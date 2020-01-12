@@ -1,0 +1,100 @@
+# R2dbc-Dsl
+
+This module provides `R2dbcDslRepository` for Web Querying throw REST API and Criteria building via `R2dbcDsl` class.
+
+Add the Maven dependency:
+
+[source,xml]
+----
+<dependency>
+  <groupId>io.github.sevenparadigms</groupId>
+  <artifactId>r2dbc-dsl</artifactId>
+  <version>1.0.0</version>
+</dependency>
+----
+
+## Features
+
+1. Paging and Sorting full support with ordering in several columns at once
+
+2. Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
+
+3. Ability to select columns in `findAll(dsl: R2dbcDsl, pageable: Pageable)` and `findBy(dsl: R2dbcDsl)` methods
+
+4. Joins to any tables and build criteria on joined columns, also select joined columns in result
+
+5. Annotation @Id is not required in model, because column ID in 90% tables it is a column ID
+
+6. Collection saving in true Batch mode (at now old `R2dbcRepository.saveAll` not batch)
+
+for PostgreSQL:
+
+7. In query can refer on value of Jsonb type as path: jdata.profile.area==Rocks Valley;jdata.type==Sentinel
+
+8. Method `repository.listen(): Sink<Notification>` subscribe to INSERT/UPDATE events on table from database
+
+9. Method `repository.fts(dsl: R2dbc, pageable: Pageable)` return ranked full-text search result
+
+10. Method `repository.oper(dsl: R2dbc, pageable: Pageable)`used for call inline operators: `@>, @?, @@ ...`
+
+## Concepts
+
+The main idea is to reduce development time when all kinds of criteria can be formed at the frontend:
+
+`http://localhost:8080/items?query=shops.type==mega;name~~biggest;price>=100&fields=id;name&page=0&size=20&sort=itemType:asc,createdAt:desc`
+
+and generate SQL:
+
+`select id, name from items join shops on items.shop_id = shops.id where shops.type='mega' and name like '%biggest%' and price >= 100 order by item_type asc, created_at desc limit 20 offset 0`
+
+## Get started
+
+Create empty configuration class with annotations:
+
+[source,java]
+----
+@EnableR2dbcRepositories(basePackages = ["com.example"], repositoryFactoryBeanClass = R2dbcDslRepositoryFactoryBean::class)
+@ImportAutoConfiguration(R2dbcDslConfiguration::class)
+class R2dbcDslConfiguration {}
+----
+
+and import it in Application class:
+[source,java]
+----
+@ImportAutoConfiguration(R2dbcDslConfiguration::class)`
+----
+then all Dsl Repositories in package "com.example" will earn.
+
+
+#### Web query predicates (-> sql):
+
+* "column##1 2 3" -> column in (1, 2, 3)
+* "column!#1 2 3" -> column not in (1, 2, 3)
+* "column==value" -> column = value
+* "column!=value" -> column != value
+* "column" -> column is true
+* "!column" -> column is not true
+* "@column" -> column is null
+* "!@column" -> column is not null
+* "column>>value" -> column > value
+* "column>=value" -> column >= value
+* "column<<value" -> column < value
+* "column<=value" -> column <= value
+* "column~~value" -> column like '%value%'
+
+#### Web query columns:
+
+* column -> used as is
+* column.type -> join table if column is not JsonNode type (model must contain columnId variable)
+* column.header.title -> column->'header'->>'title'
+
+In `fields` property can selected joined columns or jsonb path to output result.
+For example `columnType` or `columnHeaderTitle` and model must contain these variables.
+
+== Example
+
+* https://github.com/SevenParadigms/r2dbc-dsl-example/[R2dbc Dsl Example] contains example project that explain specific features.
+
+== License
+
+Spring Data R2DBC DSL is Open Source software released under the https://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].
