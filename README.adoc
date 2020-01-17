@@ -2,6 +2,10 @@
 
 This module provides `R2dbcDslRepository` for Web Querying throw REST API and Criteria building via `R2dbcDsl` class.
 
+Also provides Spring Static Application Context with access to Spring beans and environments
+and Fast Method implementation for quickly setter/getter of object properties. Also including
+Kotlin Extensions for more cleaning source code.
+
 Add the Maven dependency:
 
 [source,xml]
@@ -36,6 +40,12 @@ for PostgreSQL:
 9. Method `repository.fts(dsl: R2dbc, pageable: Pageable)` return ranked full-text search result
 
 10. Method `repository.oper(dsl: R2dbc, pageable: Pageable)`used for call inline operators: `@>, @?, @@ ...`
+
+Often in dynamically created classes needed access to `application.properties` or Spring beans
+with protection against a premature call during Application and beans depends start-up in runtime.
+Also Application Context can dynamically register beans from static context.
+
+Utility class `FastMethodInvoker` is a modern reflection access to object properties.
 
 ## Concepts
 
