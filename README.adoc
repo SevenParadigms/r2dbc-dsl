@@ -17,6 +17,20 @@ Add the Maven dependency:
 </dependency>
 ----
 
+That repository produce `R2dbcDslRepository` interface:
+[source,kotlin]
+----
+interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
+    fun <S : Any> saveBatch(entities: Iterable<S>): Flux<Int>
+    fun listen(): Sink<Notification>
+    fun findAll(dsl: R2dbcDsl, pageable: Pageable): Flux<T>
+    fun findAll(pageable: Pageable): Flux<T>
+    fun findBy(dsl: R2dbcDsl): Mono<T>
+    fun fts(dsl: R2dbcDsl, pageable: Pageable): Flux<T>
+    fun oper(dsl: R2dbcDsl, pageable: Pageable): Flux<T>
+}
+----
+
 ## Features
 
 1. Paging and Sorting full support with ordering in several columns at once
@@ -27,11 +41,11 @@ Add the Maven dependency:
 
 4. Joins to any tables and build criteria on joined columns, also select joined columns in result
 
-5. Annotation @Id is not required in model, because column ID in 90% tables it is a column ID
+5. Annotation `@Id` is not required in model, because column ID in 90% tables it is a column ID
+
+#### for PostgreSQL:
 
 6. Collection saving in true Batch mode (at now old `R2dbcRepository.saveAll` not batch)
-
-for PostgreSQL:
 
 7. In query can refer on value of Jsonb type as path: jdata.profile.area==Rocks Valley;jdata.type==Sentinel
 
@@ -61,17 +75,20 @@ and generate SQL:
 
 Create empty configuration class with annotations:
 
-[source,java]
+[source,kotlin]
 ----
+import com.sevenparadigms.dsl.R2dbcDslConfiguration
+import com.sevenparadigms.dsl.R2dbcDslRepositoryFactoryBean
+
 @EnableR2dbcRepositories(basePackages = ["com.example"], repositoryFactoryBeanClass = R2dbcDslRepositoryFactoryBean::class)
 @ImportAutoConfiguration(R2dbcDslConfiguration::class)
-class R2dbcDslConfiguration {}
+class CustomR2dbcDslConfiguration {}
 ----
 
 and import it in Application class:
-[source,java]
+[source,kotlin]
 ----
-@ImportAutoConfiguration(R2dbcDslConfiguration::class)`
+@ImportAutoConfiguration(CustomR2dbcDslConfiguration::class)
 ----
 then all Dsl Repositories in package "com.example" will earn.
 
@@ -103,7 +120,7 @@ For example `columnType` or `columnHeaderTitle` and model must contain these var
 
 == Example
 
-* https://github.com/SevenParadigms/r2dbc-dsl-ecommerce/[R2dbc Dsl Example by E-commerce building] contains example project that explain specific features.
+* https://github.com/SevenParadigms/r2dbc-dsl-ecommerce/[R2dbc Dsl Example for E-Commerce starting] contains example project that explain specific features.
 
 == License
 
