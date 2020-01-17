@@ -118,6 +118,38 @@ then all Dsl Repositories in package "com.example" will earn.
 In `fields` property can selected joined columns or jsonb path to output result.
 For example `columnType` or `columnHeaderTitle` and model must contain these variables.
 
+#### Subscribe to async tables UPDATE/INSERT changes:
+
+Before create universal notifier function:
+[source,postgresql]
+----
+create function notify_sender() returns trigger
+    language plpgsql
+as
+$$
+BEGIN
+    PERFORM pg_notify(
+                    TG_TABLE_NAME,
+                    json_build_object(
+                            'operation', TG_OP,
+                            'record', row_to_json(NEW)
+                        )::text
+                );
+    RETURN NULL;
+END;
+$$;
+----
+And set to tables notifier by trigger:
+[source,postgresql]
+----
+create trigger table_notify
+    after insert or update
+    on table
+    for each row
+execute procedure notify_sender();
+----
+In the next version of R2dbcDslRepository, it will create a trigger on first access is required.
+
 == Example
 
 * https://github.com/SevenParadigms/r2dbc-dsl-ecommerce/[R2dbc Dsl Example as E-Commerce starting project] contains project that explain specific features.
