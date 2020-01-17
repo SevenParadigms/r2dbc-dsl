@@ -96,14 +96,14 @@ then all Dsl Repositories in package "com.example" will earn.
 
 * column -> used as is
 * column.type -> join table if column is not JsonNode type (model must contain columnId variable)
-* column.header.title -> column->'header'->>'title'
+* column.header.title -> `column->'header'->>'title'` if column have JsonNode type
 
 In `fields` property can selected joined columns or jsonb path to output result.
 For example `columnType` or `columnHeaderTitle` and model must contain these variables.
 
 == Example
 
-* https://github.com/SevenParadigms/r2dbc-dsl-example/[R2dbc Dsl Example] contains example project that explain specific features.
+* https://github.com/SevenParadigms/r2dbc-dsl-ecommerce/[R2dbc Dsl Example by E-commerce building] contains example project that explain specific features.
 
 == License
 
