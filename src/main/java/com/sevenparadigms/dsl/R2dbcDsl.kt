@@ -148,8 +148,8 @@ class R2dbcDsl {
                 val step: Criteria.CriteriaStep = query?.and(field.deCamel()) ?: Criteria.where(field.deCamel())
                 val value = parts.last()
                 query = when (criteria.replace(CLEAN.toRegex(), "")) {
-                    "##" -> step.`in`(value.split(' '))
-                    "!#" -> step.notIn(value.split(' '))
+                    "##" -> step.`in`(value.split(' ').getType(field, cls))
+                    "!#" -> step.notIn(value.split(' ').getType(field, cls))
                     "==" -> step.`is`(value.getType(field, cls))
                     "!=" -> step.not(value.getType(field, cls))
                     "" -> step.`is`(true)
@@ -179,6 +179,14 @@ class R2dbcDsl {
             }
         }
         return list
+    }
+
+    private fun <T> List<String>.getType(fieldName: String, cls: Class<T>): List<Any> {
+        val result = ArrayList<Any>()
+        for (it in this) {
+            result.add(it.getType(fieldName, cls))
+        }
+        return result
     }
 
     private fun <T> String.getType(fieldName: String, cls: Class<T>): Any {
