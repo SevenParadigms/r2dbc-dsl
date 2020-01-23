@@ -43,9 +43,9 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 5. Annotation `@Id` is not required in model, because column ID in 90% tables it is a column ID
 
-#### for PostgreSQL:
+6. Collection saving in true Batch mode (original `R2dbcRepository.saveAll` not batch)
 
-6. Collection saving in true Batch mode (at now old `R2dbcRepository.saveAll` not batch)
+#### for PostgreSQL:
 
 7. In query can refer on value of Jsonb type as path: jdata.profile.area==Rocks Valley;jdata.type==Sentinel
 
@@ -91,7 +91,17 @@ and import it in Application class:
 @ImportAutoConfiguration(CustomR2dbcDslConfiguration::class)
 ----
 then all Dsl Repositories in package "com.example" will earn.
+[source,kotlin]
+----
+repository.findAll(dsl, serverRequest.getPageable())
+----
 
+The same happens using the database client:
+[source,kotlin]
+----
+val dsl = R2dbcDsl.create().id(100L).getCriteriaBy(Entity::class)
+client.select().from(Entity::class).matching(dsl).fetch().one()
+----
 
 #### Web query predicates (-> sql):
 
@@ -118,7 +128,7 @@ then all Dsl Repositories in package "com.example" will earn.
 In `fields` property can selected joined columns or jsonb path to output result.
 For example `columnType` or `columnHeaderTitle` and model must contain these variables.
 
-#### Subscribe to async tables UPDATE/INSERT changes:
+#### Subscribe to async database UPDATE/INSERT events:
 
 Before create universal notifier function:
 [source,postgresql]

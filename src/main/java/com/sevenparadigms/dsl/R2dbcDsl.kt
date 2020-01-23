@@ -197,6 +197,7 @@ class R2dbcDsl {
                     Boolean::class.java -> return this.toBoolean()
                     ByteArray::class.java -> return this.toByteArray()
                 }
+                break
             }
         }
         return this

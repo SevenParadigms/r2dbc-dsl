@@ -3,13 +3,9 @@ package com.sevenparadigms.common
 import com.fasterxml.jackson.databind.JsonNode
 import org.slf4j.LoggerFactory
 
-fun ByteArray.hex(): String {
-    val sb = StringBuilder()
-    for (b in this) {
-        sb.append(String.format("%02x", b))
-    }
-    return sb.toString()
-}
+fun ByteArray.hex() = this.joinToString(separator = "") { String.format("%02X", (it.toInt() and 0xFF)) }
+
+fun String.hexToByteArray() = ByteArray(this.length / 2) { this.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
 
 fun Any.info(message: String, vararg args: Any) {
     LoggerFactory.getLogger(this.javaClass).info(message, args)
