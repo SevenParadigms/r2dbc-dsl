@@ -13,7 +13,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>r2dbc-dsl</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
 </dependency>
 ----
 
@@ -43,17 +43,19 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 5. Annotation `@Id` is not required in model, because column ID in 90% tables it is a column ID
 
-6. Collection saving in Batch mode
+6. Annotation `@Table` is not required in model, because table name get from model class name
+
+7. Collection saving in Batch mode
 
 #### for PostgreSQL:
 
-7. In query can refer on value of Jsonb type as path: jdata.profile.area==Rocks Valley;jdata.type==Sentinel
+8. In query can refer on value of Jsonb type as path: jdata.profile.area==Rocks Valley;jdata.type==Sentinel
 
-8. Method `repository.listen(): Sink<Notification>` subscribe to INSERT/UPDATE events on table from database
+9. Method `repository.listen(): Sink<Notification>` subscribe to INSERT/UPDATE events on table from database
 
-9. Method `repository.fts(dsl: R2dbc, pageable: Pageable)` return ranked full-text search result
+10. Method `repository.fts(dsl: R2dbc, pageable: Pageable)` return ranked full-text search result
 
-10. Method `repository.oper(dsl: R2dbc, pageable: Pageable)` used for call inline operators: `@>, @?, @@ ...`
+11. Method `repository.oper(dsl: R2dbc, pageable: Pageable)` used for call inline operators: `@>, @?, @@ ...`
 
 Often in dynamically created classes needed access to `application.properties` or Spring beans
 with protection against a premature call during Application and beans depends start-up in runtime.
