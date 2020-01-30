@@ -13,7 +13,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>r2dbc-dsl</artifactId>
-  <version>1.1.1</version>
+  <version>1.2.0</version>
 </dependency>
 ----
 
@@ -43,7 +43,7 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 5. Annotation `@Id` is not required in model, because column ID in 90% tables it is a column ID
 
-6. Collection saving in true Batch mode (original `R2dbcRepository.saveAll` not batch)
+6. Collection saving in Batch mode
 
 #### for PostgreSQL:
 
