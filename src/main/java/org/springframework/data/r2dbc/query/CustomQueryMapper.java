@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.springframework.data.r2dbc.query;
 
-import io.netty.util.internal.StringUtil;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
@@ -24,9 +23,7 @@ import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.dialect.BindMarker;
-import org.springframework.data.r2dbc.dialect.BindMarkers;
-import org.springframework.data.r2dbc.dialect.Bindings;
-import org.springframework.data.r2dbc.dialect.MutableBindings;
+import org.springframework.data.r2dbc.dialect.*;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.r2dbc.query.Criteria.Combinator;
 import org.springframework.data.r2dbc.query.Criteria.Comparator;
@@ -40,6 +37,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 /**
  * Maps {@link Criteria} and {@link Sort} objects considering mapping metadata and dialect-specific conversion.
@@ -49,20 +47,38 @@ import java.util.*;
 public class CustomQueryMapper {
 
 	private final R2dbcConverter converter;
+	private final R2dbcDialect dialect;
 	private final MappingContext<? extends RelationalPersistentEntity<?>, RelationalPersistentProperty> mappingContext;
 
 	/**
 	 * Creates a new {@link CustomQueryMapper} with the given {@link R2dbcConverter}.
 	 *
+	 * @param dialect
 	 * @param converter must not be {@literal null}.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public CustomQueryMapper(R2dbcConverter converter) {
+	public CustomQueryMapper(R2dbcDialect dialect, R2dbcConverter converter) {
 
 		Assert.notNull(converter, "R2dbcConverter must not be null!");
+		Assert.notNull(dialect, "R2dbcDialect must not be null!");
 
 		this.converter = converter;
+		this.dialect = dialect;
 		this.mappingContext = (MappingContext) converter.getMappingContext();
+	}
+
+	/**
+	 * Render a {@link SqlIdentifier} for SQL usage.
+	 *
+	 * @param identifier
+	 * @return
+	 * @since 1.1
+	 */
+	public String toSql(SqlIdentifier identifier) {
+
+		Assert.notNull(identifier, "SqlIdentifier must not be null");
+
+		return identifier.toSql(this.dialect.getIdentifierProcessing());
 	}
 
 	/**
@@ -82,13 +98,9 @@ public class CustomQueryMapper {
 
 		for (Sort.Order order : sort) {
 
-			RelationalPersistentProperty persistentProperty = entity.getPersistentProperty(order.getProperty());
-			if (persistentProperty == null) {
-				mappedOrder.add(order);
-			} else {
-				mappedOrder.add(
-						Sort.Order.by(persistentProperty.getColumnName()).with(order.getNullHandling()).with(order.getDirection()));
-			}
+			Field field = createPropertyField(entity, order.getProperty(), this.mappingContext);
+			mappedOrder.add(
+					Sort.Order.by(toSql(field.getMappedColumnName())).with(order.getNullHandling()).with(order.getDirection()));
 		}
 
 		return Sort.by(mappedOrder);
@@ -99,14 +111,16 @@ public class CustomQueryMapper {
 	 *
 	 * @param markers bind markers object, must not be {@literal null}.
 	 * @param criteria criteria definition to map, must not be {@literal null}.
-	 * @param tables must not be {@literal null}.
+	 * @param table must not be {@literal null}.
+	 * @param entity related {@link RelationalPersistentEntity}, can be {@literal null}.
 	 * @return the mapped {@link BoundCondition}.
 	 */
-	public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, HashMap<String, Table> tables) {
+	public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, Table table,
+			@Nullable RelationalPersistentEntity<?> entity) {
 
 		Assert.notNull(markers, "BindMarkers must not be null!");
 		Assert.notNull(criteria, "Criteria must not be null!");
-		Assert.notNull(tables, "Table must not be null!");
+		Assert.notNull(table, "Table must not be null!");
 
 		Criteria current = criteria;
 		MutableBindings bindings = new MutableBindings(markers);
@@ -120,18 +134,17 @@ public class CustomQueryMapper {
 		}
 
 		// perform the actual mapping
-
-		Condition mapped = getCondition(current, bindings, tables, null);
+		Condition mapped = getCondition(current, bindings, table, entity);
 		while (forwardChain.containsKey(current)) {
 
 			Criteria nextCriteria = forwardChain.get(current);
 
 			if (nextCriteria.getCombinator() == Combinator.AND) {
-				mapped = mapped.and(getCondition(nextCriteria, bindings, tables, null));
+				mapped = mapped.and(getCondition(nextCriteria, bindings, table, entity));
 			}
 
 			if (nextCriteria.getCombinator() == Combinator.OR) {
-				mapped = mapped.or(getCondition(nextCriteria, bindings, tables, null));
+				mapped = mapped.or(getCondition(nextCriteria, bindings, table, entity));
 			}
 
 			current = nextCriteria;
@@ -140,17 +153,11 @@ public class CustomQueryMapper {
 		return new BoundCondition(bindings, mapped);
 	}
 
-	private Condition getCondition(Criteria criteria, MutableBindings bindings, HashMap<String, Table> tables,
+	private Condition getCondition(Criteria criteria, MutableBindings bindings, Table table,
 			@Nullable RelationalPersistentEntity<?> entity) {
-        Table table = tables.get(StringUtil.EMPTY_STRING);
-        String columnName = criteria.getColumn();
-        if (criteria.getColumn().indexOf('.') > -1) {
-            table = tables.get(columnName.substring(0, columnName.indexOf('.')));
-			columnName = columnName.substring(columnName.indexOf('.') + 1);
-		}
 
-		Field propertyField = createPropertyField(entity, columnName, this.mappingContext);
-		Column column = table.column(propertyField.getMappedColumnName());
+		Field propertyField = createPropertyField(entity, criteria.getColumn(), this.mappingContext);
+		Column column = table.column(toSql(propertyField.getMappedColumnName()));
 		TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
 
 		Object mappedValue;
@@ -201,8 +208,8 @@ public class CustomQueryMapper {
 		return this.mappingContext;
 	}
 
-	private Condition createCondition(Column column, @Nullable Object mappedValue, Class<?> valueType,
-			MutableBindings bindings, Comparator comparator) {
+	public Condition createCondition(Column column, @Nullable Object mappedValue, Class<?> valueType,
+									 MutableBindings bindings, Comparator comparator) {
 
 		if (comparator.equals(Comparator.IS_NULL)) {
 			return column.isNull();
@@ -311,7 +318,7 @@ public class CustomQueryMapper {
 		 */
 		public Field(String name) {
 
-			Assert.hasText(name, "Name must not be null!");
+			Assert.notNull(name, "Name must not be null!");
 			this.name = name;
 		}
 
@@ -320,8 +327,8 @@ public class CustomQueryMapper {
 		 *
 		 * @return
 		 */
-		public String getMappedColumnName() {
-			return this.name;
+		public SqlIdentifier getMappedColumnName() {
+			return new PassThruIdentifier(this.name);
 		}
 
 		public TypeInformation<?> getTypeHint() {
@@ -377,8 +384,9 @@ public class CustomQueryMapper {
 		}
 
 		@Override
-		public String getMappedColumnName() {
-			return this.path == null ? this.name : this.path.toDotPath(RelationalPersistentProperty::getColumnName);
+		public SqlIdentifier getMappedColumnName() {
+			return this.path == null || this.path.getLeafProperty() == null ? super.getMappedColumnName()
+					: this.path.getLeafProperty().getColumnName();
 		}
 
 		/**
@@ -433,6 +441,63 @@ public class CustomQueryMapper {
 			}
 
 			return this.property.getTypeInformation();
+		}
+	}
+
+	static class PassThruIdentifier implements SqlIdentifier {
+
+		final String name;
+
+		PassThruIdentifier(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public String getReference(IdentifierProcessing processing) {
+			return name;
+		}
+
+		@Override
+		public String toSql(IdentifierProcessing processing) {
+			return name;
+		}
+
+		@Override
+		public SqlIdentifier transform(UnaryOperator<String> transformationFunction) {
+			return new PassThruIdentifier(transformationFunction.apply(name));
+		}
+
+		/*
+		* (non-Javadoc)
+		* @see java.lang.Object#equals(java.lang.Object)
+		*/
+		@Override
+		public boolean equals(Object o) {
+
+			if (this == o)
+				return true;
+			if (o instanceof SqlIdentifier) {
+				return toString().equals(o.toString());
+			}
+			return false;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			return toString().hashCode();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return toSql(IdentifierProcessing.ANSI);
 		}
 	}
 }

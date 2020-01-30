@@ -74,7 +74,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
         val connectionPool: ConnectionPool = ApplicationContext.getBean(ConnectionFactory::class.java) as ConnectionPool
         return connectionPool.create().flatMapMany { connection ->
             val postgresqlConnection = (connection as Wrapped<Connection>).unwrap() as PostgresqlConnection
-            postgresqlConnection.createStatement("LISTEN ${entity.tableName.toLowerCase()}").execute()
+            postgresqlConnection.createStatement("LISTEN ${this.accessStrategy.toSql(this.entity.tableName).toLowerCase()}").execute()
                     .flatMap(PostgresqlResult::getRowsUpdated)
                     .thenMany(postgresqlConnection.notifications)
         }
@@ -123,31 +123,32 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
     }
 
     @Transactional
-    override fun <S : T> save(entity: S): Mono<S> {
+    override fun <S : T> save(model: S): Mono<S> {
         val idPropertyName = getIdColumnName()
-        val idValue: Any? = entity!!.getValue(idPropertyName)
+        val idValue: Any? = model!!.getValue(idPropertyName)
         return if (idValue == null) {
             databaseClient.insert()
                     .into(this.entity.javaType)
-                    .table(this.entity.tableName).using(entity)
-                    .map(populateIdIfNecessary(entity))
+                    .table(this.entity.tableName).using(model)
+                    .map(populateIdIfNecessary(model))
                     .first().flatMap { Mono.just(it as S) }
-                    .defaultIfEmpty(entity)
+                    .defaultIfEmpty(model)
         } else {
             val mapper: StatementMapper = accessStrategy.statementMapper
-            val columns: Map<String, SettableValue> = accessStrategy.getOutboundRow(entity)
+            val allColumns = accessStrategy.getAllColumns(entity.javaType)
+            val columns: Map<SqlIdentifier, SettableValue> = accessStrategy.getOutboundRow(model)
             var update: Update? = null
             val iterator: Iterator<*> = columns.keys.iterator()
             while (iterator.hasNext()) {
-                val column = iterator.next() as String
-                update = update?.set(column, columns[column]) ?: Update.update(column, columns[column])
+                val column = iterator.next() as SqlIdentifier
+                update = update?.set(accessStrategy.toSql(column), columns[column]) ?: Update.update(accessStrategy.toSql(column), columns[column])
             }
             val operation = mapper.getMappedObject(mapper.createUpdate(this.entity.tableName, update!!)
                     .withCriteria(Criteria.where(idPropertyName).`is`(idValue)))
             return databaseClient.execute(operation).fetch().rowsUpdated()
                     .handle { rowsUpdated: Int, sink: SynchronousSink<S> ->
                         if (rowsUpdated > 0) {
-                            sink.next(entity)
+                            sink.next(model)
                         }
                     }
         }
@@ -185,7 +186,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
         val idColumnName = getIdColumnName()
         val mapper: StatementMapper = accessStrategy.statementMapper.forType(entity.javaType)
         val selectSpec = mapper.createSelect(entity.tableName)
-                .withProjection(listOf(idColumnName))
+                .withProjection(idColumnName)
                 .withCriteria(Criteria.where(idColumnName).`is`(id as Any))
         val operation = mapper.getMappedObject(selectSpec)
         return databaseClient.execute(operation)
@@ -223,7 +224,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
     }
 
     override fun count(): Mono<Long> {
-        val table = Table.create(entity.tableName)
+        val table = Table.create(this.accessStrategy.toSql(this.entity.tableName))
         val select = StatementBuilder
                 .select(Functions.count(table.column(getIdColumnName())))
                 .from(table)
@@ -285,7 +286,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
     private fun getMappedObject(dsl: R2dbcDsl, pageable: Pageable): PreparedOperation<Select> {
         val connectionPool: ConnectionPool = ApplicationContext.getBean(ConnectionFactory::class.java) as ConnectionPool
         val dialect = DialectResolver.getDialect(connectionPool)
-        val table = Table.create(entity.tableName)
+        val table = Table.create(this.accessStrategy.toSql(this.entity.tableName))
         val joins = HashMap<String, Table>()
         val entityColumns = accessStrategy.getAllColumns(entity.javaType)
         val queryFields = dsl.getQueryFields()
@@ -330,7 +331,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
                     .finishJoin())
         }
         joins[StringUtil.EMPTY_STRING] = table
-        val updateMapper = CustomUpdateMapper(converter)
+        val updateMapper = CustomUpdateMapper(dialect, converter)
         val bindMarkers: BindMarkers = dialect.bindMarkersFactory.create()
         var bindings = Bindings.empty()
         val criteria = dsl.getCriteriaBy(entity.javaType)
@@ -369,13 +370,16 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
 
     private fun getIdColumnName(): String {
         return try {
-            converter
+            accessStrategy.toSql(converter
                     .mappingContext
                     .getRequiredPersistentEntity(entity.javaType)
                     .requiredIdProperty
-                    .columnName
+                    .columnName)
         } catch (ex: Exception) {
-            "id"
+            if (accessStrategy.getAllColumns(entity.javaType).contains(R2dbcDsl.defaultId))
+                R2dbcDsl.defaultId
+            else
+                throw IllegalArgumentException("@Id column in ${this.accessStrategy.toSql(this.entity.tableName)} not found")
         }
     }
 
@@ -426,5 +430,23 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
             mutableList.add(field.deCamel())
         }
         return mutableList
+    }
+
+    private fun List<SqlIdentifier>.contains(columnName: String): Boolean {
+        for (column in this) {
+            if (accessStrategy.toSql(column) == columnName) {
+                return true;
+            }
+        }
+        return false
+    }
+
+    private fun List<SqlIdentifier>.findByName(columnName: String): SqlIdentifier? {
+        for (column in this) {
+            if (accessStrategy.toSql(column) == columnName) {
+                return column;
+            }
+        }
+        return null
     }
 }

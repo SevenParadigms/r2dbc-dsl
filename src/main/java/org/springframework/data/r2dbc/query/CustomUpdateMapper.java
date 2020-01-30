@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package org.springframework.data.r2dbc.query;
 
+import io.netty.util.internal.StringUtil;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.dialect.BindMarker;
-import org.springframework.data.r2dbc.dialect.BindMarkers;
-import org.springframework.data.r2dbc.dialect.Bindings;
-import org.springframework.data.r2dbc.dialect.MutableBindings;
+import org.springframework.data.r2dbc.dialect.*;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.sql.*;
@@ -28,6 +27,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,10 +41,11 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 	/**
 	 * Creates a new {@link CustomQueryMapper} with the given {@link R2dbcConverter}.
 	 *
+	 * @param dialect must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 */
-	public CustomUpdateMapper(R2dbcConverter converter) {
-		super(converter);
+	public CustomUpdateMapper(R2dbcDialect dialect, R2dbcConverter converter) {
+		super(dialect, converter);
 	}
 
 	/**
@@ -88,11 +89,88 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 		return new BoundAssignments(bindings, result);
 	}
 
+	/**
+	 * Map a {@link Criteria} object into {@link Condition} and consider value/{@code NULL} {@link Bindings}.
+	 *
+	 * @param markers bind markers object, must not be {@literal null}.
+	 * @param criteria criteria definition to map, must not be {@literal null}.
+	 * @param tables must not be {@literal null}.
+	 * @return the mapped {@link BoundCondition}.
+	 */
+	public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, HashMap<String, Table> tables) {
+
+		Assert.notNull(markers, "BindMarkers must not be null!");
+		Assert.notNull(criteria, "Criteria must not be null!");
+		Assert.notNull(tables, "Table must not be null!");
+
+		Criteria current = criteria;
+		MutableBindings bindings = new MutableBindings(markers);
+
+		// reverse unroll criteria chain
+		Map<Criteria, Criteria> forwardChain = new HashMap<>();
+
+		while (current.hasPrevious()) {
+			forwardChain.put(current.getPrevious(), current);
+			current = current.getPrevious();
+		}
+
+		// perform the actual mapping
+
+		Condition mapped = getCondition(current, bindings, tables, null);
+		while (forwardChain.containsKey(current)) {
+
+			Criteria nextCriteria = forwardChain.get(current);
+
+			if (nextCriteria.getCombinator() == Criteria.Combinator.AND) {
+				mapped = mapped.and(getCondition(nextCriteria, bindings, tables, null));
+			}
+
+			if (nextCriteria.getCombinator() == Criteria.Combinator.OR) {
+				mapped = mapped.or(getCondition(nextCriteria, bindings, tables, null));
+			}
+
+			current = nextCriteria;
+		}
+
+		return new BoundCondition(bindings, mapped);
+	}
+
+	private Condition getCondition(Criteria criteria, MutableBindings bindings, HashMap<String, Table> tables,
+								   @Nullable RelationalPersistentEntity<?> entity) {
+		Table table = tables.get(StringUtil.EMPTY_STRING);
+		String columnName = criteria.getColumn();
+		if (criteria.getColumn().indexOf('.') > -1) {
+			table = tables.get(columnName.substring(0, columnName.indexOf('.')));
+			columnName = columnName.substring(columnName.indexOf('.') + 1);
+		}
+
+		Field propertyField = createPropertyField(entity, columnName, getMappingContext());
+		TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
+
+		Object mappedValue;
+		Class<?> typeHint;
+
+		if (criteria.getValue() instanceof SettableValue) {
+
+			SettableValue settableValue = (SettableValue) criteria.getValue();
+
+			mappedValue = convertValue(settableValue.getValue(), propertyField.getTypeHint());
+			typeHint = getTypeHint(mappedValue, actualType.getType(), settableValue);
+
+		} else {
+
+			mappedValue = convertValue(criteria.getValue(), propertyField.getTypeHint());
+			typeHint = actualType.getType();
+		}
+		Column column = table.column(columnName);
+		return createCondition(column, mappedValue, typeHint, bindings, criteria.getComparator());
+	}
+
 	private Assignment getAssignment(String columnName, Object value, MutableBindings bindings, Table table,
 			@Nullable RelationalPersistentEntity<?> entity) {
 
 		Field propertyField = createPropertyField(entity, columnName, getMappingContext());
-		Column column = table.column(propertyField.getMappedColumnName());
+		Column column = table.column(toSql(propertyField.getMappedColumnName()));
 		TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
 
 		Object mappedValue;

@@ -41,7 +41,7 @@ class R2dbcDsl {
 
     fun id(id: Long): R2dbcDsl {
         if (id > 0) {
-            query = start(query) + "id==$id"
+            query = start(query) + "$defaultId==$id"
         }
         return this
     }
@@ -221,5 +221,6 @@ class R2dbcDsl {
         const val PREFIX = "(!|@|!@)"
         const val CLEAN = "[^#!=><~@]"
         const val delimiter = ';'
+        const val defaultId = "id"
     }
 }
