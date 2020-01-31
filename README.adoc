@@ -67,7 +67,7 @@ Utility class `FastMethodInvoker` is a modern reflection access to object proper
 
 The main idea is to reduce development time when all kinds of criteria can be formed at the frontend:
 
-`http://localhost:8080/items?query=shops.type==mega;name~~biggest;price>=100 & fields=id;name & page=0 & size=20 & sort=itemType:asc,createdAt:desc`
+`localhost:8080/items?query=shops.type==mega;name~~biggest;price>=100 & fields=id;name & page=0 & size=20 & sort=itemType:asc,createdAt:desc`
 
 then generated SQL:
 
