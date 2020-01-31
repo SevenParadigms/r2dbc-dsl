@@ -90,6 +90,7 @@ class CustomR2dbcDslConfiguration {}
 and import it in Application class:
 [source,kotlin]
 ----
+@EnableR2dbcRepositories
 @ImportAutoConfiguration(CustomR2dbcDslConfiguration::class)
 ----
 then all Dsl Repositories in package "com.example" will earn.
