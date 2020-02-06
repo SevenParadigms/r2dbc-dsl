@@ -96,7 +96,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
         val lang = ApplicationContext.getProperty("spring.r2dbc.dsl.fts-lang", dsl.ftsLang)
         val parts = dsl.query.split("@@")
         var fields = if (dsl.fields.isEmpty()) "*" else dsl.fields.toJsonbPath().joinToString(separator = ",")
-        if (!fields.contains("tsv")) fields = "$fields,tsv"
+        if (fields != "*" && !fields.contains("tsv")) fields = "$fields,tsv"
         return databaseClient.execute("""SELECT * FROM (
               SELECT $fields
               FROM ${entity.tableName}, websearch_to_tsquery('$lang', '${parts.last()}') AS q
@@ -125,7 +125,11 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
     @Transactional
     override fun <S : T> save(model: S): Mono<S> {
         val idPropertyName = getIdColumnName()
-        val idValue: Any? = model!!.getValue(idPropertyName)
+        var idValue: Any? = model!!.getValue(idPropertyName)
+        if (idValue != null && idValue is Number && (idValue as Long) < 1) {
+            idValue = null
+            (model as Any).setValue(idPropertyName, null)
+        }
         return if (idValue == null) {
             databaseClient.insert()
                     .into(this.entity.javaType)
@@ -135,7 +139,6 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
                     .defaultIfEmpty(model)
         } else {
             val mapper: StatementMapper = accessStrategy.statementMapper
-            val allColumns = accessStrategy.getAllColumns(entity.javaType)
             val columns: Map<SqlIdentifier, SettableValue> = accessStrategy.getOutboundRow(model)
             var update: Update? = null
             val iterator: Iterator<*> = columns.keys.iterator()
