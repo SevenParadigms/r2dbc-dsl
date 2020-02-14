@@ -172,7 +172,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
         val idColumnName = getIdColumnName()
         val mapper: StatementMapper = accessStrategy.statementMapper.forType(entity.javaType)
         val selectSpec = mapper.createSelect(entity.tableName)
-                .withProjection(columns)
+                .withProjection(*columns.toTypedArray())
                 .withCriteria(Criteria.where(idColumnName).`is`(id as Any))
         val operation = mapper.getMappedObject(selectSpec)
         return databaseClient.execute(operation)
@@ -219,7 +219,7 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
             val idColumnName = getIdColumnName()
             val mapper: StatementMapper = accessStrategy.statementMapper.forType(entity.javaType)
             val selectSpec = mapper.createSelect(entity.tableName)
-                    .withProjection(columns)
+                    .withProjection(*columns.toTypedArray())
                     .withCriteria(Criteria.where(idColumnName).`in`(ids))
             val operation = mapper.getMappedObject(selectSpec)
             databaseClient.execute(operation).`as`(entity.javaType).fetch().all()
@@ -438,18 +438,9 @@ class R2dbcDslRepositoryImpl<T, ID : Serializable?>(private val entity: MappingR
     private fun List<SqlIdentifier>.contains(columnName: String): Boolean {
         for (column in this) {
             if (accessStrategy.toSql(column) == columnName) {
-                return true;
+                return true
             }
         }
         return false
-    }
-
-    private fun List<SqlIdentifier>.findByName(columnName: String): SqlIdentifier? {
-        for (column in this) {
-            if (accessStrategy.toSql(column) == columnName) {
-                return column;
-            }
-        }
-        return null
     }
 }

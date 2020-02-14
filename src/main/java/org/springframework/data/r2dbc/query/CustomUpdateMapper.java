@@ -71,7 +71,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 	 * @param entity related {@link RelationalPersistentEntity}, can be {@literal null}.
 	 * @return the mapped {@link BoundAssignments}.
 	 */
-	public BoundAssignments getMappedObject(BindMarkers markers, Map<String, ? extends Object> assignments, Table table,
+	public BoundAssignments getMappedObject(BindMarkers markers, Map<SqlIdentifier, ? extends Object> assignments, Table table,
 			@Nullable RelationalPersistentEntity<?> entity) {
 
 		Assert.notNull(markers, "BindMarkers must not be null!");
@@ -82,7 +82,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 		List<Assignment> result = new ArrayList<>();
 
 		assignments.forEach((column, value) -> {
-			Assignment assignment = getAssignment(column, value, bindings, table, entity);
+			Assignment assignment = getAssignment(column.getReference(), value, bindings, table, entity);
 			result.add(assignment);
 		});
 
@@ -138,8 +138,8 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 	private Condition getCondition(Criteria criteria, MutableBindings bindings, HashMap<String, Table> tables,
 								   @Nullable RelationalPersistentEntity<?> entity) {
 		Table table = tables.get(StringUtil.EMPTY_STRING);
-		String columnName = criteria.getColumn();
-		if (criteria.getColumn().indexOf('.') > -1) {
+		String columnName = criteria.getColumn().getReference();
+		if (criteria.getColumn().getReference().indexOf('.') > -1) {
 			table = tables.get(columnName.substring(0, columnName.indexOf('.')));
 			columnName = columnName.substring(columnName.indexOf('.') + 1);
 		}
@@ -199,7 +199,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 
 	private Assignment createAssignment(Column column, Object value, Class<?> type, MutableBindings bindings) {
 
-		BindMarker bindMarker = bindings.nextMarker(column.getName());
+		BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
 		AssignValue assignValue = Assignments.value(column, SQL.bindMarker(bindMarker.getPlaceholder()));
 
 		if (value == null) {

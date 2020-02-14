@@ -156,7 +156,7 @@ public class CustomQueryMapper {
 	private Condition getCondition(Criteria criteria, MutableBindings bindings, Table table,
 			@Nullable RelationalPersistentEntity<?> entity) {
 
-		Field propertyField = createPropertyField(entity, criteria.getColumn(), this.mappingContext);
+		Field propertyField = createPropertyField(entity, criteria.getColumn().getReference(), this.mappingContext);
 		Column column = table.column(toSql(propertyField.getMappedColumnName()));
 		TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
 
@@ -230,7 +230,7 @@ public class CustomQueryMapper {
 
 				for (Object o : (Iterable<?>) mappedValue) {
 
-					BindMarker bindMarker = bindings.nextMarker(column.getName());
+					BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
 					expressions.add(bind(o, valueType, bindings, bindMarker));
 				}
 
@@ -238,7 +238,7 @@ public class CustomQueryMapper {
 
 			} else {
 
-				BindMarker bindMarker = bindings.nextMarker(column.getName());
+				BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
 				Expression expression = bind(mappedValue, valueType, bindings, bindMarker);
 
 				condition = column.in(expression);
@@ -251,7 +251,7 @@ public class CustomQueryMapper {
 			return condition;
 		}
 
-		BindMarker bindMarker = bindings.nextMarker(column.getName());
+		BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
 		Expression expression = bind(mappedValue, valueType, bindings, bindMarker);
 
 		switch (comparator) {
