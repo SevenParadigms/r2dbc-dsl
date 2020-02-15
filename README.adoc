@@ -53,10 +53,6 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 9. Method `repository.listen(): Sink<Notification>` subscribe to INSERT/UPDATE events on table from database
 
-10. Method `repository.fts(dsl: R2dbc, pageable: Pageable)` return ranked full-text search result
-
-11. Method `repository.oper(dsl: R2dbc, pageable: Pageable)` used for call inline operators: `@>, @?, @@ ...`
-
 Often in dynamically created classes needed access to `application.properties` or Spring beans
 with protection against a premature call during Application and beans depends start-up in runtime.
 Also Application Context can dynamically register beans from static context.
@@ -82,7 +78,7 @@ Create empty configuration class with annotations:
 import com.sevenparadigms.dsl.R2dbcDslConfiguration
 import com.sevenparadigms.dsl.R2dbcDslRepositoryFactoryBean
 
-@EnableR2dbcRepositories(basePackages = ["com.example"], repositoryFactoryBeanClass = R2dbcDslRepositoryFactoryBean::class)
+@EnableR2dbcRepositories(basePackages = ["com.example"], repositoryFactoryBeanClass = R2dbcDslRepositoryFactoryBean::class, databaseClientRef = "databaseClient")
 @ImportAutoConfiguration(R2dbcDslConfiguration::class)
 class CustomR2dbcDslConfiguration {}
 ----
@@ -90,7 +86,7 @@ class CustomR2dbcDslConfiguration {}
 and import it in Application class:
 [source,kotlin]
 ----
-@EnableR2dbcRepositories
+@EnableR2dbcRepositories(databaseClientRef = "databaseClient")
 @ImportAutoConfiguration(CustomR2dbcDslConfiguration::class)
 ----
 then all Dsl Repositories in package "com.example" will earn.
@@ -161,7 +157,7 @@ create trigger table_notify
     for each row
 execute procedure notify_sender();
 ----
-In the next version of R2dbcDslRepository, it will create a trigger on first access is required.
+In the next version, it will create a trigger on first access is required with Reactive FlyWay features.
 
 == Example
 
