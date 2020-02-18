@@ -118,8 +118,8 @@ client.select().from(Entity::class).matching(dsl).fetch().one()
 * column.type -> join table if column is not JsonNode type (model must contain columnId variable)
 * column.header.title -> `column->'header'->>'title'` if column have JsonNode type
 
-In `fields` property can selected joined columns or jsonb path to output result.
-For example `columnType` or `columnHeaderTitle` and model must contain these variables.
+In `fields` property also can selected joined columns or jsonb path to output result.
+For example `columnType` or `columnHeaderTitle` from previous example and model must contain these variables.
 
 #### Subscribe to async database UPDATE/INSERT events:
 
@@ -151,11 +151,11 @@ create trigger table_notify
     for each row
 execute procedure notify_sender();
 ----
-In the next version, it will create a trigger on first access is required with Reactive FlyWay features.
+In the next version, it will creating on first access is Reactive FlyWay enabled in `application.properties`.
 
 == Example
 
-* https://github.com/SevenParadigms/r2dbc-dsl-ecommerce/[R2dbc Dsl Example as E-Commerce starting project] contains project that explain specific features.
+* https://github.com/SevenParadigms/r2dbc-dsl-ecommerce/[R2dbc Dsl Example as E-Commerce starting project] contains project that explain full commerce features.
 
 == Road map
 
