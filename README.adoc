@@ -83,7 +83,7 @@ and import it in Application class:
 @EnableR2dbcRepositories(databaseClientRef = "databaseClient")
 @ImportAutoConfiguration(CustomR2dbcDslConfiguration::class)
 ----
-then all Dsl Repositories in package "com.example" will earn.
+then all Dsl Repositories in package "com.example.repositories" will earn.
 [source,kotlin]
 ----
 repository.findAll(dsl, serverRequest.getPageable())
