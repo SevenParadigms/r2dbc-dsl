@@ -86,7 +86,7 @@ and import it in Application class:
 then all Dsl Repositories in package "com.example.repositories" will earn.
 [source,kotlin]
 ----
-repository.findAll(dsl, serverRequest.getPageable())
+repository.findAll(dsl, serverWebExchange.getPageable())
 ----
 
 The same happens using the database client:
