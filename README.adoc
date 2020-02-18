@@ -13,7 +13,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>r2dbc-dsl</artifactId>
-  <version>1.2.4</version>
+  <version>1.2.5</version>
 </dependency>
 ----
 
@@ -26,8 +26,6 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findAll(dsl: R2dbcDsl, pageable: Pageable): Flux<T>
     fun findAll(pageable: Pageable): Flux<T>
     fun findBy(dsl: R2dbcDsl): Mono<T>
-    fun fts(dsl: R2dbcDsl, pageable: Pageable): Flux<T>
-    fun oper(dsl: R2dbcDsl, pageable: Pageable): Flux<T>
 }
 ----
 
@@ -75,11 +73,7 @@ Create empty configuration class with annotations:
 
 [source,kotlin]
 ----
-import com.sevenparadigms.dsl.R2dbcDslConfiguration
-import com.sevenparadigms.dsl.R2dbcDslRepositoryFactoryBean
-
-@EnableR2dbcRepositories(basePackages = ["com.example"], repositoryFactoryBeanClass = R2dbcDslRepositoryFactoryBean::class, databaseClientRef = "databaseClient")
-@ImportAutoConfiguration(R2dbcDslConfiguration::class)
+@EnableR2dbcDslRepositories(basePackages = ["com.example.repositories"])
 class CustomR2dbcDslConfiguration {}
 ----
 
