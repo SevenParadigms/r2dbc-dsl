@@ -15,6 +15,7 @@
  */
 package org.springframework.data.r2dbc.query;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
@@ -22,17 +23,17 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
-import org.springframework.data.r2dbc.dialect.BindMarker;
-import org.springframework.data.r2dbc.dialect.*;
+import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.SettableValue;
-import org.springframework.data.r2dbc.query.Criteria.Combinator;
-import org.springframework.data.r2dbc.query.Criteria.Comparator;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
+import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.r2dbc.core.binding.BindMarkers;
+import org.springframework.r2dbc.core.binding.MutableBindings;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -107,7 +108,7 @@ public class CustomQueryMapper {
 	}
 
 	/**
-	 * Map a {@link Criteria} object into {@link Condition} and consider value/{@code NULL} {@link Bindings}.
+	 * Map a {@link Criteria} object into {@link Condition} and consider value/{@code NULL} {Bindings}.
 	 *
 	 * @param markers bind markers object, must not be {@literal null}.
 	 * @param criteria criteria definition to map, must not be {@literal null}.
@@ -116,7 +117,7 @@ public class CustomQueryMapper {
 	 * @return the mapped {@link BoundCondition}.
 	 */
 	public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
+										  @Nullable RelationalPersistentEntity<?> entity) {
 
 		Assert.notNull(markers, "BindMarkers must not be null!");
 		Assert.notNull(criteria, "Criteria must not be null!");
@@ -139,11 +140,11 @@ public class CustomQueryMapper {
 
 			Criteria nextCriteria = forwardChain.get(current);
 
-			if (nextCriteria.getCombinator() == Combinator.AND) {
+			if (nextCriteria.getCombinator() == CriteriaDefinition.Combinator.AND) {
 				mapped = mapped.and(getCondition(nextCriteria, bindings, table, entity));
 			}
 
-			if (nextCriteria.getCombinator() == Combinator.OR) {
+			if (nextCriteria.getCombinator() == CriteriaDefinition.Combinator.OR) {
 				mapped = mapped.or(getCondition(nextCriteria, bindings, table, entity));
 			}
 
@@ -154,7 +155,7 @@ public class CustomQueryMapper {
 	}
 
 	private Condition getCondition(Criteria criteria, MutableBindings bindings, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
+								   @Nullable RelationalPersistentEntity<?> entity) {
 
 		Field propertyField = createPropertyField(entity, criteria.getColumn().getReference(), this.mappingContext);
 		Column column = table.column(toSql(propertyField.getMappedColumnName()));
@@ -209,17 +210,17 @@ public class CustomQueryMapper {
 	}
 
 	public Condition createCondition(Column column, @Nullable Object mappedValue, Class<?> valueType,
-									 MutableBindings bindings, Comparator comparator) {
+									 MutableBindings bindings, CriteriaDefinition.Comparator comparator) {
 
-		if (comparator.equals(Comparator.IS_NULL)) {
+		if (comparator.equals(CriteriaDefinition.Comparator.IS_NULL)) {
 			return column.isNull();
 		}
 
-		if (comparator.equals(Comparator.IS_NOT_NULL)) {
+		if (comparator.equals(CriteriaDefinition.Comparator.IS_NOT_NULL)) {
 			return column.isNotNull();
 		}
 
-		if (comparator == Comparator.NOT_IN || comparator == Comparator.IN) {
+		if (comparator == CriteriaDefinition.Comparator.NOT_IN || comparator == CriteriaDefinition.Comparator.IN) {
 
 			Condition condition;
 
@@ -230,7 +231,7 @@ public class CustomQueryMapper {
 
 				for (Object o : (Iterable<?>) mappedValue) {
 
-					BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
+					org.springframework.r2dbc.core.binding.BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
 					expressions.add(bind(o, valueType, bindings, bindMarker));
 				}
 
@@ -238,20 +239,20 @@ public class CustomQueryMapper {
 
 			} else {
 
-				BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
+				org.springframework.r2dbc.core.binding.BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
 				Expression expression = bind(mappedValue, valueType, bindings, bindMarker);
 
 				condition = column.in(expression);
 			}
 
-			if (comparator == Comparator.NOT_IN) {
+			if (comparator == CriteriaDefinition.Comparator.NOT_IN) {
 				condition = condition.not();
 			}
 
 			return condition;
 		}
 
-		BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
+		org.springframework.r2dbc.core.binding.BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
 		Expression expression = bind(mappedValue, valueType, bindings, bindMarker);
 
 		switch (comparator) {
@@ -293,7 +294,7 @@ public class CustomQueryMapper {
 	}
 
 	private Expression bind(@Nullable Object mappedValue, Class<?> valueType, MutableBindings bindings,
-			BindMarker bindMarker) {
+							org.springframework.r2dbc.core.binding.BindMarker bindMarker) {
 
 		if (mappedValue != null) {
 			bindings.bind(bindMarker, mappedValue);
@@ -498,6 +499,12 @@ public class CustomQueryMapper {
 		@Override
 		public String toString() {
 			return toSql(IdentifierProcessing.ANSI);
+		}
+
+		@NotNull
+		@Override
+		public Iterator<SqlIdentifier> iterator() {
+			return null;
 		}
 	}
 }

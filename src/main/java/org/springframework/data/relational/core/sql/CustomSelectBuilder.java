@@ -43,6 +43,7 @@ public class CustomSelectBuilder implements SelectBuilder, SelectAndFrom, Select
 	private List<Join> joins = new ArrayList<>();
 	private @Nullable Condition where;
 	private List<OrderByField> orderBy = new ArrayList<>();
+	private @Nullable LockMode lockMode = LockMode.PESSIMISTIC_WRITE;
 
 	/*
 	 * (non-Javadoc)
@@ -265,13 +266,19 @@ public class CustomSelectBuilder implements SelectBuilder, SelectAndFrom, Select
 		return this;
 	}
 
+	@Override
+	public SelectLock lock(LockMode lockMode) {
+		this.lockMode = lockMode;
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.relational.core.sql.SelectBuilder.BuildSelect#build()
 	 */
 	@Override
 	public Select build() {
-		DefaultSelect select = new DefaultSelect(distinct, selectList, from, limit, offset, joins, where, orderBy);
+		DefaultSelect select = new DefaultSelect(distinct, selectList, from, limit, offset, joins, where, orderBy, lockMode);
 		SelectValidator.validate(select);
 		return select;
 	}
@@ -449,6 +456,12 @@ public class CustomSelectBuilder implements SelectBuilder, SelectAndFrom, Select
 			return selectBuilder.offset(offset);
 		}
 
+		@Override
+		public SelectLock lock(LockMode lockMode) {
+			selectBuilder.join(finishJoin());
+			return selectBuilder.lock(lockMode);
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.relational.core.sql.SelectBuilder.BuildSelect#build()
@@ -458,5 +471,7 @@ public class CustomSelectBuilder implements SelectBuilder, SelectAndFrom, Select
 			 selectBuilder.join(finishJoin());
 			return selectBuilder.build();
 		}
+
+
 	}
 }

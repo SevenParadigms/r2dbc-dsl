@@ -17,13 +17,15 @@ package org.springframework.data.r2dbc.query;
 
 import io.netty.util.internal.StringUtil;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
-import org.springframework.data.r2dbc.dialect.BindMarker;
-import org.springframework.data.r2dbc.dialect.*;
+import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.r2dbc.core.binding.BindMarker;
+import org.springframework.r2dbc.core.binding.BindMarkers;
+import org.springframework.r2dbc.core.binding.MutableBindings;
 import org.springframework.util.Assert;
 
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 	}
 
 	/**
-	 * Map a {@link Update} object to {@link BoundAssignments} and consider value/{@code NULL} {@link Bindings}.
+	 * Map a {@link Update} object to {@link BoundAssignments} and consider value/{@code NULL} {Bindings}.
 	 *
 	 * @param markers bind markers object, must not be {@literal null}.
 	 * @param update update definition to map, must not be {@literal null}.
@@ -63,7 +65,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 	}
 
 	/**
-	 * Map a {@code assignments} object to {@link BoundAssignments} and consider value/{@code NULL} {@link Bindings}.
+	 * Map a {@code assignments} object to {@link BoundAssignments} and consider value/{@code NULL} {Bindings}.
 	 *
 	 * @param markers bind markers object, must not be {@literal null}.
 	 * @param assignments update/insert definition to map, must not be {@literal null}.
@@ -90,14 +92,14 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 	}
 
 	/**
-	 * Map a {@link Criteria} object into {@link Condition} and consider value/{@code NULL} {@link Bindings}.
+	 * Map a {@link Criteria} object into {@link Condition} and consider value/{@code NULL} {Bindings}.
 	 *
 	 * @param markers bind markers object, must not be {@literal null}.
 	 * @param criteria criteria definition to map, must not be {@literal null}.
 	 * @param tables must not be {@literal null}.
 	 * @return the mapped {@link BoundCondition}.
 	 */
-	public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, HashMap<String, Table> tables) {
+	public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, Map<String, Table> tables) {
 
 		Assert.notNull(markers, "BindMarkers must not be null!");
 		Assert.notNull(criteria, "Criteria must not be null!");
@@ -135,7 +137,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
 		return new BoundCondition(bindings, mapped);
 	}
 
-	private Condition getCondition(Criteria criteria, MutableBindings bindings, HashMap<String, Table> tables,
+	private Condition getCondition(Criteria criteria, MutableBindings bindings, Map<String, Table> tables,
 								   @Nullable RelationalPersistentEntity<?> entity) {
 		Table table = tables.get(StringUtil.EMPTY_STRING);
 		String columnName = criteria.getColumn().getReference();
