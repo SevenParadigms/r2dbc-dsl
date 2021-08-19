@@ -1,10 +1,7 @@
 # R2dbc-Dsl
 
 This module provides `R2dbcDslRepository` for Web Querying throw REST API and Criteria building via `R2dbcDsl` class.
-
-Also provides Spring Static Application Context with access to Spring beans and environments
-and Fast Method implementation for quickly setter/getter of object properties. Also including
-Kotlin Extensions for more cleaning source code.
+Working with PostgreSQL, MySQL, Oracle, MSSql
 
 Add the Maven dependency:
 
@@ -12,8 +9,8 @@ Add the Maven dependency:
 ----
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
-  <artifactId>r2dbc-dsl</artifactId>
-  <version>1.2.5</version>
+  <artifactId>spring-data-r2dbc-dsl</artifactId>
+  <version>2.6.0</version>
 </dependency>
 ----
 
@@ -21,11 +18,8 @@ That repository produce `R2dbcDslRepository` interface:
 [source,kotlin]
 ----
 interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
-    fun <S : Any> saveBatch(entities: Iterable<S>): Flux<Int>
-    fun listen(): Sink<Notification>
-    fun findAll(dsl: R2dbcDsl, pageable: Pageable): Flux<T>
-    fun findAll(pageable: Pageable): Flux<T>
-    fun findBy(dsl: R2dbcDsl): Mono<T>
+    fun findOne(dsl: R2dbcDsl): Mono<T>
+    fun findAll(dsl: R2dbcDsl): Flux<T>
 }
 ----
 
@@ -67,35 +61,6 @@ then generated SQL:
 
 `select id, name from items join shops on items.shop_id = shops.id where shops.type='mega' and name like '%biggest%' and price >= 100 order by item_type asc, created_at desc limit 20 offset 0`
 
-## Get started
-
-Create empty configuration class with annotations:
-
-[source,kotlin]
-----
-@EnableR2dbcDslRepositories(basePackages = ["com.example.repositories"])
-class CustomR2dbcDslConfiguration {}
-----
-
-and import it in Application class:
-[source,kotlin]
-----
-@EnableR2dbcRepositories(databaseClientRef = "databaseClient")
-@ImportAutoConfiguration(CustomR2dbcDslConfiguration::class)
-----
-then all Dsl Repositories in package "com.example.repositories" will earn.
-[source,kotlin]
-----
-repository.findAll(dsl, serverWebExchange.getPageable())
-----
-
-The same happens using the database client:
-[source,kotlin]
-----
-val dsl = R2dbcDsl.create().id(100L).getCriteriaBy(Entity::class)
-client.select().from(Entity::class).matching(dsl).fetch().one()
-----
-
 #### Web query predicates (-> sql):
 
 * "column##1 2 3" -> column in (1, 2, 3)
@@ -120,43 +85,3 @@ client.select().from(Entity::class).matching(dsl).fetch().one()
 
 In `fields` property also can selected joined columns or jsonb path to output result.
 For example `columnType` or `columnHeaderTitle` from previous example and model must contain these variables.
-
-#### Subscribe to async database UPDATE/INSERT events:
-
-Before create universal notifier function:
-[source,postgresql]
-----
-create function notify_sender() returns trigger
-    language plpgsql
-as
-$$
-BEGIN
-    PERFORM pg_notify(
-                    TG_TABLE_NAME,
-                    json_build_object(
-                            'operation', TG_OP,
-                            'record', row_to_json(NEW)
-                        )::text
-                );
-    RETURN NULL;
-END;
-$$;
-----
-And set to tables notifier by trigger:
-[source,postgresql]
-----
-create trigger table_notify
-    after insert or update
-    on table
-    for each row
-execute procedure notify_sender();
-----
-In the next version, it will creating on first access is Reactive FlyWay enabled in `application.properties`.
-
-== Example
-
-* https://github.com/SevenParadigms/r2dbc-dsl-ecommerce/[R2dbc Dsl Example as E-Commerce starting project] contains project that explain full commerce features.
-
-== Road map
-
-* https://github.com/SevenParadigms/r2dbc-dsl/wiki[Painted on Wiki]
