@@ -29,7 +29,7 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 2. Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
 
-3. Ability to select columns in `findAll(dsl: R2dbcDsl, pageable: Pageable)` and `findBy(dsl: R2dbcDsl)` methods
+3. Ability to select columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
 
 4. Joins to any tables and build criteria on joined columns, also select joined columns in result
 
@@ -37,17 +37,6 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 6. Annotation `@Table` is not required in model, because table name get from model class name
 
-7. Collection saving in Batch mode
-
-#### for PostgreSQL:
-
-8. In query can refer on value of Jsonb type as path: jdata.profile.area==Rocks Valley;jdata.type==Sentinel
-
-9. Method `repository.listen(): Sink<Notification>` subscribe to INSERT/UPDATE events on table from database
-
-Often in dynamically created classes needed access to `application.properties` or Spring beans
-with protection against a premature call during Application and beans depends start-up in runtime.
-Also Application Context can dynamically register beans from static context.
 
 Utility class `FastMethodInvoker` is a modern reflection access to object properties.
 
