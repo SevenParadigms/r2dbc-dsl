@@ -19,28 +19,24 @@ import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.testing.H2TestSupport;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 /**
  * Integration test for {@link DatabaseClient} and repositories using H2.
@@ -60,7 +56,7 @@ class H2IntegrationTests {
 	void before() {
 
 		try {
-			jdbc.execute("DROP TABLE legoset");
+			jdbc.execute("DROP TABLE lego_set");
 		} catch (DataAccessException e) {}
 		jdbc.execute(H2TestSupport.CREATE_TABLE_LEGOSET);
 	}
@@ -68,9 +64,9 @@ class H2IntegrationTests {
 	@Test // gh-109
 	void shouldSelectCountWithDatabaseClient() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
-		databaseClient.sql("SELECT COUNT(*) FROM legoset") //
+		databaseClient.sql("SELECT COUNT(*) from lego_set") //
 				.map(it -> it.get(0, Long.class)) //
 				.all() //
 				.as(StepVerifier::create) //
@@ -81,7 +77,7 @@ class H2IntegrationTests {
 	@Test // gh-109
 	void shouldSelectCountWithRepository() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		repository.selectCount() //
 				.as(StepVerifier::create) //
@@ -103,16 +99,16 @@ class H2IntegrationTests {
 
 	interface H2Repository extends ReactiveCrudRepository<LegoSet, Integer> {
 
-		@Query("SELECT COUNT(*) FROM legoset")
+		@Query("SELECT COUNT(*) from lego_set")
 		Mono<Long> selectCount();
 	}
 
 	@Data
-	@Table("legoset")
+//	@Table("legoset")
 	@AllArgsConstructor
 	@NoArgsConstructor
 	static class LegoSet {
-		@Id Integer id;
+		/*@Id */Integer id;
 		String name;
 		Integer manual;
 	}

@@ -38,7 +38,11 @@ public class FastMethodInvoker {
     }
 
     public static Boolean isField(Object any, String name) {
-        for (Field field : FastMethodInvoker.reflectionStorage(any.getClass())) {
+        return isField(any.getClass(), name);
+    }
+
+    public static Boolean isField(Class cls, String name) {
+        for (Field field : FastMethodInvoker.reflectionStorage(cls)) {
             if (field.getName().equals(name)) return true;
         }
         return false;

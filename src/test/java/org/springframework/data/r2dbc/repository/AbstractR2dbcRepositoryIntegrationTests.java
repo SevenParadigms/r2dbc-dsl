@@ -22,14 +22,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.connectionfactory.R2dbcTransactionManager;
 import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactory;
 import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -61,7 +59,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		this.jdbc = createJdbcTemplate(createDataSource());
 
 		try {
-			this.jdbc.execute("DROP TABLE legoset");
+			this.jdbc.execute("DROP TABLE lego_set");
 		} catch (DataAccessException e) {}
 
 		this.jdbc.execute(getCreateTableStatement());
@@ -212,7 +210,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 				.then().as(StepVerifier::create) //
 				.verifyComplete();
 
-		Map<String, Object> count = jdbc.queryForMap("SELECT count(*) AS count FROM legoset");
+		Map<String, Object> count = jdbc.queryForMap("SELECT count(*) AS count from lego_set");
 		assertThat(getCount(count)).satisfies(numberOf(1));
 	}
 
@@ -287,17 +285,17 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
 
 		Mono<Map<String, Object>> transactional = repository.save(legoSet1) //
-				.map(it -> jdbc.queryForMap("SELECT count(*) AS count FROM legoset")).as(rxtx::transactional);
+				.map(it -> jdbc.queryForMap("SELECT count(*) AS count from lego_set")).as(rxtx::transactional);
 
 		Mono<Map<String, Object>> nonTransactional = repository.save(legoSet2) //
-				.map(it -> jdbc.queryForMap("SELECT count(*) AS count FROM legoset"));
+				.map(it -> jdbc.queryForMap("SELECT count(*) AS count from lego_set"));
 
 		transactional.as(StepVerifier::create).assertNext(actual -> assertThat(getCount(actual)).satisfies(numberOf(0)))
 				.verifyComplete();
 		nonTransactional.as(StepVerifier::create).assertNext(actual -> assertThat(getCount(actual)).satisfies(numberOf(2)))
 				.verifyComplete();
 
-		Map<String, Object> map = jdbc.queryForMap("SELECT count(*) AS count FROM legoset");
+		Map<String, Object> map = jdbc.queryForMap("SELECT count(*) AS count from lego_set");
 		assertThat(getCount(map)).satisfies(numberOf(2));
 	}
 
@@ -377,7 +375,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 
 		<T> Flux<T> findBy(Class<T> theClass);
 
-		@Query("SELECT name from legoset")
+		@Query("SELECT name from lego_set")
 		Flux<LegoDto> findAsDtoProjection();
 
 		Flux<Named> findDistinctBy();
@@ -389,11 +387,11 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		Mono<Void> deleteAllBy();
 
 		@Modifying
-		@Query("DELETE from legoset where manual = :manual")
+		@Query("DELETE from lego_set where manual = :manual")
 		Mono<Void> deleteAllByManual(int manual);
 
 		@Modifying
-		@Query("DELETE from legoset")
+		@Query("DELETE from lego_set")
 		Mono<Integer> deleteAllAndReturnCount();
 
 		Mono<Integer> countByNameContains(String namePart);
@@ -408,7 +406,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 
 	@Getter
 	@Setter
-	@Table("legoset")
+//	@Table("legoset")
 	@NoArgsConstructor
 	public static class LegoSet extends Lego implements Buildable {
 		String name;
@@ -427,7 +425,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 	@Getter
 	@Setter
 	static class Lego {
-		@Id Integer id;
+		/*@Id */Integer id;
 	}
 
 	@Value

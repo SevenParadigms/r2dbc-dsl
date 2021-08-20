@@ -1,12 +1,10 @@
 package org.springframework.data.r2dbc.testing;
 
+import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import io.r2dbc.spi.ConnectionFactory;
-
-import javax.sql.DataSource;
-
 import org.springframework.data.r2dbc.testing.ExternalDatabase.ProvidedDatabase;
 
-import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+import javax.sql.DataSource;
 
 /**
  * Utility class for testing against Microsoft SQL Server.
@@ -16,7 +14,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
  * @author Jens Schauder
  */
 public class SqlServerTestSupport {
-	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -24,7 +22,7 @@ public class SqlServerTestSupport {
 			+ "    cert        varbinary(255) NULL\n" //
 			+ ");";
 
-	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer IDENTITY(1,1) PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -32,15 +30,15 @@ public class SqlServerTestSupport {
 			+ "    manual      integer NULL\n" //
 			+ ");";
 
-	public static String INSERT_INTO_LEGOSET = "INSERT INTO legoset (id, name, manual) VALUES(@P0, @P1, @P3)";
+	public static String INSERT_INTO_LEGOSET = "INSERT INTO lego_set (id, name, manual) VALUES(@P0, @P1, @P3)";
 
-	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE LegoSet (\n" //
+	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE lego_set (\n" //
 			+ "    Id          integer IDENTITY(1,1) PRIMARY KEY,\n" //
 			+ "    Name        varchar(255) NOT NULL,\n" //
 			+ "    Manual      integer NULL\n" //
 			+ ");";
 
-	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE LegoSet";
+	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE lego_set";
 
 	/**
 	 * Returns a locally provided database at {@code sqlserver:@localhost:1433/master}.

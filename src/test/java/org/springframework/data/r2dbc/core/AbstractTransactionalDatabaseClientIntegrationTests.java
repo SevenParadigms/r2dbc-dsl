@@ -15,20 +15,11 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-
 import io.r2dbc.spi.ConnectionFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import javax.sql.DataSource;
-
 import org.assertj.core.api.Condition;
 import org.junit.After;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -45,6 +36,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import javax.sql.DataSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Abstract base class for transactional integration tests for {@link DatabaseClient}.
@@ -79,10 +77,10 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 
 		jdbc = createJdbcTemplate(createDataSource());
 		try {
-			jdbc.execute("DROP TABLE legoset");
+			jdbc.execute("DROP TABLE lego_set");
 		} catch (DataAccessException e) {}
 		jdbc.execute(getCreateTableStatement());
-		jdbc.execute("DELETE FROM legoset");
+		jdbc.execute("DELETE from lego_set");
 
 		databaseClient = DatabaseClient.create(connectionFactory);
 		transactionManager = new R2dbcTransactionManager(connectionFactory);
@@ -121,10 +119,10 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 	protected abstract String getCreateTableStatement();
 
 	/**
-	 * Get a parameterized {@code INSERT INTO legoset} statement setting id, name, and manual values.
+	 * Get a parameterized {@code INSERT INTO lego_set} statement setting id, name, and manual values.
 	 */
 	protected String getInsertIntoLegosetStatement() {
-		return "INSERT INTO legoset (id, name, manual) VALUES(:id, :name, :manual)";
+		return "INSERT INTO lego_set (id, name, manual) VALUES(:id, :name, :manual)";
 	}
 
 	/**
@@ -157,7 +155,7 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM legoset")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -173,7 +171,7 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM legoset")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -190,7 +188,7 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 				.expectError(IllegalStateException.class) //
 				.verify();
 
-		Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM legoset", Integer.class);
+		Integer count = jdbc.queryForObject("SELECT COUNT(*) from lego_set", Integer.class);
 		assertThat(count).isEqualTo(0);
 	}
 
@@ -235,7 +233,7 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 				.expectError(IllegalStateException.class) //
 				.verify();
 
-		Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM legoset", Integer.class);
+		Integer count = jdbc.queryForObject("SELECT COUNT(*) from lego_set", Integer.class);
 		assertThat(count).isEqualTo(0);
 	}
 
@@ -260,7 +258,7 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 				.expectError(IllegalStateException.class) //
 				.verify();
 
-		Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM legoset", Integer.class);
+		Integer count = jdbc.queryForObject("SELECT COUNT(*) from lego_set", Integer.class);
 		assertThat(count).isEqualTo(0);
 	}
 

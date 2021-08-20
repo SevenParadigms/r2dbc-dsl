@@ -18,10 +18,9 @@ package org.springframework.data.r2dbc.testing;
 import io.r2dbc.h2.H2ConnectionConfiguration;
 import io.r2dbc.h2.H2ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactory;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
-
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 /**
  * Utility class for testing against H2.
@@ -32,7 +31,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
  */
 public class H2TestSupport {
 
-	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer CONSTRAINT id1 PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -40,7 +39,7 @@ public class H2TestSupport {
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 
-	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          serial CONSTRAINT id1 PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -48,13 +47,13 @@ public class H2TestSupport {
 			+ "    manual      integer NULL\n" //
 			+ ");";
 
-	public static String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE \"LegoSet\" (\n" //
+	public static String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE \"Lego_Set\" (\n" //
 			+ "    \"Id\"          serial CONSTRAINT id2 PRIMARY KEY,\n" //
 			+ "    \"Name\"        varchar(255) NOT NULL,\n" //
 			+ "    \"Manual\"      integer NULL\n" //
 			+ ");";
 
-	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE \"LegoSet\"";
+	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE \"Lego_Set\"";
 
 	/**
 	 * Creates a new {@link ConnectionFactory}.

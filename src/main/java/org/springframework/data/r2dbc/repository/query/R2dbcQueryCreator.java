@@ -15,23 +15,15 @@
  */
 package org.springframework.data.r2dbc.repository.query;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.core.StatementMapper;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.sql.Column;
-import org.springframework.data.relational.core.sql.Expression;
-import org.springframework.data.relational.core.sql.Functions;
-import org.springframework.data.relational.core.sql.SqlIdentifier;
-import org.springframework.data.relational.core.sql.Table;
+import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.relational.repository.query.RelationalEntityMetadata;
 import org.springframework.data.relational.repository.query.RelationalParameterAccessor;
 import org.springframework.data.relational.repository.query.RelationalQueryCreator;
@@ -39,6 +31,11 @@ import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.PreparedOperation;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link AbstractQueryCreator} that creates {@link PreparedOperation} from a {@link PartTree}.
@@ -164,7 +161,10 @@ class R2dbcQueryCreator extends RelationalQueryCreator<PreparedOperation<?>> {
 				.collect(Collectors.toList());
 		} else if (tree.isCountProjection()) {
 
-			SqlIdentifier idColumn = entityMetadata.getTableEntity().getRequiredIdProperty().getColumnName();
+			SqlIdentifier idColumn = SqlIdentifier.quoted(Dsl.defaultId);
+			if (!FastMethodInvoker.isField(entityToRead, Dsl.defaultId)) {
+				idColumn = entityMetadata.getTableEntity().getRequiredIdProperty().getColumnName();
+			}
 			expressions = Collections.singletonList(Functions.count(table.column(idColumn)));
 		} else {
 			expressions = dataAccessStrategy.getAllColumns(entityToRead).stream()

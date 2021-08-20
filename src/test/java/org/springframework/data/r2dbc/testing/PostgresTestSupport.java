@@ -1,17 +1,13 @@
 package org.springframework.data.r2dbc.testing;
 
 import io.r2dbc.spi.ConnectionFactory;
-
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.springframework.data.r2dbc.testing.ExternalDatabase.ProvidedDatabase;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
-
-import org.postgresql.ds.PGSimpleDataSource;
-
-import org.springframework.data.r2dbc.testing.ExternalDatabase.ProvidedDatabase;
-
-import org.testcontainers.containers.PostgreSQLContainer;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Utility class for testing against Postgres.
@@ -24,7 +20,7 @@ public class PostgresTestSupport {
 
 	private static ExternalDatabase testContainerDatabase;
 
-	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer CONSTRAINT id1 PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -32,7 +28,7 @@ public class PostgresTestSupport {
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 
-	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          serial CONSTRAINT id1 PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -40,13 +36,13 @@ public class PostgresTestSupport {
 			+ "    manual      integer NULL\n" //
 			+ ");";
 
-	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE \"LegoSet\" (\n" //
+	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE \"Lego_Set\" (\n" //
 			+ "    \"Id\"          serial CONSTRAINT id2 PRIMARY KEY,\n" //
 			+ "    \"Name\"        varchar(255) NOT NULL,\n" //
 			+ "    \"Manual\"      integer NULL\n" //
 			+ ");";
 
-	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE \"LegoSet\"";
+	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE \"Lego_Set\"";
 	/**
 	 * Returns a database either hosted locally at {@code postgres:@localhost:5432/postgres} or running inside Docker.
 	 *
@@ -88,7 +84,7 @@ public class PostgresTestSupport {
 				.port(5432) //
 				.database("postgres") //
 				.username("postgres") //
-				.password("") //
+				.password("postgres") //
 				.jdbcUrl("jdbc:postgresql://localhost:5432/postgres") //
 				.build();
 	}

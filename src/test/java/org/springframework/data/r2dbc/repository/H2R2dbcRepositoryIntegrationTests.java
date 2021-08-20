@@ -15,27 +15,14 @@
  */
 package org.springframework.data.r2dbc.repository;
 
-import static org.assertj.core.api.Assertions.*;
-
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -52,6 +39,16 @@ import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for {@link LegoSetRepository} using {@link R2dbcRepositoryFactory} against H2.
@@ -184,34 +181,34 @@ public class H2R2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIn
 
 		Mono<Buildable> findByName(String name);
 
-		@Query("SELECT MAX(manual) FROM legoset WHERE name = :name")
+		@Query("SELECT MAX(manual) from lego_set WHERE name = :name")
 		Mono<Integer> findMax(String name);
 
 		@Override
-		@Query("SELECT name FROM legoset")
+		@Query("SELECT name from lego_set")
 		Flux<Named> findAsProjection();
 
 		@Override
-		@Query("SELECT * FROM legoset WHERE manual = :manual")
+		@Query("SELECT * from lego_set WHERE manual = :manual")
 		Mono<LegoSet> findByManual(int manual);
 
 		@Override
-		@Query("SELECT id FROM legoset")
+		@Query("SELECT id from lego_set")
 		Flux<Integer> findAllIds();
 
-		@Query("UPDATE legoset set manual = :manual")
+		@Query("UPDATE lego_set set manual = :manual")
 		@Modifying
 		Mono<Long> updateManual(int manual);
 
-		@Query("UPDATE legoset set manual = :manual")
+		@Query("UPDATE lego_set set manual = :manual")
 		@Modifying
 		Mono<Boolean> updateManualAndReturnBoolean(int manual);
 
-		@Query("UPDATE legoset set manual = :manual")
+		@Query("UPDATE lego_set set manual = :manual")
 		@Modifying
 		Mono<Void> updateManualAndReturnNothing(int manual);
 
-		@Query("UPDATE legoset set manual = :manual")
+		@Query("UPDATE lego_set set manual = :manual")
 		@Modifying
 		Mono<Double> updateManualAndReturnDouble(int manual);
 	}

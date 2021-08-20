@@ -15,20 +15,11 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.domain.Sort.Order.*;
-import static org.springframework.data.r2dbc.query.Criteria.*;
-
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.Data;
-import reactor.test.StepVerifier;
-
-import javax.sql.DataSource;
-
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
@@ -39,6 +30,13 @@ import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.jdbc.core.JdbcTemplate;
+import reactor.test.StepVerifier;
+
+import javax.sql.DataSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.domain.Sort.Order.desc;
+import static org.springframework.data.r2dbc.query.Criteria.where;
 
 /**
  * Integration tests for {@link DatabaseClient}.
@@ -60,7 +58,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 		jdbc = createJdbcTemplate(createDataSource());
 
 		try {
-			jdbc.execute("DROP TABLE legoset");
+			jdbc.execute("DROP TABLE lego_set");
 		} catch (DataAccessException e) {}
 		jdbc.execute(getCreateTableStatement());
 	}
@@ -92,10 +90,10 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	protected abstract String getCreateTableStatement();
 
 	/**
-	 * Get a parameterized {@code INSERT INTO legoset} statement setting id, name, and manual values.
+	 * Get a parameterized {@code INSERT INTO lego_set} statement setting id, name, and manual values.
 	 */
 	protected String getInsertIntoLegosetStatement() {
-		return "INSERT INTO legoset (id, name, manual) VALUES(:id, :name, :manual)";
+		return "INSERT INTO lego_set (id, name, manual) VALUES(:id, :name, :manual)";
 	}
 
 	@Test // gh-2
@@ -112,7 +110,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM legoset")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -130,18 +128,18 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.as(StepVerifier::create) //
 				.expectErrorSatisfies(exception -> assertThat(exception) //
 						.isInstanceOf(DataIntegrityViolationException.class) //
-						.hasMessageContaining("execute; SQL [INSERT INTO legoset")) //
+						.hasMessageContaining("execute; SQL [INSERT INTO lego_set")) //
 				.verify();
 	}
 
 	@Test // gh-2
 	public void executeSelect() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.execute("SELECT id, name, manual FROM legoset") //
+		databaseClient.execute("SELECT id, name, manual from lego_set") //
 				.as(LegoSet.class) //
 				.fetch().all() //
 				.as(StepVerifier::create) //
@@ -158,7 +156,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.execute("SELECT id, name, manual FROM legoset WHERE name = :name or name = :name") //
+		databaseClient.execute("SELECT id, name, manual from lego_set WHERE name = :name or name = :name") //
 				.bind("name", "unknown").as(LegoSet.class) //
 				.fetch().all() //
 				.as(StepVerifier::create) //
@@ -170,7 +168,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.insert().into("legoset")//
+		databaseClient.insert().into("lego_set")//
 				.value("id", 42055) //
 				.value("name", "SCHAUFELRADBAGGER") //
 				.nullValue("manual", Integer.class) //
@@ -180,7 +178,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM legoset")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -188,7 +186,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.insert().into("legoset")//
+		databaseClient.insert().into("lego_set")//
 				.value("id", 42055) //
 				.value("name", "SCHAUFELRADBAGGER") //
 				.nullValue("manual", Integer.class) //
@@ -196,7 +194,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM legoset")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -217,7 +215,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM legoset")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -253,7 +251,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-64
 	public void update() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -266,13 +264,13 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT name, manual FROM legoset")).containsEntry("name", "Lego");
+		assertThat(jdbc.queryForMap("SELECT name, manual from lego_set")).containsEntry("name", "Lego");
 	}
 
 	@Test // gh-64
 	public void updateWithoutResult() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -282,13 +280,13 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT name, manual FROM legoset")).containsEntry("name", "Lego");
+		assertThat(jdbc.queryForMap("SELECT name, manual from lego_set")).containsEntry("name", "Lego");
 	}
 
 	@Test // gh-64
 	public void updateTypedObject() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		LegoSet legoSet = new LegoSet();
 		legoSet.setId(42055);
@@ -306,14 +304,14 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT name, manual FROM legoset")).containsEntry("name", "Lego");
+		assertThat(jdbc.queryForMap("SELECT name, manual from lego_set")).containsEntry("name", "Lego");
 	}
 
 	@Test // gh-64
 	public void deleteUntyped() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -325,14 +323,14 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.as(StepVerifier::create) //
 				.expectNext(1).verifyComplete();
 
-		assertThat(jdbc.queryForList("SELECT id AS count FROM legoset")).hasSize(1);
+		assertThat(jdbc.queryForList("SELECT id AS count from lego_set")).hasSize(1);
 	}
 
 	@Test // gh-64
 	public void deleteTyped() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -343,13 +341,13 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForList("SELECT id AS count FROM legoset")).hasSize(1);
+		assertThat(jdbc.queryForList("SELECT id AS count from lego_set")).hasSize(1);
 	}
 
 	@Test // gh-2
 	public void selectAsMap() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -369,7 +367,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-8
 	public void selectExtracting() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -386,11 +384,11 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-109
 	public void selectSimpleTypeProjection() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.execute("SELECT COUNT(*) FROM legoset") //
+		databaseClient.execute("SELECT COUNT(*) from lego_set") //
 				.as(Long.class) //
 				.fetch() //
 				.all() //
@@ -398,7 +396,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1L) //
 				.verifyComplete();
 
-		databaseClient.execute("SELECT name FROM legoset") //
+		databaseClient.execute("SELECT name from lego_set") //
 				.as(String.class) //
 				.fetch() //
 				.one() //
@@ -410,7 +408,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-8
 	public void selectWithCriteria() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -428,9 +426,9 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-64
 	public void selectWithCriteriaIn() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -448,9 +446,9 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-2
 	public void selectOrderByIdDesc() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -466,9 +464,9 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-2
 	public void selectOrderPaged() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
@@ -493,9 +491,9 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	@Test // gh-2
 	public void selectTypedLater() {
 
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
-		jdbc.execute("INSERT INTO legoset (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42055, 'SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42064, 'FORSCHUNGSSCHIFF', 13)");
+		jdbc.execute("INSERT INTO lego_set (id, name, manual) VALUES(42068, 'FLUGHAFEN-LÖSCHFAHRZEUG', 13)");
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 

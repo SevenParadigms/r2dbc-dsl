@@ -15,20 +15,16 @@
  */
 package org.springframework.data.r2dbc.testing;
 
+import com.mysql.cj.jdbc.MysqlDataSource;
 import dev.miku.r2dbc.mysql.MySqlConnectionFactoryProvider;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import javax.sql.DataSource;
-
 import org.springframework.data.r2dbc.testing.ExternalDatabase.ProvidedDatabase;
-
 import org.testcontainers.containers.MySQLContainer;
 
-import com.mysql.cj.jdbc.MysqlDataSource;
+import javax.sql.DataSource;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Utility class for testing against MySQL.
@@ -41,7 +37,7 @@ public class MySqlTestSupport {
 
 	private static ExternalDatabase testContainerDatabase;
 
-	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -49,7 +45,7 @@ public class MySqlTestSupport {
 			+ "    cert        varbinary(255) NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
-	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE legoset (\n" //
+	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -57,13 +53,13 @@ public class MySqlTestSupport {
 			+ ") ENGINE=InnoDB;";
 
 
-	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE `LegoSet` (\n" //
+	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE `Lego_Set` (\n" //
 			+ "    `Id`          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    `Name`        varchar(255) NOT NULL,\n" //
 			+ "    `Manual`      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
-	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE LegoSet";
+	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE lego_set";
 	/**
 	 * Returns a database either hosted locally or running inside Docker.
 	 *

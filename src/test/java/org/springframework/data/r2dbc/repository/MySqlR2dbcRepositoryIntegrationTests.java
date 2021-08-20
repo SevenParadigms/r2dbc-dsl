@@ -119,15 +119,15 @@ public class MySqlR2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositor
 	interface MySqlLegoSetRepository extends LegoSetRepository {
 
 		@Override
-		@Query("SELECT name FROM legoset")
+		@Query("SELECT name from lego_set")
 		Flux<Named> findAsProjection();
 
 		@Override
-		@Query("SELECT * FROM legoset WHERE manual = :manual")
+		@Query("SELECT * from lego_set WHERE manual = :manual")
 		Mono<LegoSet> findByManual(int manual);
 
 		@Override
-		@Query("SELECT id FROM legoset")
+		@Query("SELECT id from lego_set")
 		Flux<Integer> findAllIds();
 	}
 

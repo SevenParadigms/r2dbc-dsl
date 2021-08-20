@@ -17,14 +17,6 @@ package org.springframework.data.r2dbc.convert;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiFunction;
-
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -34,14 +26,11 @@ import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
-import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
+import org.springframework.data.mapping.model.*;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
+import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.ArrayUtils;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.relational.core.conversion.BasicRelationalConverter;
 import org.springframework.data.relational.core.conversion.RelationalConverter;
 import org.springframework.data.relational.core.dialect.ArrayColumns;
@@ -54,6 +43,9 @@ import org.springframework.r2dbc.core.Parameter;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+
+import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * Converter for R2DBC.
@@ -598,12 +590,17 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 		RelationalPersistentEntity<?> entity = getMappingContext().getRequiredPersistentEntity(userClass);
 
 		return (row, metadata) -> {
+			RelationalPersistentProperty idProperty = null;
+			if (FastMethodInvoker.isField(object, Dsl.defaultId)) {
+				RelationalPersistentEntity<?> persist = getMappingContext().getPersistentEntity(object.getClass());
+				assert persist != null;
+				idProperty = persist.getPersistentProperty(Dsl.defaultId);
+			} else {
+				idProperty = entity.getRequiredIdProperty();
+			}
 
 			PersistentPropertyAccessor<?> propertyAccessor = entity.getPropertyAccessor(object);
-			RelationalPersistentProperty idProperty = entity.getRequiredIdProperty();
-
 			boolean idPropertyUpdateNeeded = false;
-
 			Object id = propertyAccessor.getProperty(idProperty);
 			if (idProperty.getType().isPrimitive()) {
 				idPropertyUpdateNeeded = id instanceof Number && ((Number) id).longValue() == 0;

@@ -16,14 +16,8 @@
 package org.springframework.data.r2dbc.repository;
 
 import io.r2dbc.spi.ConnectionFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +29,10 @@ import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.MariaDbTestSupport;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import javax.sql.DataSource;
 
 /**
  * Integration tests for {@link LegoSetRepository} using {@link R2dbcRepositoryFactory} against MariaDB.
@@ -82,15 +80,15 @@ public class MariaDbR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposit
 	interface MySqlLegoSetRepository extends LegoSetRepository {
 
 		@Override
-		@Query("SELECT name FROM legoset")
+		@Query("SELECT name from lego_set")
 		Flux<Named> findAsProjection();
 
 		@Override
-		@Query("SELECT * FROM legoset WHERE manual = :manual")
+		@Query("SELECT * from lego_set WHERE manual = :manual")
 		Mono<LegoSet> findByManual(int manual);
 
 		@Override
-		@Query("SELECT id FROM legoset")
+		@Query("SELECT id from lego_set")
 		Flux<Integer> findAllIds();
 	}
 }

@@ -178,11 +178,11 @@ public class DefaultDatabaseClientUnitTests {
 	@Test // gh-178
 	void executeShouldBindNamedValuesFromIndexes() {
 
-		Statement statement = mockStatementFor("SELECT id, name, manual FROM legoset WHERE name IN ($1, $2, $3)");
+		Statement statement = mockStatementFor("SELECT id, name, manual from lego_set WHERE name IN ($1, $2, $3)");
 
 		DatabaseClient databaseClient = databaseClientBuilder.build();
 
-		databaseClient.execute("SELECT id, name, manual FROM legoset WHERE name IN (:name)") //
+		databaseClient.execute("SELECT id, name, manual from lego_set WHERE name IN (:name)") //
 				.bind(0, Arrays.asList("unknown", "dunno", "other")) //
 				.then() //
 				.as(StepVerifier::create) //

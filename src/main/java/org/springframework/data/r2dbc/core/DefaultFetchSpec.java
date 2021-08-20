@@ -21,8 +21,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
-
 /**
  * Default implementation of {@link FetchSpec}.
  *
@@ -56,10 +54,10 @@ class DefaultFetchSpec<T> implements FetchSpec<T> {
 						return Mono.empty();
 					}
 
-					if (it.size() > 1) {
-						return Mono.error(new IncorrectResultSizeDataAccessException(
-								String.format("Query [%s] returned non unique result.", this.sql), 1));
-					}
+//					if (it.size() > 1) {
+//						return Mono.error(new IncorrectResultSizeDataAccessException(
+//								String.format("Query [%s] returned non unique result.", this.sql), 1));
+//					}
 
 					return Mono.just(it.get(0));
 				}).next();

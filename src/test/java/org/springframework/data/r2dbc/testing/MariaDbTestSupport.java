@@ -18,18 +18,14 @@ package org.springframework.data.r2dbc.testing;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import lombok.SneakyThrows;
-
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import javax.sql.DataSource;
-
 import org.mariadb.jdbc.MariaDbDataSource;
 import org.mariadb.r2dbc.MariadbConnectionFactoryProvider;
-
 import org.springframework.data.r2dbc.testing.ExternalDatabase.ProvidedDatabase;
-
 import org.testcontainers.containers.MariaDBContainer;
+
+import javax.sql.DataSource;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Utility class for testing against MariaDB.
@@ -41,26 +37,26 @@ public class MariaDbTestSupport {
 
 	private static ExternalDatabase testContainerDatabase;
 
-	public static final String CREATE_TABLE_LEGOSET = "CREATE TABLE legoset (\n" //
+	public static final String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer PRIMARY KEY,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
 			+ "    cert        varbinary(255) NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
-	public static final String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE legoset (\n" //
+	public static final String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
-	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE `LegoSet` (\n" //
+	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE `Lego_Set` (\n" //
 			+ "    `Id`          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    `Name`        varchar(255) NOT NULL,\n" //
 			+ "    `Manual`      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
-	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE `LegoSet`";
+	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE `Lego_Set`";
 
 	/**
 	 * Returns a database either hosted locally at {@code localhost:3306/mysql} or running inside Docker.
