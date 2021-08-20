@@ -18,8 +18,8 @@ That repository produce `R2dbcDslRepository` interface:
 [source,kotlin]
 ----
 interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
-    fun findOne(dsl: R2dbcDsl): Mono<T>
-    fun findAll(dsl: R2dbcDsl): Flux<T>
+    fun findOne(dsl: Dsl): Mono<T>
+    fun findAll(dsl: Dsl): Flux<T>
 }
 ----
 
