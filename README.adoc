@@ -3,6 +3,8 @@
 This module provides `R2dbcDslRepository` for Web Querying throw REST API and Criteria building via `R2dbcDsl` class.
 Working with PostgreSQL, MySQL, Oracle, MSSql
 
+There are quite a few positive changes in version 2.6.0-SNAPSHOT, so i have not yet publish Dsl in Maven Central together with Spring Data 2.5.3, because SNAPSHOT do not accepted. Let's wait for the release version 2.6.0 of Spring Data R2dbc. 
+
 Add the Maven dependency:
 
 [source,xml]
