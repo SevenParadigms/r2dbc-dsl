@@ -37,8 +37,10 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 6. Annotation `@Table` is not required in model, because table name get from model class name
 
+7. JsonNode field in model automatically converted to JSONB type of PostgreSQL database and back 
 
-Utility class `FastMethodInvoker` is a modern reflection access to object properties.
+
+Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
 
 ## Concepts
 
