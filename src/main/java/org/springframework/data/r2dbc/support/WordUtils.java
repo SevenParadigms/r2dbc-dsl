@@ -2,7 +2,12 @@ package org.springframework.data.r2dbc.support;
 
 import org.springframework.util.StringUtils;
 
-public class WordUtils {
+/**
+ * Utilities for string interaction.
+ *
+ * @author Lao Tsing
+ */
+public abstract class WordUtils {
     public static String sqlToCamel(String sqlName) {
         String[] parts = sqlName.split("_");
         StringBuilder camelCaseString = new StringBuilder(parts[0]);

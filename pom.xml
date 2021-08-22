@@ -232,7 +232,6 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>${postgresql.version}</version>
-			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -268,7 +267,6 @@
 		<dependency>
 			<groupId>io.r2dbc</groupId>
 			<artifactId>r2dbc-postgresql</artifactId>
-			<optional>true</optional>
 		</dependency>
 
 		<dependency>

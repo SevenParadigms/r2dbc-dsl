@@ -1,8 +1,6 @@
-package org.springframework.data.r2dbc.repository.support;
+package org.springframework.data.r2dbc.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.data.r2dbc.support.FastMethodInvoker;
-import org.springframework.data.r2dbc.support.WordUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -11,8 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
-public class DslUtils {
+/**
+ * Utilities for dsl interaction.
+ *
+ * @author Lao Tsing
+ */
+public abstract class DslUtils {
     public static String toJsonbPath(String path) {
         if (path.contains(".")) {
             String[] paths = path.split(".");
@@ -40,15 +42,15 @@ public class DslUtils {
         return dotter;
     }
 
-    public static <T> List<Object> getType(String[] list, String fieldName, Class<T> type) {
+    public static <T> List<Object> stringToObject(String[] list, String fieldName, Class<T> type) {
         List<Object> result = new ArrayList<>();
         for (String it : list) {
-            result.add(getType(it, fieldName, type));
+            result.add(stringToObject(it, fieldName, type));
         }
         return result;
     }
 
-    public static <T> Object getType(String it, String fieldName, Class<T> type) {
+    public static <T> Object stringToObject(String it, String fieldName, Class<T> type) {
         List<Field> reflectionStorage = FastMethodInvoker.reflectionStorage(type);
         for (Field field : reflectionStorage) {
             if (WordUtils.dotToCamel(fieldName).equals(field.getName())) {
@@ -57,7 +59,7 @@ public class DslUtils {
                     case "LocalDateTime": return "'$this'::timestamp";
                     case "LocalDate": return "'$this'::date";
                     case "Short": return Short.valueOf(it);
-                    case "Integer": return Integer.valueOf(it);
+                    case "Integer": case "int": return Integer.valueOf(it);
                     case "Long": return Long.parseLong(it);
                     case "Double": return Double.valueOf(it);
                     case "BigInteger": return BigInteger.valueOf(Long.parseLong(it));

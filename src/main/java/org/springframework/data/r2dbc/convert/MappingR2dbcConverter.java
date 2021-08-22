@@ -147,9 +147,11 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 	 * @return the value read from the {@link Row}. May be {@literal null}.
 	 */
 	@Nullable
-	private Object readFrom(Row row, @Nullable RowMetadata metadata, RelationalPersistentProperty property,
-			String prefix) {
+	private Object readFrom(Row row, @Nullable RowMetadata metadata, RelationalPersistentProperty property, String prefix) {
 
+		if (((PersistentProperty)property).getType() == List.class) {
+			return null;
+		}
 		String identifier = prefix + property.getColumnName().getReference();
 
 		try {

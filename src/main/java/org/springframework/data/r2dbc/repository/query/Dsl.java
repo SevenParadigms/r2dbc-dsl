@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.query.Criteria;
-import org.springframework.data.r2dbc.repository.support.DslUtils;
+import org.springframework.data.r2dbc.support.DslUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -64,20 +64,6 @@ public class Dsl {
         return this;
     }
 
-    public String toJsonbPath(String path) {
-        if (path.contains(".")) {
-            String[] paths = path.split(".");
-            StringBuilder order = new StringBuilder(paths[0]);
-            for (int i = 1; i < paths.length; i++) {
-                if (i < paths.length - 1)
-                    order.append("->'").append(paths[i]).append("'");
-                else
-                    order.append("->>'").append(paths[i]).append("'");
-            }
-            return order.toString();
-        } else return path;
-    }
-
     public boolean isSorted() {
         return !sort.isEmpty() && sort.contains(":");
     }
@@ -87,7 +73,7 @@ public class Dsl {
                 String[] parts = it.split(":");
                 String name;
                 if (parts[0].contains(".")) {
-                    name = toJsonbPath(parts[0]);
+                    name = DslUtils.toJsonbPath(parts[0]);
                 } else
                     name = parts[0];
                 return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), name);
@@ -100,6 +86,13 @@ public class Dsl {
             sort += ",";
         }
         sort += (field + ":" + direction);
+        return this;
+    }
+
+    public Dsl fields(List<String> fields) {
+        if (fields != null) {
+            this.fields = fields.toArray(new String[0]);
+        }
         return this;
     }
 
@@ -239,10 +232,10 @@ public class Dsl {
                 Criteria.CriteriaStep step = criteriaBy != null ? criteriaBy.and(camelToSql(field)) : Criteria.where(camelToSql(field));
                 String value = parts[1];
                 switch (criteria.replaceAll(CLEAN, "")) {
-                    case "##": criteriaBy = step.in(DslUtils.getType(value.split(" "), field, type)); break;
-                    case "!#": criteriaBy = step.notIn(DslUtils.getType(value.split(" "), field, type)); break;
-                    case "==": criteriaBy = step.is(DslUtils.getType(value, field, type)); break;
-                    case "!=": criteriaBy = step.not(DslUtils.getType(value, field, type)); break;
+                    case "##": criteriaBy = step.in(DslUtils.stringToObject(value.split(" "), field, type)); break;
+                    case "!#": criteriaBy = step.notIn(DslUtils.stringToObject(value.split(" "), field, type)); break;
+                    case "==": criteriaBy = step.is(DslUtils.stringToObject(value, field, type)); break;
+                    case "!=": criteriaBy = step.not(DslUtils.stringToObject(value, field, type)); break;
                     case "": criteriaBy = step.is(true); break;
                     case "!": criteriaBy = step.not(true); break;
                     case "@": criteriaBy = step.isNull(); break;

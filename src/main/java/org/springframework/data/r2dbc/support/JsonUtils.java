@@ -9,34 +9,38 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.ZonedDateTimeSerializer;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import reactor.util.annotation.Nullable;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public final class JsonUtils {
-    public static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
+/**
+ * Utilities for json interaction.
+ *
+ * @author Lao Tsing
+ */
+public abstract class JsonUtils {
     public static final ThreadLocal<ObjectMapper> OBJECT_MAPPER_THREAD_LOCAL = ThreadLocal.withInitial(() -> {
         final ObjectMapper mapper = new ObjectMapper();
         JavaTimeModule javaTimeModule = new JavaTimeModule();
-        javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATETIME_FORMAT)));
-        javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATETIME_FORMAT)));
+        javaTimeModule.addSerializer(ZonedDateTime.class, new ZonedDateTimeSerializer(DateTimeFormatter.ISO_ZONED_DATE_TIME));
+        javaTimeModule.addDeserializer(ZonedDateTime.class, InstantDeserializer.ZONED_DATE_TIME);
         mapper.registerModule(javaTimeModule);
-        mapper.registerModule(new ParameterNamesModule());
         mapper.registerModule(new Jdk8Module());
-        mapper.configure(DeserializationFeature.WRAP_EXCEPTIONS, false);
+        mapper.registerModule(new ParameterNamesModule());
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         mapper.configure(DeserializationFeature.FAIL_ON_MISSING_EXTERNAL_TYPE_ID_PROPERTY, false);
         mapper.configure(DeserializationFeature.FAIL_ON_UNRESOLVED_OBJECT_IDS, false);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.configure(DeserializationFeature.READ_ENUMS_USING_TO_STRING, true);
+        mapper.configure(DeserializationFeature.WRAP_EXCEPTIONS, false);
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         return mapper;
     });
 
@@ -44,21 +48,26 @@ public final class JsonUtils {
         return OBJECT_MAPPER_THREAD_LOCAL.get();
     }
 
-    public static Map<String, ?> jsonToMap(JsonNode json) {
-        if (json.isObject()) {
-            Map<String, Object> map = new LinkedHashMap<>();
-            Iterator<String> fieldNames = json.fieldNames();
-            while (fieldNames.hasNext()) {
-                String fieldName = fieldNames.next();
-                JsonNode jsonNode = json.get(fieldName);
-                map.put(fieldName, nodeToObject(jsonNode));
-            }
-            return map;
-        } else {
-            throw new IllegalArgumentException("JsonObject type needed");
-        }
+    public static JsonNode mapToJson(final Map<String, Object> map) {
+        return getMapper().valueToTree(map);
     }
 
+    public static Map<String, ?> objectToMap(final Object object) {
+        return getMapper().convertValue(object, Map.class);
+    }
+
+    public static Map<String, ?> jsonToMap(JsonNode json) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        Iterator<String> fieldNames = json.fieldNames();
+        while (fieldNames.hasNext()) {
+            String fieldName = fieldNames.next();
+            JsonNode jsonNode = json.get(fieldName);
+            map.put(fieldName, nodeToObject(jsonNode));
+        }
+        return map;
+    }
+
+    @Nullable
     public static Object nodeToObject(JsonNode json) {
         JsonNodeType type = json.getNodeType();
         switch (type) {
@@ -76,13 +85,13 @@ public final class JsonUtils {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            case NULL:
+                return null;
+            case NUMBER:
+                return json.numberValue();
             case OBJECT:
             case POJO:
                 return jsonToMap(json);
-            case NUMBER:
-                return json.numberValue();
-            case NULL:
-                return null;
             default:
                 return json.textValue();
         }
@@ -106,7 +115,7 @@ public final class JsonUtils {
         return getMapper().convertValue(object, JsonNode.class);
     }
 
-    public static <T> Object jsonToObject(JsonNode json, Class<T> cls) {
+    public static <T> T jsonToObject(JsonNode json, Class<T> cls) {
         return getMapper().convertValue(json, cls);
     }
 

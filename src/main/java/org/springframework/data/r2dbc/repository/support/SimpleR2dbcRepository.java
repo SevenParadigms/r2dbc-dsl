@@ -16,7 +16,12 @@
 package org.springframework.data.r2dbc.repository.support;
 
 import io.netty.util.internal.StringUtil;
+import io.r2dbc.postgresql.api.Notification;
+import io.r2dbc.postgresql.api.PostgresqlConnection;
+import io.r2dbc.postgresql.api.PostgresqlResult;
+import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.Wrapped;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Example;
@@ -31,6 +36,7 @@ import org.springframework.data.r2dbc.query.BoundCondition;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
@@ -54,6 +60,8 @@ import reactor.core.publisher.Mono;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.springframework.data.r2dbc.support.DslUtils.toJsonbPath;
+
 /**
  * Simple {@link ReactiveSortingRepository} implementation using R2DBC through {@link DatabaseClient}.
  *
@@ -62,6 +70,7 @@ import java.util.stream.Collectors;
  * @author Mingyuan Wu
  * @author Stephen Cohen
  * @author Greg Turnquist
+ * @author Lao Tsing
  */
 @Transactional(readOnly = true)
 public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
@@ -233,6 +242,53 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 	@Override
 	public Mono<T> findOne(Dsl dsl) {
 		return databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().one();
+	}
+
+	@Override
+	public Flux<Notification> listener() {
+		ConnectionFactory connectionFactory = entityOperations.getDatabaseClient().getConnectionFactory();
+		return Mono.from(connectionFactory.create()).flatMapMany(connection -> {
+			String tableName = entityOperations.getDataAccessStrategy().toSql(this.entity.getTableName()).toLowerCase();
+			PostgresqlConnection postgresqlConnection = (PostgresqlConnection) ((Wrapped<Connection>) connection).unwrap();
+			return postgresqlConnection.createStatement("LISTEN " + tableName)
+					.execute()
+					.flatMap(PostgresqlResult::getRowsUpdated)
+					.thenMany(postgresqlConnection.getNotifications());
+		});
+	}
+
+	@Override
+	public Flux<T> fullTextSearch(Dsl dsl) {
+		String lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.lang);
+		String[] parts = dsl.query.split("@@");
+		String fields;
+		if (dsl.fields.length == 0)
+			fields = "*";
+		else {
+			List<String> mutableList = new ArrayList<>();
+			List<SqlIdentifier> columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType());
+			for (String field : dsl.fields) {
+				if (field.contains(".")) {
+					String[] tmp = field.split("\\.");
+					if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
+						mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + WordUtils.dotToSql(field));
+						continue;
+					}
+				}
+				mutableList.add(WordUtils.camelToSql(field));
+			}
+			fields = mutableList.stream().collect(Collectors.joining(","));
+		}
+
+		if (!fields.equals("*") && !fields.contains("tsv")) fields += ",tsv";
+		String sql = "SELECT * FROM ( SELECT " + fields +
+				" FROM " + entity.getTableName() + ", websearch_to_tsquery(:lang, :value) AS q" +
+				" WHERE (" + parts[0] + " @@ q)) AS s" +
+				" ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery(:lang, :value))) DESC";
+		return databaseClient.execute(sql)
+				.bind("lang", lang)
+				.bind("value", parts[1])
+				.as(entity.getJavaType()).fetch().all();
 	}
 
 	@Override
@@ -521,7 +577,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 						continue;
 					}
 					if (entityColumns.contains(tableName)) {
-						columns.add(Column.create(DslUtils.toJsonbPath(sqlFieldName) + " as " + WordUtils.dotToSql(sqlFieldName), table));
+						columns.add(Column.create(toJsonbPath(sqlFieldName) + " as " + WordUtils.dotToSql(sqlFieldName), table));
 						continue;
 					}
 				}
