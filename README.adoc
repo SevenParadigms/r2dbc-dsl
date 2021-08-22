@@ -83,7 +83,7 @@ then generated SQL:
 In `fields` property also can selected joined columns or jsonb path to output result.
 For example `columnType` or `columnHeaderTitle` from previous example and model must contain these variables.
 
-#### Subscribe to async database UPDATE/INSERT events:
+## Subscribe to async database UPDATE/INSERT events:
 
 Before create universal notifier function:
 [source,postgresql]
@@ -114,7 +114,7 @@ create trigger table_notify
 execute procedure notify_sender();
 ----
 
-#### Ranked full text search:
+## Ranked full text search:
 
 Default language is english, but may be setting in:
 
