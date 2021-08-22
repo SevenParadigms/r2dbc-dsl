@@ -112,6 +112,7 @@ create trigger table_notify
     on table
     for each row
 execute procedure notify_sender();
+----
 
 #### Ranked full text search:
 
@@ -131,4 +132,5 @@ CREATE TABLE public.jobject
     tsv        tsvector,
     PRIMARY KEY (jfolder_id, id)
 ) PARTITION BY LIST (jfolder_id);
+
 CREATE INDEX idx_jobject_tsv ON jobject USING rum (tsv rum_tsvector_ops);
