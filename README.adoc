@@ -42,7 +42,11 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 7. JsonNode field in model automatically converted to JSONB type of PostgreSQL database and back
 
-8. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
+8. In repository with `listener` method subscribe to listen of all changes of table from database
+
+9. Ranked full text search by field `tsv` with RUM index operator with `fullTextSearch` method
+
+10. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
 
 ## Concepts
 
@@ -127,4 +131,4 @@ CREATE TABLE public.jobject
     tsv        tsvector,
     PRIMARY KEY (jfolder_id, id)
 ) PARTITION BY LIST (jfolder_id);
-
+CREATE INDEX idx_jobject_tsv ON jobject USING rum (tsv rum_tsvector_ops);
