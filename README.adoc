@@ -1,7 +1,8 @@
-# R2dbc-Dsl
+# R2DBC-Dsl
 
-This module provides `R2dbcDslRepository` for Web Querying throw REST API and Criteria building via `R2dbcDsl` class.
-Working with PostgreSQL, MySQL, Oracle, MSSql
+This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL.
+
+There are quite a few positive changes in version 2.6.0-SNAPSHOT, so i have not yet publish Dsl in Maven Central together with Spring Data 2.5.3, because SNAPSHOT do not accepted. Let's wait for the release version 2.6.0 of Spring Data R2DBC. 
 
 Add the Maven dependency:
 
@@ -33,12 +34,13 @@ interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 
 4. Joins to any tables and build criteria on joined columns, also select joined columns in result
 
-5. Annotation `@Id` is not required in model, because column ID in 90% tables it is a column ID
+5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
 
-6. Annotation `@Table` is not required in model, because table name get from model class name
+6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
+7. JsonNode field in model automatically converted to JSONB type of PostgreSQL database and back
 
-Utility class `FastMethodInvoker` is a modern reflection access to object properties.
+8. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
 
 ## Concepts
 
