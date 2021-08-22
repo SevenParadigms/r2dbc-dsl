@@ -21,6 +21,8 @@ That repository produce `R2dbcDslRepository` interface:
 interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
+    Flux<Notification> listener();
+    Flux<T> fullTextSearch(Dsl dsl);
 }
 ----
 
@@ -76,3 +78,53 @@ then generated SQL:
 
 In `fields` property also can selected joined columns or jsonb path to output result.
 For example `columnType` or `columnHeaderTitle` from previous example and model must contain these variables.
+
+#### Subscribe to async database UPDATE/INSERT events:
+
+Before create universal notifier function:
+[source,postgresql]
+----
+create function notify_sender() returns trigger
+    language plpgsql
+as
+$$
+BEGIN
+    PERFORM pg_notify(
+                    TG_TABLE_NAME,
+                    json_build_object(
+                            'operation', TG_OP,
+                            'record', row_to_json(NEW)
+                        )::text
+                );
+    RETURN NULL;
+END;
+$$;
+----
+And set to tables notifier by trigger:
+[source,postgresql]
+----
+create trigger table_notify
+    after insert or update
+    on table
+    for each row
+execute procedure notify_sender();
+
+#### Ranked full text search:
+
+Default language is english, but may be setting in:
+
+`spring.r2dbc.dsl.fts-lang`
+
+In table needed field with name `tsv` (in next generation also be setting in application.yml):
+[source,postgresql]
+----
+CREATE TABLE public.jobject
+(
+    id         uuid                     DEFAULT uuid_generate_v1mc() NOT NULL,
+    jtree      jsonb                                                 NOT NULL,
+    jfolder_id uuid                                                  NOT NULL REFERENCES jfolder (id),
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, CURRENT_TIMESTAMP),
+    tsv        tsvector,
+    PRIMARY KEY (jfolder_id, id)
+) PARTITION BY LIST (jfolder_id);
+
