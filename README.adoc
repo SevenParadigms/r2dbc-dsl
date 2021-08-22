@@ -1,4 +1,4 @@
-# R2DBC-Dsl
+# R2DBC-DSL
 
 This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL.
 
