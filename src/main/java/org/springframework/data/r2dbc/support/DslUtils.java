@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,6 +16,10 @@ import java.util.UUID;
  * @author Lao Tsing
  */
 public abstract class DslUtils {
+    public static final String UUID_REGEX = "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}";
+    public static final String NUMBER_REGEX = "^\\d+$";
+    public static final String FLOAT_REGEX = "\\d+\\.\\d+";
+
     public static String toJsonbPath(String path) {
         if (path.contains(".")) {
             String[] paths = path.split(".");
@@ -70,5 +75,13 @@ public abstract class DslUtils {
             }
         }
         return it;
+    }
+
+    public static Object getObject(String object) {
+       if (object.matches(NUMBER_REGEX)) return Long.parseLong(object);
+       if (object.matches(FLOAT_REGEX)) return Double.parseDouble(object);
+       if (Arrays.asList(Boolean.TRUE.toString(), Boolean.FALSE.toString()).contains(object.toLowerCase())) return Boolean.TRUE.toString().equalsIgnoreCase(object);
+       if (object.matches(UUID_REGEX)) return UUID.fromString(object);
+       return null;
     }
 }

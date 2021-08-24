@@ -110,6 +110,14 @@ public class Dsl {
         return this;
     }
 
+    public Dsl id(String id) {
+        Object object = DslUtils.getObject(id);
+        if (object instanceof UUID) return id((UUID) object);
+        if (object instanceof Long) return id((Long) object);
+        if (object instanceof Integer) return id((Integer) object);
+        return this;
+    }
+
     public Dsl id(UUID id) {
         if (id != null) {
             query = start(query) + defaultId + "=='" + id + "'::uuid";
@@ -199,11 +207,12 @@ public class Dsl {
 
     public Dsl isNull(String field) {
         equals(field, "null");
+        query = start(query) + "@" + field;
         return this;
     }
 
     public Dsl isNotNull(String field) {
-        notEquals(field, "null");
+        query = start(query) + "!@" + field;
         return this;
     }
 
@@ -227,10 +236,9 @@ public class Dsl {
             String[] criterias = getQuery().split(delimiter);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
-                assert (parts.length == 2);
                 String field = parts[0].replaceAll(PREFIX, "");
                 Criteria.CriteriaStep step = criteriaBy != null ? criteriaBy.and(camelToSql(field)) : Criteria.where(camelToSql(field));
-                String value = parts[1];
+                String value = parts.length > 1 ? parts[1] : null;
                 switch (criteria.replaceAll(CLEAN, "")) {
                     case "##": criteriaBy = step.in(DslUtils.stringToObject(value.split(" "), field, type)); break;
                     case "!#": criteriaBy = step.notIn(DslUtils.stringToObject(value.split(" "), field, type)); break;
@@ -244,7 +252,7 @@ public class Dsl {
                     case ">=": criteriaBy = step.greaterThanOrEquals(Long.valueOf(value)); break;
                     case "<<": criteriaBy = step.lessThan(Long.valueOf(value)); break;
                     case "<=": criteriaBy = step.lessThanOrEquals(Long.valueOf(value)); break;
-                    case "~~": criteriaBy = step.like("%$value%"); break;
+                    case "~~": criteriaBy = step.like("%" + value + "%"); break;
                     default: criteriaBy = null;
                 }
             }
