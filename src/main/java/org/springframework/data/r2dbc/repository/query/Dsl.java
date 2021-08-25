@@ -206,7 +206,6 @@ public class Dsl {
     }
 
     public Dsl isNull(String field) {
-        equals(field, "null");
         query = start(query) + "@" + field;
         return this;
     }
