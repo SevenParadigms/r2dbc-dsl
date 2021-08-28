@@ -83,7 +83,7 @@ public abstract class JsonUtils {
                 try {
                     return json.binaryValue();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
             case NULL:
                 return null;
@@ -102,14 +102,14 @@ public abstract class JsonUtils {
             try {
                 return getMapper().readTree((String) object);
             } catch (JsonProcessingException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
         if (object instanceof byte[]) {
             try {
                 return getMapper().readTree((byte[]) object);
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
         return getMapper().convertValue(object, JsonNode.class);

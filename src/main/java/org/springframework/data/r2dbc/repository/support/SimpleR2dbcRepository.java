@@ -30,13 +30,16 @@ import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
+import org.springframework.data.r2dbc.core.StatementMapper;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
+import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.query.BoundCondition;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.DslUtils;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
@@ -56,6 +59,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import org.springframework.data.relational.core.query.Update;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -164,11 +168,42 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
 		Assert.notNull(objectToSave, "Object to save must not be null!");
 
-		if (this.entity.isNew(objectToSave)) {
-			return this.entityOperations.insert(objectToSave);
+		String idPropertyName = getIdColumnName();
+		Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
+		if (idValue != null && idValue instanceof Number && ((Number) idValue).longValue() < 1) {
+			idValue = null;
+			FastMethodInvoker.setValue(objectToSave, idPropertyName, null);
 		}
-
-		return this.entityOperations.update(objectToSave);
+		if (idValue == null) {
+			return databaseClient.insert()
+					.into(this.entity.getJavaType())
+					.table(this.entity.getTableName()).using(objectToSave)
+					.map(converter.populateIdIfNecessary(objectToSave))
+					.first().flatMap(s -> Mono.just(s))
+					.defaultIfEmpty(objectToSave);
+		} else {
+			ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
+			StatementMapper mapper = accessStrategy.getStatementMapper();
+			OutboundRow columns = accessStrategy.getOutboundRow(objectToSave);
+			Update update = null;
+			Iterator<?> iterator = columns.keySet().iterator();
+			while (iterator.hasNext()) {
+				SqlIdentifier column = (SqlIdentifier) iterator.next();
+				if (update == null) {
+					update = Update.update(accessStrategy.toSql(column), columns.get(column));
+				}
+				update = update.set(accessStrategy.toSql(column), columns.get(column));
+			}
+			PreparedOperation<?> operation = mapper.getMappedObject(
+					mapper.createUpdate(this.entity.getTableName(), update)
+							.withCriteria(Criteria.where(idPropertyName).is(idValue)));
+			return databaseClient.execute(operation).fetch().rowsUpdated()
+					.handle((rowsUpdated, sSynchronousSink) -> {
+						if (rowsUpdated > 0) {
+							sSynchronousSink.next(objectToSave);
+						}
+					});
+		}
 	}
 
 	/*
