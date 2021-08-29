@@ -18,12 +18,25 @@ Add the Maven dependency:
 That repository produce `R2dbcDslRepository` interface:
 [source,kotlin]
 ----
-interface R2dbcDslRepository<T, ID> : ReactiveCrudRepository<T, ID> {
+interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
     Flux<Notification> listener();
     Flux<T> fullTextSearch(Dsl dsl);
 }
+----
+
+and `Dsl` class:
+[source,kotlin]
+----
+data class Dsl(
+    val query: String,
+    val lang: String,
+    val fields: Array<String>,
+    val page: Int,
+    val size: Int,
+    val sort: String
+)
 ----
 
 ## Features
