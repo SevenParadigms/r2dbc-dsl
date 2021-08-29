@@ -15,7 +15,6 @@
  */
 package org.springframework.data.r2dbc.query;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
@@ -501,7 +500,6 @@ public class CustomQueryMapper {
 			return toSql(IdentifierProcessing.ANSI);
 		}
 
-		@NotNull
 		@Override
 		public Iterator<SqlIdentifier> iterator() {
 			return null;

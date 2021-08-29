@@ -170,10 +170,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
 		String idPropertyName = getIdColumnName();
 		Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
-		if (idValue != null && idValue instanceof Number && ((Number) idValue).longValue() < 1) {
-			idValue = null;
-			FastMethodInvoker.setValue(objectToSave, idPropertyName, null);
-		}
 		if (idValue == null) {
 			return databaseClient.insert()
 					.into(this.entity.getJavaType())
@@ -558,7 +554,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 	}
 
 	private String getIdColumnName() {
-		if (entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType()).contains(Dsl.defaultId))
+		if (entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType()).stream().anyMatch(i -> i.getReference().equals(Dsl.defaultId)))
 			return Dsl.defaultId;
 		else
 			return entityOperations.getDataAccessStrategy().toSql(

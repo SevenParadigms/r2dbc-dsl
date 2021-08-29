@@ -15,36 +15,10 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.R2dbcException;
-import io.r2dbc.spi.Result;
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
-import io.r2dbc.spi.Statement;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
+import io.r2dbc.spi.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Pageable;
@@ -53,7 +27,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.r2dbc.UncategorizedR2dbcException;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionFactoryUtils;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionProxy;
-import org.springframework.data.r2dbc.convert.ColumnMapRowMapper;
 import org.springframework.data.r2dbc.dialect.BindTarget;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.mapping.SettableValue;
@@ -63,10 +36,24 @@ import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.lang.Nullable;
+import org.springframework.r2dbc.core.ColumnMapRowMapper;
 import org.springframework.r2dbc.core.Parameter;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Default implementation of {@link DatabaseClient}.
@@ -76,7 +63,7 @@ import org.springframework.util.StringUtils;
  * @author Bogdan Ilchyshyn
  * @deprecated since 1.2.
  */
-@Deprecated
+//@Deprecated
 class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 	private final Log logger = LogFactory.getLog(getClass());
@@ -1580,17 +1567,23 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 	private static String getSql(Object sqlProvider) {
 
 		if (sqlProvider instanceof SqlProvider) {
-			return ((SqlProvider) sqlProvider).getSql();
+			return prepareSql(((SqlProvider) sqlProvider).getSql());
 		} else {
 			return null;
 		}
 	}
 
-	private static String getRequiredSql(Supplier<String> sqlSupplier) {
+	private static String prepareSql(String sql) {
+		if (sql.replaceAll("\\s+", "").startsWith("SELECTFROM")) {
+			return sql.toLowerCase().replaceAll("SELECT", "SELECT *");
+		}
+		return sql;
+	}
 
+	private static String getRequiredSql(Supplier<String> sqlSupplier) {
 		String sql = sqlSupplier.get();
 		Assert.state(StringUtils.hasText(sql), "SQL returned by SQL supplier must not be empty!");
-		return sql;
+		return prepareSql(sql);
 	}
 
 	private static void assertRegularClass(Class<?> table) {

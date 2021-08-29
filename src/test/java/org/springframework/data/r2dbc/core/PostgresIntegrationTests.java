@@ -15,38 +15,16 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.relational.core.query.Criteria.*;
-
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
-import io.r2dbc.postgresql.codec.Box;
-import io.r2dbc.postgresql.codec.Circle;
-import io.r2dbc.postgresql.codec.EnumCodec;
-import io.r2dbc.postgresql.codec.Interval;
-import io.r2dbc.postgresql.codec.Line;
-import io.r2dbc.postgresql.codec.Lseg;
-import io.r2dbc.postgresql.codec.Path;
-import io.r2dbc.postgresql.codec.Point;
-import io.r2dbc.postgresql.codec.Polygon;
+import io.r2dbc.postgresql.codec.*;
 import io.r2dbc.postgresql.extension.CodecRegistrar;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import reactor.test.StepVerifier;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
-
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.convert.EnumWriteSupport;
@@ -57,6 +35,15 @@ import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.jdbc.core.JdbcTemplate;
+import reactor.test.StepVerifier;
+
+import javax.sql.DataSource;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.function.Consumer;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.relational.core.query.Criteria.where;
 
 /**
  * Integration tests for PostgreSQL-specific features such as array support.
@@ -112,7 +99,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Test // gh-30
 	void shouldReadAndWriteConvertedDimensionArrays() {
 
-		EntityWithArrays withArrays = new EntityWithArrays(null, null, null, null, Arrays.asList(5, 6, 7));
+		EntityWithArrays withArrays = new EntityWithArrays(null, null, null, null, new int[] {5, 6, 7});
 
 		insert(withArrays);
 
@@ -304,7 +291,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 		Integer[] boxedArray;
 		int[] primitiveArray;
 		int[][] multidimensionalArray;
-		List<Integer> collectionArray;
+		int[] collectionArray;
 	}
 
 	@Data

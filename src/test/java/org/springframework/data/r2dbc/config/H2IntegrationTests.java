@@ -104,7 +104,7 @@ class H2IntegrationTests {
 	}
 
 	@Data
-//	@Table("legoset")
+//	@Table("lego_set")
 	@AllArgsConstructor
 	@NoArgsConstructor
 	static class LegoSet {

@@ -15,10 +15,6 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.r2dbc.query.Criteria.*;
-
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
@@ -27,13 +23,6 @@ import io.r2dbc.spi.test.MockColumnMetadata;
 import io.r2dbc.spi.test.MockResult;
 import io.r2dbc.spi.test.MockRow;
 import io.r2dbc.spi.test.MockRowMetadata;
-import reactor.core.CoreSubscriber;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import java.util.Arrays;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,13 +34,23 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.lang.Nullable;
+import reactor.core.CoreSubscriber;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.mockito.Mockito.*;
+import static org.springframework.data.r2dbc.query.Criteria.where;
 
 /**
  * Unit tests for {@link DefaultDatabaseClient}.
@@ -178,11 +177,11 @@ public class DefaultDatabaseClientUnitTests {
 	@Test // gh-178
 	void executeShouldBindNamedValuesFromIndexes() {
 
-		Statement statement = mockStatementFor("SELECT id, name, manual from lego_set WHERE name IN ($1, $2, $3)");
+		Statement statement = mockStatementFor("SELECT id, name, manual FROM lego_set WHERE name IN ($1, $2, $3)");
 
 		DatabaseClient databaseClient = databaseClientBuilder.build();
 
-		databaseClient.execute("SELECT id, name, manual from lego_set WHERE name IN (:name)") //
+		databaseClient.execute("SELECT id, name, manual FROM lego_set WHERE name IN (:name)") //
 				.bind(0, Arrays.asList("unknown", "dunno", "other")) //
 				.then() //
 				.as(StepVerifier::create) //

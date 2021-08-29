@@ -15,8 +15,6 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
-import java.io.Serializable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -31,6 +29,8 @@ import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationCo
 import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.util.Assert;
+
+import java.io.Serializable;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} to create
@@ -112,7 +112,7 @@ public class R2dbcRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * @return new instance of {@link RepositoryFactorySupport}.
 	 */
 	protected RepositoryFactorySupport getFactoryInstance(DatabaseClient client,
-			ReactiveDataAccessStrategy dataAccessStrategy) {
+                                                             ReactiveDataAccessStrategy dataAccessStrategy) {
 		return new R2dbcRepositoryFactory(client, dataAccessStrategy, applicationContext);
 	}
 

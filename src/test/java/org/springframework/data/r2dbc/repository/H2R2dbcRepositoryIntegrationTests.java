@@ -32,7 +32,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.mapping.event.AfterConvertCallback;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
-import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactory;
 import org.springframework.data.r2dbc.testing.H2TestSupport;
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
@@ -51,7 +50,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for {@link LegoSetRepository} using {@link R2dbcRepositoryFactory} against H2.
+ * Integration tests for {@link LegoSetRepository} using {@linkRepositoryFactorySupport} against H2.
  *
  * @author Mark Paluch
  * @author Zsombor Gegesy

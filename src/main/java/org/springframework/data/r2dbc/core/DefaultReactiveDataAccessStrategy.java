@@ -17,15 +17,6 @@ package org.springframework.data.r2dbc.core;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mapping.context.MappingContext;
@@ -49,6 +40,9 @@ import org.springframework.r2dbc.core.Parameter;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+
+import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * Default {@link ReactiveDataAccessStrategy} implementation.

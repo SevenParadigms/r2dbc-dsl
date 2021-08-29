@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>2.6.0</version>
+	<version>2.6.2</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -78,7 +78,6 @@
 	<properties>
 
 		<dist.key>DATAR2DBC</dist.key>
-
 		<springdata.commons>2.6.0-SNAPSHOT</springdata.commons>
 		<springdata.jdbc>2.3.0-SNAPSHOT</springdata.jdbc>
 		<springdata.relational>${springdata.jdbc}</springdata.relational>
@@ -186,31 +185,6 @@
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
-		</dependency>
-
-		<!-- Kotlin extension -->
-		<dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-stdlib</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-reflect</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jetbrains.kotlinx</groupId>
-			<artifactId>kotlinx-coroutines-core</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jetbrains.kotlinx</groupId>
-			<artifactId>kotlinx-coroutines-reactor</artifactId>
-			<optional>true</optional>
 		</dependency>
 
 		<dependency>

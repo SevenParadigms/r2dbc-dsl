@@ -15,15 +15,6 @@
  */
 package org.springframework.data.r2dbc.repository.query;
 
-import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.jetbrains.annotations.NotNull;
-
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
@@ -41,6 +32,12 @@ import org.springframework.r2dbc.core.Parameter;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.r2dbc.core.binding.BindTarget;
 import org.springframework.util.Assert;
+import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * String-based {@link StringBasedR2dbcQuery} implementation.
@@ -249,7 +246,6 @@ public class StringBasedR2dbcQuery extends AbstractR2dbcQuery {
 			byName.put(identifier, toParameter(value));
 		}
 
-		@NotNull
 		private Parameter toParameter(Object value) {
 
 			if (value instanceof SettableValue) {

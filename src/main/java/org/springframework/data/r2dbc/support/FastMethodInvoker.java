@@ -88,13 +88,13 @@ public class FastMethodInvoker {
                 String fastMethodKey = any.getClass().getName() + "." + methodName;
                 FastMethod fastMethod = FastMethodInvoker.getFastMethod(fastMethodKey);
                 if (fastMethod == null) {
-                    fastMethod = FastClass.create(any.getClass()).getMethod(methodName, new Class[] { field.getClass() });
+                    fastMethod = FastClass.create(any.getClass()).getMethod(methodName, new Class[] { field.getType() });
                     FastMethodInvoker.setFastMethod(fastMethodKey, fastMethod);
                 }
                 try {
                     fastMethod.invoke(any, new Object[] { value });
                 } catch (InvocationTargetException e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e.getCause());
                 }
             }
         }
@@ -113,15 +113,15 @@ public class FastMethodInvoker {
                         } catch (NoSuchMethodError ex) {
                             ex.printStackTrace();
                         }
-                        if (fastMethod != null) {
-                            FastMethodInvoker.setFastMethod(fastMethodKey, fastMethod);
-                        }
                     }
                     Object result = null;
-                    try {
-                        result = fastMethod.invoke(any, null);
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
+                    if (fastMethod != null) {
+                        FastMethodInvoker.setFastMethod(fastMethodKey, fastMethod);
+                        try {
+                            result = fastMethod.invoke(any, null);
+                        } catch (InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     return result;
                 }

@@ -31,7 +31,6 @@ import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.repository.query.Dsl;
-import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactory;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
@@ -51,7 +50,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for {@link LegoSetRepository} using {@link R2dbcRepositoryFactory} against Postgres.
+ * Integration tests for {@link LegoSetRepository} using {@linkRepositoryFactorySupport} against Postgres.
  *
  * @author Mark Paluch
  * @author Jose Luis Leon
@@ -179,6 +178,14 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		@Id Long id;
 
 		JsonNode jsonValue;
+
+		public Long getId() {
+			return id;
+		}
+
+		public JsonNode getJsonValue() {
+			return jsonValue;
+		}
 	}
 
 	interface WithJsonRepository extends R2dbcRepository<WithJson, Long> {
@@ -192,6 +199,14 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		@Id Long id;
 
 		Map<String, String> hstoreValue;
+
+		public Long getId() {
+			return id;
+		}
+
+		public Map<String, String> getHstoreValue() {
+			return hstoreValue;
+		}
 	}
 
 	interface WithHStoreRepository extends R2dbcRepository<WithHStore, Long> {

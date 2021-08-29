@@ -15,9 +15,6 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import io.r2dbc.spi.test.MockColumnMetadata;
 import io.r2dbc.spi.test.MockResult;
 import io.r2dbc.spi.test.MockRow;
@@ -25,17 +22,8 @@ import io.r2dbc.spi.test.MockRowMetadata;
 import lombok.ToString;
 import lombok.Value;
 import lombok.With;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -47,11 +35,7 @@ import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
-import org.springframework.data.r2dbc.mapping.event.AfterConvertCallback;
-import org.springframework.data.r2dbc.mapping.event.AfterSaveCallback;
-import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
-import org.springframework.data.r2dbc.mapping.event.BeforeSaveCallback;
-import org.springframework.data.r2dbc.mapping.event.ReactiveAuditingEntityCallback;
+import org.springframework.data.r2dbc.mapping.event.*;
 import org.springframework.data.r2dbc.testing.StatementRecorder;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.query.Criteria;
@@ -62,6 +46,17 @@ import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.Parameter;
 import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link R2dbcEntityTemplate}.

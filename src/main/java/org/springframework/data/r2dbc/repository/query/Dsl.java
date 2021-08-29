@@ -1,7 +1,6 @@
 package org.springframework.data.r2dbc.repository.query;
 
 import io.netty.util.internal.StringUtil;
-import kotlin.text.Charsets;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,6 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.springframework.data.r2dbc.support.WordUtils.camelToSql;
 
 
@@ -32,7 +32,7 @@ public class Dsl {
     public String getQuery() {
         String decodedQuery = null;
         try {
-            decodedQuery = URLDecoder.decode(query, Charsets.UTF_8.name()).trim();
+            decodedQuery = URLDecoder.decode(query, UTF_8.displayName()).trim();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

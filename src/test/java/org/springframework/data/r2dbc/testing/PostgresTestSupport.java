@@ -21,28 +21,14 @@ public class PostgresTestSupport {
 	private static ExternalDatabase testContainerDatabase;
 
 	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
-			+ "    id          integer CONSTRAINT id1 PRIMARY KEY,\n" //
+			+ "    id          serial PRIMARY KEY,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 
-	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
-			+ "    id          serial CONSTRAINT id1 PRIMARY KEY,\n" //
-			+ "    version     integer NULL,\n" //
-			+ "    name        varchar(255) NOT NULL,\n" //
-			+ "    extra       varchar(255),\n" //
-			+ "    manual      integer NULL\n" //
-			+ ");";
-
-	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE \"Lego_Set\" (\n" //
-			+ "    \"Id\"          serial CONSTRAINT id2 PRIMARY KEY,\n" //
-			+ "    \"Name\"        varchar(255) NOT NULL,\n" //
-			+ "    \"Manual\"      integer NULL\n" //
-			+ ");";
-
-	public static final String DROP_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "DROP TABLE \"Lego_Set\"";
+	public static final String DROP_TABLE_LEGOSET = "DROP TABLE lego_set";
 	/**
 	 * Returns a database either hosted locally at {@code postgres:@localhost:5432/postgres} or running inside Docker.
 	 *

@@ -78,14 +78,14 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	protected abstract ConnectionFactory createConnectionFactory();
 
 	/**
-	 * Returns the the CREATE TABLE statement for table {@code legoset} with the following three columns:
+	 * Returns the the CREATE TABLE statement for table {@code lego_set} with the following three columns:
 	 * <ul>
 	 * <li>id integer (primary key), not null</li>
 	 * <li>name varchar(255), nullable</li>
 	 * <li>manual integer, nullable</li>
 	 * </ul>
 	 *
-	 * @return the CREATE TABLE statement for table {@code legoset} with three columns.
+	 * @return the CREATE TABLE statement for table {@code lego_set} with three columns.
 	 */
 	protected abstract String getCreateTableStatement();
 
@@ -110,7 +110,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -139,7 +139,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.execute("SELECT id, name, manual from lego_set") //
+		databaseClient.execute("SELECT id, name, manual FROM lego_set") //
 				.as(LegoSet.class) //
 				.fetch().all() //
 				.as(StepVerifier::create) //
@@ -156,7 +156,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.execute("SELECT id, name, manual from lego_set WHERE name = :name or name = :name") //
+		databaseClient.execute("SELECT id, name, manual FROM lego_set WHERE name = :name or name = :name") //
 				.bind("name", "unknown").as(LegoSet.class) //
 				.fetch().all() //
 				.as(StepVerifier::create) //
@@ -178,7 +178,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -194,7 +194,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -215,7 +215,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT id, name, manual from lego_set")).hasEntrySatisfying("id", numberOf(42055));
+		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
 	@Test // gh-2
@@ -255,7 +255,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.update().table("legoset")//
+		databaseClient.update().table("lego_set")//
 				.using(Update.update("name", "Lego")) //
 				.matching(Criteria.where("id").is(42055)) //
 				.fetch() //
@@ -264,7 +264,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT name, manual from lego_set")).containsEntry("name", "Lego");
+		assertThat(jdbc.queryForMap("SELECT name, manual FROM lego_set")).containsEntry("name", "Lego");
 	}
 
 	@Test // gh-64
@@ -274,13 +274,13 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.update().table("legoset")//
+		databaseClient.update().table("lego_set")//
 				.using(Update.update("name", "Lego")) //
 				.then() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT name, manual from lego_set")).containsEntry("name", "Lego");
+		assertThat(jdbc.queryForMap("SELECT name, manual FROM lego_set")).containsEntry("name", "Lego");
 	}
 
 	@Test // gh-64
@@ -304,7 +304,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForMap("SELECT name, manual from lego_set")).containsEntry("name", "Lego");
+		assertThat(jdbc.queryForMap("SELECT name, manual FROM lego_set")).containsEntry("name", "Lego");
 	}
 
 	@Test // gh-64
@@ -316,14 +316,14 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
 		databaseClient.delete() //
-				.from("legoset") //
+				.from("lego_set") //
 				.matching(where("id").is(42055)) //
 				.fetch() //
 				.rowsUpdated() //
 				.as(StepVerifier::create) //
 				.expectNext(1).verifyComplete();
 
-		assertThat(jdbc.queryForList("SELECT id AS count from lego_set")).hasSize(1);
+		assertThat(jdbc.queryForList("SELECT id AS count FROM lego_set")).hasSize(1);
 	}
 
 	@Test // gh-64
@@ -341,7 +341,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(jdbc.queryForList("SELECT id AS count from lego_set")).hasSize(1);
+		assertThat(jdbc.queryForList("SELECT id AS count FROM lego_set")).hasSize(1);
 	}
 
 	@Test // gh-2
@@ -371,7 +371,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.select().from("legoset") //
+		databaseClient.select().from("lego_set") //
 				.project("id", "name", "manual") //
 				.orderBy(Sort.by("id")) //
 				.map((r) -> r.get("id", Integer.class)) //
@@ -388,7 +388,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.execute("SELECT COUNT(*) from lego_set") //
+		databaseClient.execute("SELECT COUNT(*) FROM lego_set") //
 				.as(Long.class) //
 				.fetch() //
 				.all() //
@@ -396,7 +396,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.expectNext(1L) //
 				.verifyComplete();
 
-		databaseClient.execute("SELECT name from lego_set") //
+		databaseClient.execute("SELECT name FROM lego_set") //
 				.as(String.class) //
 				.fetch() //
 				.one() //
@@ -412,7 +412,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.select().from("legoset") //
+		databaseClient.select().from("lego_set") //
 				.project("id", "name", "manual") //
 				.orderBy(Sort.by("id")) //
 				.matching(where("id").greaterThanOrEquals(42055).and("id").lessThanOrEquals(42055))
@@ -497,7 +497,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
-		databaseClient.select().from("legoset") //
+		databaseClient.select().from("lego_set") //
 				.orderBy(Sort.by(desc("id"))) //
 				.as(LegoSet.class) //
 				.fetch().all() //
@@ -514,7 +514,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	}
 
 	@Data
-	@Table("legoset")
+	@Table("lego_set")
 	static class LegoSet {
 
 		@Id int id;

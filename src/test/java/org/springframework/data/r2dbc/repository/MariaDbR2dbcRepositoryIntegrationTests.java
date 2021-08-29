@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
-import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactory;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.MariaDbTestSupport;
 import org.springframework.test.context.ContextConfiguration;
@@ -35,7 +34,7 @@ import reactor.core.publisher.Mono;
 import javax.sql.DataSource;
 
 /**
- * Integration tests for {@link LegoSetRepository} using {@link R2dbcRepositoryFactory} against MariaDB.
+ * Integration tests for {@link LegoSetRepository} using {@linkRepositoryFactorySupport} against MariaDB.
  *
  * @author Mark Paluch
  */

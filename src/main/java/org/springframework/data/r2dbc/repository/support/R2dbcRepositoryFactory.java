@@ -15,9 +15,6 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
-import java.lang.reflect.Method;
-import java.util.Optional;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
@@ -47,6 +44,9 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.util.Assert;
+
+import java.lang.reflect.Method;
+import java.util.Optional;
 
 /**
  * Factory to create {@link R2dbcRepository} instances.
