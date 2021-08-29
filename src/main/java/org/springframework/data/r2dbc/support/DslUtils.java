@@ -20,10 +20,10 @@ public abstract class DslUtils {
     public static final String NUMBER_REGEX = "^\\d+$";
     public static final String FLOAT_REGEX = "\\d+\\.\\d+";
 
-    public static String toJsonbPath(String path) {
+    public static String toJsonbPath(final String path) {
         if (path.contains(".")) {
-            String[] paths = path.split(".");
-            StringBuilder order = new StringBuilder(paths[0]);
+            final String[] paths = path.split(".");
+            final StringBuilder order = new StringBuilder(paths[0]);
             for (int i = 1; i < paths.length; i++) {
                 if (i < paths.length - 1)
                     order.append("->'").append(paths[i]).append("'");
@@ -34,10 +34,10 @@ public abstract class DslUtils {
         } else return path;
     }
 
-    public static <T> String toJsonbPath(String dotter, Class<T> type) {
+    public static <T> String toJsonbPath(final String dotter, final Class<T> type) {
         if (dotter.contains(".")) {
-            String fieldName = dotter.split(".")[0];
-            List<Field> reflectionStorage = FastMethodInvoker.reflectionStorage(type);
+            final String fieldName = dotter.split(".")[0];
+            final List<Field> reflectionStorage = FastMethodInvoker.reflectionStorage(type);
             for (Field field : reflectionStorage) {
                 if (fieldName.equals(field.getName()) && field.getType() == JsonNode.class) {
                     return toJsonbPath(dotter);
@@ -47,16 +47,16 @@ public abstract class DslUtils {
         return dotter;
     }
 
-    public static <T> List<Object> stringToObject(String[] list, String fieldName, Class<T> type) {
-        List<Object> result = new ArrayList<>();
+    public static <T> List<Object> stringToObject(final String[] list, final String fieldName, final Class<T> type) {
+        final List<Object> result = new ArrayList<>();
         for (String it : list) {
             result.add(stringToObject(it, fieldName, type));
         }
         return result;
     }
 
-    public static <T> Object stringToObject(String it, String fieldName, Class<T> type) {
-        List<Field> reflectionStorage = FastMethodInvoker.reflectionStorage(type);
+    public static <T> Object stringToObject(final String it, final String fieldName, final Class<T> type) {
+        final List<Field> reflectionStorage = FastMethodInvoker.reflectionStorage(type);
         for (Field field : reflectionStorage) {
             if (WordUtils.dotToCamel(fieldName).equals(field.getName())) {
                 switch (field.getType().getSimpleName()) {
@@ -77,7 +77,7 @@ public abstract class DslUtils {
         return it;
     }
 
-    public static Object getObject(String object) {
+    public static Object getObject(final String object) {
        if (object.matches(NUMBER_REGEX)) return Long.parseLong(object);
        if (object.matches(FLOAT_REGEX)) return Double.parseDouble(object);
        if (Arrays.asList(Boolean.TRUE.toString(), Boolean.FALSE.toString()).contains(object.toLowerCase())) return Boolean.TRUE.toString().equalsIgnoreCase(object);
