@@ -47,7 +47,7 @@ data class Dsl {
 
 2. Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
 
-3. Ability to select columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
+3. Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
 
 4. Joins to any tables and build criteria on joined columns, also select joined columns in result
 
