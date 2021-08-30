@@ -126,7 +126,7 @@
 			<dependency>
 				<groupId>org.testcontainers</groupId>
 				<artifactId>testcontainers-bom</artifactId>
-				<version>${testcontainers}</version>
+				<version>${test.container}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -319,7 +319,6 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mysql</artifactId>
-			<version>${test.container}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -332,7 +331,6 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mariadb</artifactId>
-			<version>${test.container}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -345,14 +343,12 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>oracle-xe</artifactId>
-			<version>${test.container}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>${test.container}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -376,6 +372,14 @@
 			<version>4.0.3</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.20</version>
+			<scope>test</scope>
+		</dependency>
+
 
 	</dependencies>
 
