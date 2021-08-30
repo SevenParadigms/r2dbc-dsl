@@ -21,7 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.convert.MappingR2dbcConverter;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
@@ -75,6 +74,6 @@ public class R2dbcRepositoryFactoryUnitTests {
 	interface MyPersonRepository extends Repository<Person, Long> {}
 
 	static class Person {
-		@Id long id;
+		/*@Id */long id;
 	}
 }

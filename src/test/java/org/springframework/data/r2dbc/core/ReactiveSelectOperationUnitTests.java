@@ -212,7 +212,7 @@ public class ReactiveSelectOperationUnitTests {
 
 	static class Person {
 
-		@Id String id;
+		/*@Id */String id;
 
 		@Column("THE_NAME") String name;
 

@@ -593,10 +593,10 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 
 		return (row, metadata) -> {
 			RelationalPersistentProperty idProperty = null;
-			if (FastMethodInvoker.isField(object, Dsl.defaultId)) {
+			if (FastMethodInvoker.isField(object, Dsl.idProperty)) {
 				RelationalPersistentEntity<?> persist = getMappingContext().getPersistentEntity(object.getClass());
 				assert persist != null;
-				idProperty = persist.getPersistentProperty(Dsl.defaultId);
+				idProperty = persist.getPersistentProperty(Dsl.idProperty);
 			} else {
 				idProperty = entity.getRequiredIdProperty();
 			}

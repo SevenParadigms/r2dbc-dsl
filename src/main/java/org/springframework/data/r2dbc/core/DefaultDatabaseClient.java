@@ -31,7 +31,11 @@ import org.springframework.data.r2dbc.dialect.BindTarget;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.r2dbc.query.Update;
+import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.repository.support.DefaultSqlIdentifier;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.r2dbc.support.R2dbcExceptionTranslator;
+import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
@@ -1339,11 +1343,25 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 			return fetch().rowsUpdated().then();
 		}
 
+		public boolean isIdContains(Class<?> entityClass) {
+			FastMethodInvoker.reflectionStorage(entityClass);
+			return FastMethodInvoker.isField(entityClass, Dsl.idProperty);
+		}
+
+		public SqlIdentifier getIdSqlIdentifier(Class<?> entityClass) {
+			if (isIdContains(entityClass)) {
+				return new DefaultSqlIdentifier(Dsl.idProperty, false);
+			}
+			RelationalPersistentEntity<?> entity = dataAccessStrategy.getConverter().getMappingContext().getRequiredPersistentEntity(entityClass);
+			return entity.getRequiredIdProperty().getColumnName();
+		}
+
 		private UpdatedRowsFetchSpec exchange(SqlIdentifier table) {
 
 			StatementMapper mapper = dataAccessStrategy.getStatementMapper();
 			Map<SqlIdentifier, Parameter> columns = dataAccessStrategy.getOutboundRow(this.objectToUpdate);
-			List<SqlIdentifier> ids = dataAccessStrategy.getIdentifierColumns(this.typeToUpdate);
+			List<SqlIdentifier> ids = Arrays.asList(getIdSqlIdentifier(this.typeToUpdate));
+//					 dataAccessStrategy.getIdentifierColumns(this.typeToUpdate);
 
 			if (ids.isEmpty()) {
 				throw new IllegalStateException("No identifier columns in " + this.typeToUpdate.getName() + "!");

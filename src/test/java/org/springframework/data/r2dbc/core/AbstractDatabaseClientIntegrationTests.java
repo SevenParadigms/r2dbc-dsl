@@ -22,11 +22,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -514,10 +512,10 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 	}
 
 	@Data
-	@Table("lego_set")
+//	@Table("lego_set")
 	static class LegoSet {
 
-		@Id int id;
+		/*@Id */int id;
 		String name;
 		Integer manual;
 		byte[] cert;

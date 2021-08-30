@@ -15,21 +15,18 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.relational.core.query.Criteria.*;
-import static org.springframework.data.relational.core.query.Query.*;
-
 import io.r2dbc.spi.test.MockResult;
-import reactor.test.StepVerifier;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.testing.StatementRecorder;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.r2dbc.core.Parameter;
+import reactor.test.StepVerifier;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.relational.core.query.Criteria.where;
+import static org.springframework.data.relational.core.query.Query.query;
 
 /**
  * Unit test for {@link ReactiveDeleteOperation}.
@@ -129,7 +126,7 @@ public class ReactiveDeleteOperationUnitTests {
 
 	static class Person {
 
-		@Id String id;
+		/*@Id */String id;
 
 		@Column("THE_NAME") String name;
 

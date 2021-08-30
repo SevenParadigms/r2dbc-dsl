@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
@@ -775,12 +774,12 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 	}
 
 	@Data
-	@Table("lego_set")
+//	@Table("lego_set")
 	@AllArgsConstructor
 	@NoArgsConstructor
 	static class LegoSet {
 
-		@Id int id;
+		/*@Id */int id;
 		String name;
 		Integer manual;
 	}
@@ -791,7 +790,7 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 	@NoArgsConstructor
 	static class LegoSetWithNonScalarId {
 
-		@Id Integer id;
+		/*@Id */Integer id;
 		String name;
 		Integer manual;
 		String extra;
@@ -808,47 +807,9 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 			super(id, name, manual);
 			this.version = version;
 		}
-
-		@Override
-		public int getId() {
-			return super.getId();
-		}
-
-		@Override
-		public String getName() {
-			return super.getName();
-		}
-
-		@Override
-		public Integer getManual() {
-			return super.getManual();
-		}
-
-		public int getVersion() {
-			return version;
-		}
-
-		@Override
-		public void setId(int id) {
-			super.setId(id);
-		}
-
-		@Override
-		public void setManual(Integer manual) {
-			super.setManual(manual);
-		}
-
-		@Override
-		public void setName(String name) {
-			super.setName(name);
-		}
-
-		public void setVersion(int version) {
-			this.version = version;
-		}
 	}
 
-//	@Data
+	@Data
 	@Table("lego_set")
 	@NoArgsConstructor
 	static class LegoSetPrimitiveVersionable extends LegoSet {
@@ -857,44 +818,6 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 
 		LegoSetPrimitiveVersionable(int id, String name, Integer manual, int version) {
 			super(id, name, manual);
-			this.version = version;
-		}
-
-		@Override
-		public int getId() {
-			return super.getId();
-		}
-
-		@Override
-		public String getName() {
-			return super.getName();
-		}
-
-		@Override
-		public Integer getManual() {
-			return super.getManual();
-		}
-
-		public int getVersion() {
-			return version;
-		}
-
-		@Override
-		public void setId(int id) {
-			super.setId(id);
-		}
-
-		@Override
-		public void setManual(Integer manual) {
-			super.setManual(manual);
-		}
-
-		@Override
-		public void setName(String name) {
-			super.setName(name);
-		}
-
-		public void setVersion(int version) {
 			this.version = version;
 		}
 	}

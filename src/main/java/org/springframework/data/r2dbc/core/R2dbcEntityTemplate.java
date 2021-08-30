@@ -29,8 +29,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.TransientDataAccessResourceException;
-import org.springframework.data.mapping.IdentifierAccessor;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
@@ -44,6 +42,9 @@ import org.springframework.data.r2dbc.mapping.event.AfterConvertCallback;
 import org.springframework.data.r2dbc.mapping.event.AfterSaveCallback;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.mapping.event.BeforeSaveCallback;
+import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.repository.support.DefaultSqlIdentifier;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
@@ -311,15 +312,27 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 		return doCount(query, entityClass, getTableName(entityClass));
 	}
 
+	public boolean isIdContains(Class<?> entityClass) {
+		FastMethodInvoker.reflectionStorage(entityClass);
+		return FastMethodInvoker.isField(entityClass, Dsl.idProperty);
+	}
+
+	public SqlIdentifier getIdSqlIdentifier(Class<?> entityClass) {
+		if (isIdContains(entityClass)) {
+			return new DefaultSqlIdentifier(Dsl.idProperty, false);
+		}
+		RelationalPersistentEntity<?> entity = getRequiredEntity(entityClass);
+		return entity.getRequiredIdProperty().getColumnName();
+	}
+
 	Mono<Long> doCount(Query query, Class<?> entityClass, SqlIdentifier tableName) {
 
-		RelationalPersistentEntity<?> entity = getRequiredEntity(entityClass);
 		StatementMapper statementMapper = dataAccessStrategy.getStatementMapper().forType(entityClass);
 
 		StatementMapper.SelectSpec selectSpec = statementMapper //
 				.createSelect(tableName) //
 				.doWithTable((table, spec) -> {
-					return spec.withProjection(Functions.count(table.column(entity.getRequiredIdProperty().getColumnName())));
+					return spec.withProjection(Functions.count(table.column(getIdSqlIdentifier(entityClass))));
 				});
 
 		Optional<CriteriaDefinition> criteria = query.getCriteria();
@@ -353,8 +366,13 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 		RelationalPersistentEntity<?> entity = getRequiredEntity(entityClass);
 		StatementMapper statementMapper = dataAccessStrategy.getStatementMapper().forType(entityClass);
 
-		SqlIdentifier columnName = entity.hasIdProperty() ? entity.getRequiredIdProperty().getColumnName()
-				: SqlIdentifier.unquoted("*");
+		SqlIdentifier columnName = SqlIdentifier.unquoted("*");
+		if (!entity.hasIdProperty() && isIdContains(entityClass)) {
+			columnName = getIdSqlIdentifier(entityClass);
+		} else
+			if (entity.hasIdProperty()) {
+				columnName = entity.getRequiredIdProperty().getColumnName();
+			}
 
 		StatementMapper.SelectSpec selectSpec = statementMapper //
 				.createSelect(tableName) //
@@ -693,7 +711,7 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 			return maybeCallBeforeSave(entityToUse, outboundRow, tableName) //
 					.flatMap(entityToSave -> {
 
-						SqlIdentifier idColumn = persistentEntity.getRequiredIdProperty().getColumnName();
+						SqlIdentifier idColumn = getIdSqlIdentifier(entity.getClass());
 						Parameter id = outboundRow.remove(idColumn);
 						Criteria criteria = Criteria.where(dataAccessStrategy.toSql(idColumn)).is(id);
 
@@ -831,14 +849,14 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 	}
 
 	private <T> Query getByIdQuery(T entity, RelationalPersistentEntity<?> persistentEntity) {
-		if (!persistentEntity.hasIdProperty()) {
-			throw new MappingException("No id property found for object of type " + persistentEntity.getType() + "!");
-		}
+//		if (!persistentEntity.hasIdProperty()) {
+//			throw new MappingException("No id property found for object of type " + persistentEntity.getType() + "!");
+//		}
 
-		IdentifierAccessor identifierAccessor = persistentEntity.getIdentifierAccessor(entity);
-		Object id = identifierAccessor.getRequiredIdentifier();
-
-		return Query.query(Criteria.where(persistentEntity.getRequiredIdProperty().getName()).is(id));
+//		IdentifierAccessor identifierAccessor = persistentEntity.getIdentifierAccessor(entity);
+//		Object id = identifierAccessor.getRequiredIdentifier();
+		Object id = FastMethodInvoker.getValue(entity, getIdSqlIdentifier(entity.getClass()).getReference());
+		return Query.query(Criteria.where(getIdSqlIdentifier(entity.getClass()).getReference()).is(id));
 	}
 
 	SqlIdentifier getTableName(Class<?> entityClass) {

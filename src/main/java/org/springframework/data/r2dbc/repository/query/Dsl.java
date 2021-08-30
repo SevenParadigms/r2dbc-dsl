@@ -26,7 +26,7 @@ public class Dsl {
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^#!=><~@]";
     public static final String delimiter = ";";
-    public static final String defaultId = "id";
+    public static final String idProperty = "id";
 
     public String query = StringUtil.EMPTY_STRING;
     public String getQuery() {
@@ -120,21 +120,21 @@ public class Dsl {
 
     public Dsl id(UUID id) {
         if (id != null) {
-            query = start(query) + defaultId + "=='" + id + "'::uuid";
+            query = start(query) + idProperty + "=='" + id + "'::uuid";
         }
         return this;
     }
 
     public Dsl id(Long id) {
         if (id != null) {
-            query = start(query) + defaultId + "==" + id;
+            query = start(query) + idProperty + "==" + id;
         }
         return this;
     }
 
     public Dsl id(Integer id) {
         if (id != null) {
-            query = start(query) + defaultId + "==" + id;
+            query = start(query) + idProperty + "==" + id;
         }
         return this;
     }

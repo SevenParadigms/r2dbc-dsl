@@ -39,14 +39,14 @@ public class PostgresTestSupport {
 		if (Boolean.getBoolean("spring.data.r2dbc.test.preferLocalDatabase")) {
 
 			return getFirstWorkingDatabase( //
-					PostgresTestSupport::local, //
+//					PostgresTestSupport::local, //
 					PostgresTestSupport::testContainer //
 			);
 		} else {
 
 			return getFirstWorkingDatabase( //
-					PostgresTestSupport::testContainer, //
-					PostgresTestSupport::local //
+					PostgresTestSupport::testContainer //
+//					PostgresTestSupport::local //
 			);
 		}
 	}

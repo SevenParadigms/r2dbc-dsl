@@ -161,8 +161,8 @@ class R2dbcQueryCreator extends RelationalQueryCreator<PreparedOperation<?>> {
 				.collect(Collectors.toList());
 		} else if (tree.isCountProjection()) {
 
-			SqlIdentifier idColumn = SqlIdentifier.quoted(Dsl.defaultId);
-			if (!FastMethodInvoker.isField(entityToRead, Dsl.defaultId)) {
+			SqlIdentifier idColumn = SqlIdentifier.quoted(Dsl.idProperty);
+			if (!FastMethodInvoker.isField(entityToRead, Dsl.idProperty)) {
 				idColumn = entityMetadata.getTableEntity().getRequiredIdProperty().getColumnName();
 			}
 			expressions = Collections.singletonList(Functions.count(table.column(idColumn)));

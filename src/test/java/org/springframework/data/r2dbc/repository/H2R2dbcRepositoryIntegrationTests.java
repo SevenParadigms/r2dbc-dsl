@@ -28,12 +28,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.mapping.event.AfterConvertCallback;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.testing.H2TestSupport;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -159,7 +157,7 @@ public class H2R2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIn
 
 		this.jdbc.execute("CREATE TABLE ID_ONLY(id serial CONSTRAINT id_only_pk PRIMARY KEY)");
 
-		IdOnlyEntity entity1 = new IdOnlyEntity();
+		IdOnly entity1 = new IdOnly();
 		idOnlyEntityRepository.saveAll(Collections.singletonList(entity1))
 			.as(StepVerifier::create) //
 			.consumeNextWith( actual -> {
@@ -212,14 +210,14 @@ public class H2R2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIn
 		Mono<Double> updateManualAndReturnDouble(int manual);
 	}
 
-	interface IdOnlyEntityRepository extends ReactiveCrudRepository<IdOnlyEntity, Integer> {}
+	interface IdOnlyEntityRepository extends ReactiveCrudRepository<IdOnly, Integer> {}
 
 	@Getter
 	@Setter
-	@Table("id_only")
+//	@Table("id_only")
 	@NoArgsConstructor
-	static class IdOnlyEntity {
-		@Id Integer id;
+	static class IdOnly {
+		/*@Id */Integer id;
 	}
 
 	static class AfterConvertCallbackRecorder implements AfterConvertCallback<LegoSet> {

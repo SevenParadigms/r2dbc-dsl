@@ -15,32 +15,27 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.Data;
-import reactor.test.StepVerifier;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.r2dbc.dialect.MySqlDialect;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.MySqlTestSupport;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.jdbc.core.JdbcTemplate;
+import reactor.test.StepVerifier;
+
+import javax.sql.DataSource;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration tests for {@link DatabaseClient} against MySQL.
@@ -146,7 +141,7 @@ public class MySqlDatabaseClientIntegrationTests extends AbstractDatabaseClientI
 				.verifyComplete();
 	}
 
-	@Table("boolean_mapping")
+//	@Table("boolean_mapping")
 	@Data
 	static class BooleanMapping {
 
@@ -155,11 +150,11 @@ public class MySqlDatabaseClientIntegrationTests extends AbstractDatabaseClientI
 		boolean flag2;
 	}
 
-	@Table("uuid_type")
+//	@Table("uuid_type")
 	@Data
 	static class UuidType {
 
-		@Id UUID id;
+		/*@Id */UUID id;
 		UUID uuidValue;
 	}
 

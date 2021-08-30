@@ -26,13 +26,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.convert.EnumWriteSupport;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
 import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.jdbc.core.JdbcTemplate;
 import reactor.test.StepVerifier;
@@ -74,7 +72,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Test // gh-30
 	void shouldReadAndWritePrimitiveSingleDimensionArrays() {
 
-		EntityWithArrays withArrays = new EntityWithArrays(null, null, new int[] { 1, 2, 3 }, null, null);
+		WithArrays withArrays = new WithArrays(null, null, new int[] { 1, 2, 3 }, null, null);
 
 		insert(withArrays);
 		selectAndAssert(actual -> {
@@ -85,7 +83,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Test // gh-30
 	void shouldReadAndWriteBoxedSingleDimensionArrays() {
 
-		EntityWithArrays withArrays = new EntityWithArrays(null, new Integer[] { 1, 2, 3 }, null, null, null);
+		WithArrays withArrays = new WithArrays(null, new Integer[] { 1, 2, 3 }, null, null, null);
 
 		insert(withArrays);
 
@@ -99,7 +97,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Test // gh-30
 	void shouldReadAndWriteConvertedDimensionArrays() {
 
-		EntityWithArrays withArrays = new EntityWithArrays(null, null, null, null, new int[] {5, 6, 7});
+		WithArrays withArrays = new WithArrays(null, null, null, null, new int[] {5, 6, 7});
 
 		insert(withArrays);
 
@@ -111,7 +109,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Test // gh-30
 	void shouldReadAndWriteMultiDimensionArrays() {
 
-		EntityWithArrays withArrays = new EntityWithArrays(null, null, null, new int[][] { { 1, 2, 3 }, { 4, 5, 6 } },
+		WithArrays withArrays = new WithArrays(null, null, null, new int[][] { { 1, 2, 3 }, { 4, 5, 6 } },
 				null);
 
 		insert(withArrays);
@@ -123,7 +121,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 			assertThat(actual.multidimensionalArray[1]).containsExactly(4, 5, 6);
 		});
 
-		client.update().table(EntityWithArrays.class).using(withArrays).then() //
+		client.update().table(WithArrays.class).using(withArrays).then() //
 				.as(StepVerifier::create).verifyComplete();
 	}
 
@@ -237,8 +235,8 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Test // gh-573
 	void shouldReadAndWriteInterval() {
 
-		EntityWithInterval entityWithInterval = new EntityWithInterval();
-		entityWithInterval.interval = Interval.of(Duration.ofHours(3));
+		WithInterval withInterval = new WithInterval();
+		withInterval.interval = Interval.of(Duration.ofHours(3));
 
 		template.execute("DROP TABLE IF EXISTS with_interval");
 		template.execute("CREATE TABLE with_interval (" //
@@ -249,28 +247,28 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 		R2dbcEntityTemplate template = new R2dbcEntityTemplate(client,
 				new DefaultReactiveDataAccessStrategy(PostgresDialect.INSTANCE));
 
-		template.insert(entityWithInterval).thenMany(template.select(Query.empty(), EntityWithInterval.class)) //
+		template.insert(withInterval).thenMany(template.select(Query.empty(), WithInterval.class)) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.getInterval()).isEqualTo(entityWithInterval.interval);
+					assertThat(actual.getInterval()).isEqualTo(withInterval.interval);
 				}).verifyComplete();
 	}
 
-	private void insert(EntityWithArrays object) {
+	private void insert(WithArrays object) {
 
 		client.insert() //
-				.into(EntityWithArrays.class) //
+				.into(WithArrays.class) //
 				.using(object) //
 				.then() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
-	private void selectAndAssert(Consumer<? super EntityWithArrays> assertion) {
+	private void selectAndAssert(Consumer<? super WithArrays> assertion) {
 
 		client.select() //
-				.from(EntityWithArrays.class).fetch() //
+				.from(WithArrays.class).fetch() //
 				.first() //
 				.as(StepVerifier::create) //
 				.consumeNextWith(assertion).verifyComplete();
@@ -279,15 +277,15 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Data
 	@AllArgsConstructor
 	static class EntityWithEnum {
-		@Id long id;
+		/*@Id */long id;
 		State myState;
 	}
 
-	@Table("with_arrays")
+//	@Table("with_arrays")
 	@AllArgsConstructor
-	static class EntityWithArrays {
+	static class WithArrays {
 
-		@Id Integer id;
+		/*@Id */Integer id;
 		Integer[] boxedArray;
 		int[] primitiveArray;
 		int[][] multidimensionalArray;
@@ -297,7 +295,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	@Data
 	static class GeoType {
 
-		@Id Integer id;
+		/*@Id */Integer id;
 
 		Point thePoint;
 		Box theBox;
@@ -314,10 +312,10 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 	}
 
 	@Data
-	@Table("with_interval")
-	static class EntityWithInterval {
+//	@Table("with_interval")
+	static class WithInterval {
 
-		@Id Integer id;
+		/*@Id */Integer id;
 
 		Interval interval;
 

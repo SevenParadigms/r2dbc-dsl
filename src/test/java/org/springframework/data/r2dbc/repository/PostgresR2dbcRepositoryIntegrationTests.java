@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
@@ -34,7 +33,6 @@ import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
-import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ContextConfiguration;
@@ -163,7 +161,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				+ "    id            SERIAL PRIMARY KEY," //
 				+ "    hstore_value  HSTORE NOT NULL);");
 
-		WithHStore person = new WithHStore(null, Collections.singletonMap("hello", "world"));
+		WithHstore person = new WithHstore(null, Collections.singletonMap("hello", "world"));
 		hstoreRepositoryWith.save(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		hstoreRepositoryWith.findAll().as(StepVerifier::create).consumeNextWith(actual -> {
@@ -175,7 +173,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	@AllArgsConstructor
 	static class WithJson {
 
-		@Id Long id;
+		/*@Id */Long id;
 
 		JsonNode jsonValue;
 
@@ -193,10 +191,10 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	}
 
 	@AllArgsConstructor
-	@Table("with_hstore")
-	static class WithHStore {
+//	@Table("with_hstore")
+	static class WithHstore {
 
-		@Id Long id;
+		/*@Id */Long id;
 
 		Map<String, String> hstoreValue;
 
@@ -209,7 +207,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		}
 	}
 
-	interface WithHStoreRepository extends R2dbcRepository<WithHStore, Long> {
+	interface WithHStoreRepository extends R2dbcRepository<WithHstore, Long> {
 
 	}
 

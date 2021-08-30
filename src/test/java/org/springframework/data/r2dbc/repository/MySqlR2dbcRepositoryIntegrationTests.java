@@ -27,7 +27,6 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
@@ -107,7 +106,7 @@ public class MySqlR2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositor
 	@Data
 	@AllArgsConstructor
 	static class DateTests {
-		@Id Integer id;
+		/*@Id */Integer id;
 		LocalDateTime createdTimestamp;
 		LocalDateTime createdDate;
 	}

@@ -24,7 +24,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.TransientDataAccessException;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -125,7 +124,7 @@ public class H2SimpleR2dbcRepositoryIntegrationTests extends AbstractSimpleR2dbc
 	@AllArgsConstructor
 	static class AlwaysNew implements Persistable<Long> {
 
-		@Id Long id;
+		/*@Id */Long id;
 		String name;
 
 		@Override

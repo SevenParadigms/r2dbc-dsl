@@ -70,14 +70,14 @@ public class MySqlTestSupport {
 		if (Boolean.getBoolean("spring.data.r2dbc.test.preferLocalDatabase")) {
 
 			return getFirstWorkingDatabase( //
-					MySqlTestSupport::local, //
+//					MySqlTestSupport::local, //
 					MySqlTestSupport::testContainer //
 			);
 		} else {
 
 			return getFirstWorkingDatabase( //
-					MySqlTestSupport::testContainer, //
-					MySqlTestSupport::local //
+					MySqlTestSupport::testContainer //
+//					MySqlTestSupport::local //
 			);
 		}
 	}

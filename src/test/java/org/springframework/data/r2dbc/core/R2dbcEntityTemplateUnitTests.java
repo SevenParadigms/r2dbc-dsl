@@ -19,6 +19,7 @@ import io.r2dbc.spi.test.MockColumnMetadata;
 import io.r2dbc.spi.test.MockResult;
 import io.r2dbc.spi.test.MockRow;
 import io.r2dbc.spi.test.MockRowMetadata;
+import lombok.Data;
 import lombok.ToString;
 import lombok.Value;
 import lombok.With;
@@ -455,29 +456,22 @@ public class R2dbcEntityTemplateUnitTests {
 				Parameter.from("before-save"));
 	}
 
+	@Data
 	@ToString
 	static class Person {
 
-		@Id String id;
+		/*@Id */String id;
 
 		@Column("THE_NAME") String name;
 
 		String description;
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
 	}
 
 	@Value
 	@With
 	private static class VersionedPerson {
 
-		@Id String id;
+		/*@Id */String id;
 
 		@Version long version;
 
@@ -488,7 +482,8 @@ public class R2dbcEntityTemplateUnitTests {
 	@With
 	private static class PersonWithPrimitiveId {
 
-		@Id int id;
+		@Id
+		int id;
 
 		String name;
 	}
@@ -497,7 +492,8 @@ public class R2dbcEntityTemplateUnitTests {
 	@With
 	private static class VersionedPersonWithPrimitiveId {
 
-		@Id int id;
+		@Id
+		int id;
 
 		@Version long version;
 
@@ -508,7 +504,7 @@ public class R2dbcEntityTemplateUnitTests {
 	@With
 	private static class WithAuditingAndOptimisticLocking {
 
-		@Id String id;
+		/*@Id */String id;
 
 		@Version long version;
 

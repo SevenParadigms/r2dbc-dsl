@@ -15,15 +15,8 @@
  */
 package org.springframework.data.r2dbc.config;
 
-import static org.assertj.core.api.Assertions.*;
-
 import lombok.Data;
-import reactor.core.publisher.Mono;
-
-import java.time.LocalDateTime;
-
 import org.junit.jupiter.api.Test;
-
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.annotation.CreatedDate;
@@ -35,6 +28,11 @@ import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit tests for {@link EnableR2dbcAuditing}
@@ -74,7 +72,7 @@ class AuditingUnitTests {
 		assertThat(entity.modified).isEqualTo(entity.created);
 		assertThat(entity.modifiedBy).isEqualTo("Walter");
 
-		Thread.sleep(10);
+		Thread.sleep(100);
 		entity.id = 1L;
 
 		entity = callbacks.callback(BeforeConvertCallback.class, entity, SqlIdentifier.unquoted("table")).block();
@@ -87,7 +85,8 @@ class AuditingUnitTests {
 	@Data
 	class Entity {
 
-		@Id Long id;
+		@Id
+		Long id;
 		@CreatedDate LocalDateTime created;
 		@LastModifiedDate LocalDateTime modified;
 		@LastModifiedBy String modifiedBy;

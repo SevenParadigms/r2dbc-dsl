@@ -75,14 +75,14 @@ public class OracleTestSupport {
 		if (Boolean.getBoolean("spring.data.r2dbc.test.preferLocalDatabase")) {
 
 			return getFirstWorkingDatabase( //
-					OracleTestSupport::local, //
+//					OracleTestSupport::local, //
 					OracleTestSupport::testContainer //
 			);
 		} else {
 
 			return getFirstWorkingDatabase( //
-					OracleTestSupport::testContainer, //
-					OracleTestSupport::local //
+					OracleTestSupport::testContainer //
+//					OracleTestSupport::local //
 			);
 		}
 	}

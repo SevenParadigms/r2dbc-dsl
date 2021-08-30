@@ -15,22 +15,19 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-
 import io.r2dbc.spi.test.MockColumnMetadata;
 import io.r2dbc.spi.test.MockResult;
 import io.r2dbc.spi.test.MockRow;
 import io.r2dbc.spi.test.MockRowMetadata;
-import reactor.test.StepVerifier;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.springframework.data.annotation.Id;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.testing.StatementRecorder;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.r2dbc.core.Parameter;
+import reactor.test.StepVerifier;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit test for {@link ReactiveInsertOperation}.
@@ -110,7 +107,7 @@ public class ReactiveInsertOperationUnitTests {
 
 	static class Person {
 
-		@Id String id;
+		/*@Id */String id;
 
 		@Column("THE_NAME") String name;
 

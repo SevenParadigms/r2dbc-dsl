@@ -68,14 +68,14 @@ public class MariaDbTestSupport {
 		if (Boolean.getBoolean("spring.data.r2dbc.test.preferLocalDatabase")) {
 
 			return getFirstWorkingDatabase( //
-					MariaDbTestSupport::local, //
+//					MariaDbTestSupport::local, //
 					MariaDbTestSupport::testContainer //
 			);
 		} else {
 
 			return getFirstWorkingDatabase( //
-					MariaDbTestSupport::testContainer, //
-					MariaDbTestSupport::local //
+					MariaDbTestSupport::testContainer //
+//					MariaDbTestSupport::local //
 			);
 		}
 	}

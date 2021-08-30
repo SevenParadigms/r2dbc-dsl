@@ -45,6 +45,7 @@ import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
+import org.springframework.data.relational.core.query.Update;
 import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.relational.repository.query.RelationalEntityInformation;
 import org.springframework.data.relational.repository.query.RelationalExampleMapper;
@@ -59,7 +60,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import org.springframework.data.relational.core.query.Update;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -420,10 +420,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 	@Override
 	@Transactional
 	public Mono<Void> delete(T objectToDelete) {
-
 		Assert.notNull(objectToDelete, "Object to delete must not be null!");
 
-		return deleteById(this.entity.getRequiredId(objectToDelete));
+		return deleteById((ID) FastMethodInvoker.getValue(objectToDelete, getIdColumnName()));
 	}
 
 	/*
@@ -464,8 +463,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
 		Assert.notNull(objectPublisher, "The Object Publisher must not be null!");
 
-		Flux<ID> idPublisher = Flux.from(objectPublisher) //
-				.map(this.entity::getRequiredId);
+		Flux<ID> idPublisher = Flux.from(objectPublisher).map(p -> (ID) FastMethodInvoker.getValue(p, getIdColumnName()));
 
 		return deleteById(idPublisher);
 	}
@@ -554,8 +552,8 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 	}
 
 	private String getIdColumnName() {
-		if (entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType()).stream().anyMatch(i -> i.getReference().equals(Dsl.defaultId)))
-			return Dsl.defaultId;
+		if (entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType()).stream().anyMatch(i -> i.getReference().equals(Dsl.idProperty)))
+			return Dsl.idProperty;
 		else
 			return entityOperations.getDataAccessStrategy().toSql(
 					converter
