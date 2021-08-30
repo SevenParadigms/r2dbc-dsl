@@ -29,14 +29,13 @@ import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
 import org.springframework.data.relational.repository.support.MappingRelationalEntityInformation;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.EntityInformation;
-import org.springframework.data.repository.core.support.DslRepositoryFactorySupport;
 import org.springframework.r2dbc.core.DatabaseClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit test for {@link DslRepositoryFactorySupport}.
+ * Unit test for {@linkRepositoryFactorySupport}.
  *
  * @author Mark Paluch
  */

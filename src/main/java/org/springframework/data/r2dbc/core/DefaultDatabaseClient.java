@@ -63,7 +63,6 @@ import java.util.stream.Collectors;
  * @author Bogdan Ilchyshyn
  * @deprecated since 1.2.
  */
-//@Deprecated
 class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 	private final Log logger = LogFactory.getLog(getClass());
@@ -1567,23 +1566,16 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 	private static String getSql(Object sqlProvider) {
 
 		if (sqlProvider instanceof SqlProvider) {
-			return prepareSql(((SqlProvider) sqlProvider).getSql());
+			return ((SqlProvider) sqlProvider).getSql();
 		} else {
 			return null;
 		}
 	}
 
-	private static String prepareSql(String sql) {
-		if (sql.replaceAll("\\s+", "").startsWith("SELECTFROM")) {
-			return sql.toLowerCase().replaceAll("SELECT", "SELECT *");
-		}
-		return sql;
-	}
-
 	private static String getRequiredSql(Supplier<String> sqlSupplier) {
 		String sql = sqlSupplier.get();
 		Assert.state(StringUtils.hasText(sql), "SQL returned by SQL supplier must not be empty!");
-		return prepareSql(sql);
+		return sql;
 	}
 
 	private static void assertRegularClass(Class<?> table) {
