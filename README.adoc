@@ -24,7 +24,7 @@ interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
     fun listener(): Flux<Notification>
-    fun fullTextSearch(Dsl dsl): Flux<T>
+    fun fullTextSearch(dsl: Dsl): Flux<T>
 }
 ----
 
