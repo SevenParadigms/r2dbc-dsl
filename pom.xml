@@ -5,12 +5,12 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>2.6.3</version>
+	<version>2.6.4</version>
 
 	<parent>
-		<groupId>org.springframework.data.build</groupId>
-		<artifactId>spring-data-parent</artifactId>
-		<version>2.6.0-SNAPSHOT</version>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>9</version>
 	</parent>
 
 	<name>Spring Data R2DBC DSL</name>
@@ -93,6 +93,7 @@
 		<r2dbc-releasetrain.version>Arabba-SR10</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
 		<netty>4.1.66.Final</netty>
+		<test.container>1.16.0</test.container>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
@@ -107,6 +108,13 @@
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-framework-bom</artifactId>
 				<version>[5.3.9,)</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>2.3.12.RELEASE</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 			<dependency>
 				<groupId>io.r2dbc</groupId>
@@ -149,6 +157,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-r2dbc</artifactId>
+			<version>5.3.9</version>
 		</dependency>
 
 		<dependency>
@@ -190,7 +199,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>${assertj}</version>
+			<version>3.20.2</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -310,6 +319,7 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mysql</artifactId>
+			<version>${test.container}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -322,6 +332,7 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mariadb</artifactId>
+			<version>${test.container}</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -334,12 +345,14 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>oracle-xe</artifactId>
+			<version>${test.container}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>${test.container}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -353,7 +366,7 @@
 		<dependency>
 			<groupId>io.mockk</groupId>
 			<artifactId>mockk</artifactId>
-			<version>${mockk}</version>
+			<version>1.12.0</version>
 			<scope>test</scope>
 		</dependency>
 
