@@ -47,15 +47,15 @@ data class Dsl {
 
 3. Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
 
-4. Joins to any tables and build criteria on joined columns, also select joined columns in result
+4. Joins to any tables and build criteria on joined columns, also can select joined columns in result
 
-5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
+5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`, the camel name automatic convert to sql underlined
 
 6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
 7. JsonNode field in model automatically converted to JSONB type of PostgreSQL database and back
 
-8. In repository with `listener` method subscribe to listen of all changes of table from database
+8. Repository `listener` method can subscribe to listen of all changes of table from database to Sink<Notification>
 
 9. Ranked full text search by field `tsv` with RUM index operator with `fullTextSearch` method
 
@@ -129,7 +129,7 @@ execute procedure notify_sender();
 
 ## Ranked full text search:
 
-Default language is english, but may be setting in:
+Default language is English, but may be setting in:
 
 `spring.r2dbc.dsl.fts-lang`
 
