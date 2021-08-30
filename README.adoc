@@ -31,14 +31,14 @@ interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
 and `Dsl` class:
 [source,kotlin]
 ----
-data class Dsl(
-    val query: String,
-    val lang: String,
-    val fields: Array<String>,
-    val page: Int,
-    val size: Int,
+data class Dsl {
+    val query: String
+    val lang: String
+    val fields: Array<String>
+    val page: Int
+    val size: Int
     val sort: String
-)
+}
 ----
 
 ## Features
