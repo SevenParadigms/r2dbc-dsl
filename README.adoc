@@ -4,7 +4,7 @@ This module provides `R2dbcRepository` for Web Querying throw REST API and Crite
 
 The extension of the base repository `R2dbcRepository` of Spring Data R2dbc is due to the use of features by all methods, and not just those related to DSL. 
 
-Add the Maven dependency:
+Add the Maven Central Repository dependency:
 
 [source,xml]
 ----
