@@ -36,4 +36,5 @@ public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>
     Mono<T> findOne(Dsl dsl);
     Flux<Notification> listener();
     Flux<T> fullTextSearch(Dsl dsl);
+    <S> Long saveBatch(Iterable<S> models);
 }

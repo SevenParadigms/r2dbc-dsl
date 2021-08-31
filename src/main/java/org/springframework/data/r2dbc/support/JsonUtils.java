@@ -26,8 +26,8 @@ import java.util.*;
  */
 public abstract class JsonUtils {
     private static final ThreadLocal<ObjectMapper> OBJECT_MAPPER_THREAD_LOCAL = ThreadLocal.withInitial(() -> {
-        final ObjectMapper mapper = new ObjectMapper();
-        final JavaTimeModule javaTimeModule = new JavaTimeModule();
+        final var mapper = new ObjectMapper();
+        final var javaTimeModule = new JavaTimeModule();
         javaTimeModule.addSerializer(ZonedDateTime.class, new ZonedDateTimeSerializer(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         javaTimeModule.addDeserializer(ZonedDateTime.class, InstantDeserializer.ZONED_DATE_TIME);
         mapper.registerModule(javaTimeModule);
@@ -60,11 +60,11 @@ public abstract class JsonUtils {
     }
 
     public static Map<String, ?> jsonToMap(final JsonNode json) {
-        final Map<String, Object> map = new LinkedHashMap<>();
-        final Iterator<String> fieldNames = json.fieldNames();
+        final var map = new LinkedHashMap<String, Object>();
+        final var fieldNames = json.fieldNames();
         while (fieldNames.hasNext()) {
-            final String fieldName = fieldNames.next();
-            final JsonNode jsonNode = json.get(fieldName);
+            final var fieldName = fieldNames.next();
+            final var jsonNode = json.get(fieldName);
             map.put(fieldName, nodeToObject(jsonNode));
         }
         return map;
@@ -72,10 +72,10 @@ public abstract class JsonUtils {
 
     @Nullable
     public static Object nodeToObject(final JsonNode json) {
-        final JsonNodeType type = json.getNodeType();
+        final var type = json.getNodeType();
         switch (type) {
             case ARRAY:
-                List<Object> array = new ArrayList<>();
+                var array = new ArrayList<>();
                 for (JsonNode node : json) {
                     array.add(nodeToObject(node));
                 }
