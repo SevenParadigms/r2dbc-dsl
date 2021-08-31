@@ -21,9 +21,9 @@ That library produce `R2dbcDslRepository` interface:
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
-    fun listener(): Flux<Notification>          /* only for PostgreSQL */
-    fun fullTextSearch(dsl: Dsl): Flux<T>       /* only for PostgreSQL */
-    fun saveBatch(models: Iterable<S>): Long    /* only for PostgreSQL */
+    fun listener(): Flux<Notification>          /* bye for one PostgreSQL, in the next generation others DB will be added  */
+    fun fullTextSearch(dsl: Dsl): Flux<T>       /* bye for one PostgreSQL, in the next generation others DB will be added  */
+    fun saveBatch(models: Iterable<S>): Long    /* bye for one PostgreSQL, in the next generation others DB will be added  */
 }
 ----
 
@@ -134,7 +134,7 @@ Default language is English, but may be setting in:
 
 `spring.r2dbc.dsl.fts-lang`
 
-In table needed field with name `tsv` (in next generation also be setting in application.yml):
+In table needed field with name `tsv` (in next generation also name setting in application.yml):
 [source,postgresql]
 ----
 CREATE TABLE public.jobject
