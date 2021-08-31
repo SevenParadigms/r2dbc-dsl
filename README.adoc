@@ -55,9 +55,9 @@ data class Dsl {
 
 7. JsonNode field in model automatically converted to JSONB type of PostgreSQL database and back
 
-8. Repository `listener` method can subscribe to listen of all changes of table from database to Sink<Notification>
+8. Repository `listener` method can subscribe to listen of all changes of table from database over `Sink<Notification>`
 
-9. Ranked full text search by field `tsv` with RUM index operator with `fullTextSearch` method
+9. Ranked full text search by field `tsv` with RUM index operator in `fullTextSearch` method
 
 10. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
 
