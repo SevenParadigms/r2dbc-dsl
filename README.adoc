@@ -51,7 +51,7 @@ data class Dsl {
 
 5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`, the camel name automatic convert to sql underlined
 
-6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
+6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name
 
 7. JsonNode field in model automatically converted to JSONB type of PostgreSQL database and back
 
