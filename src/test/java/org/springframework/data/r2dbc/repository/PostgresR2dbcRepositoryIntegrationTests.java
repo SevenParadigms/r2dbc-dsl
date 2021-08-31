@@ -216,12 +216,20 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 		shouldInsertNewItems();
 
-		repository.findOne(Dsl.create().filter("manual", 13))
+		repository.findOne(Dsl.create().equals("manual", 13))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					assertThat(actual.getName()).isEqualTo("FORSCHUNGSSCHIFF");
 				})
 				.verifyComplete();
+
+		repository.findOne(Dsl.create().equals("name", "FORSCHUNGSSCHIFF"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					assertThat(actual.getManual()).isEqualTo(13);
+				})
+				.verifyComplete();
+
 
 		repository.findOne(Dsl.create().id(1)).as(StepVerifier::create)
 				.consumeNextWith(actual -> {

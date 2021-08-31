@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
@@ -120,6 +119,22 @@ public abstract class JsonUtils {
 
     public static <T> T jsonToObject(final JsonNode json, final Class<T> cls) {
         return getMapper().convertValue(json, cls);
+    }
+
+    public static <T> ArrayList<T> jsonToList(final JsonNode json, final Class<T> cls) {
+        var list = new ArrayList<T>();
+        var maps = JsonUtils.jsonToObject(json, ArrayList.class);
+        for (Object map : maps) {
+            try {
+                var constructor = cls.getConstructor();
+                var obj = constructor.newInstance();
+                FastMethodInvoker.setMap(obj, (LinkedHashMap<String, Object>) map);
+                list.add(obj);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return list;
     }
 
     public static <T> String toJsonString(final Object object) {

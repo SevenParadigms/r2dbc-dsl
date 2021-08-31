@@ -81,7 +81,7 @@ public class FastMethodInvoker {
         return map;
     }
 
-    public static <S> void setValue(Object any, String name, S value) {
+    public static void setValue(Object any, String name, Object value) {
         for (Field field : FastMethodInvoker.reflectionStorage(any.getClass())) {
             if (field.getName().equals(name)) {
                 String methodName = "set" + StringUtils.capitalize(name);
@@ -95,6 +95,27 @@ public class FastMethodInvoker {
                     fastMethod.invoke(any, new Object[] { value });
                 } catch (InvocationTargetException e) {
                     throw new RuntimeException(e.getCause());
+                }
+            }
+        }
+    }
+
+    public static void setMap(Object any, LinkedHashMap<String, Object> map) {
+        for (var name : map.keySet()) {
+            for (Field field : FastMethodInvoker.reflectionStorage(any.getClass())) {
+                if (field.getName().equals(name)) {
+                    String methodName = "set" + StringUtils.capitalize(name);
+                    String fastMethodKey = any.getClass().getName() + "." + methodName;
+                    FastMethod fastMethod = FastMethodInvoker.getFastMethod(fastMethodKey);
+                    if (fastMethod == null) {
+                        fastMethod = FastClass.create(any.getClass()).getMethod(methodName, new Class[] { field.getType() });
+                        FastMethodInvoker.setFastMethod(fastMethodKey, fastMethod);
+                    }
+                    try {
+                        fastMethod.invoke(any, new Object[] { map.get(name) });
+                    } catch (InvocationTargetException e) {
+                        throw new RuntimeException(e.getCause());
+                    }
                 }
             }
         }

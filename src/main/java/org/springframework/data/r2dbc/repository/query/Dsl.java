@@ -146,12 +146,11 @@ public class Dsl {
         return this;
     }
 
-    public Dsl filter(String field, Object value) {
+    public Dsl equals(String field, Object value) {
         if (field != null) {
             query = start(query) + field + "==";
-            if (value instanceof UUID) query += "'" + value + "':uuid";
-            else if (value instanceof Number) query += value;
-            else query += "'" + value + "'";
+            if (value instanceof Number) query += value;
+            else query += value;
         }
         return this;
     }
@@ -159,13 +158,6 @@ public class Dsl {
     public Dsl isFalse(String field) {
         if (field != null) {
             query = start(query) + "!" + field;
-        }
-        return this;
-    }
-
-    public Dsl equals(String field, Object value) {
-        if (field != null) {
-            query = start(query) + field + "==" + value;
         }
         return this;
     }
