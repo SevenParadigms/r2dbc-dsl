@@ -15,7 +15,7 @@ Add the Maven Central Repository dependency:
 </dependency>
 ----
 
-That repository produce `R2dbcDslRepository` interface:
+That library produce `R2dbcDslRepository` interface:
 [source,kotlin]
 ----
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
