@@ -2,7 +2,7 @@
 
 This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL. 
 
-The extension of the base repository `R2dbcRepository` of Spring Data R2dbc is due to the use of features by all methods, and not just those related to DSL. 
+The internal extension of the base repository `R2dbcRepository` in Spring Data R2dbc is due to the use of features by all methods, and not just those related to DSL. Also modified a lot of integration tests.
 
 Add the Maven Central dependency instead of the library `spring-data-r2dbc`:
 
@@ -15,7 +15,7 @@ Add the Maven Central dependency instead of the library `spring-data-r2dbc`:
 </dependency>
 ----
 
-That repository produce `R2dbcDslRepository` interface:
+That library produce `R2dbcDslRepository` interface:
 [source,kotlin]
 ----
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
@@ -52,13 +52,13 @@ data class Dsl {
 
 5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`, the camel name automatic convert to sql underlined
 
-6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
+6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name
 
 7. JsonNode field in model automatically converted to JSONB type of PostgreSQL database and back
 
-8. Repository `listener` method can subscribe to listen of all changes of table from database to Sink<Notification>
+8. Repository `listener` method can subscribe to listen of all changes of table from database over `Sink<Notification>`
 
-9. Ranked full text search by field `tsv` with RUM index operator with `fullTextSearch` method
+9. Ranked full text search by field `tsv` with RUM index operator in `fullTextSearch` method
 
 10. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
 
