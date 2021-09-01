@@ -11,7 +11,7 @@ Add the Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.0.1</version>
+  <version>3.0.2</version>
 </dependency>
 ----
 
