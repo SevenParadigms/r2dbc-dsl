@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>3.0.1</version>
+	<version>3.0.2</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -311,6 +311,12 @@
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 			<version>1.15</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>1.9</version>
 		</dependency>
 
 		<!-- Testcontainers -->

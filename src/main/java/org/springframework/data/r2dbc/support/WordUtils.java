@@ -1,5 +1,7 @@
 package org.springframework.data.r2dbc.support;
 
+import org.apache.commons.text.CharacterPredicates;
+import org.apache.commons.text.RandomStringGenerator;
 import org.springframework.util.StringUtils;
 
 /**
@@ -34,5 +36,11 @@ public abstract class WordUtils {
 
     public static String trimInline(final String text) {
         return text.replaceAll("[\\s\\n]", " ");
+    }
+
+    public static String generateString(final int size) {
+        return new RandomStringGenerator.Builder().withinRange('0', 'z')
+                .filteredBy(CharacterPredicates.DIGITS, CharacterPredicates.LETTERS)
+                .build().generate(size);
     }
 }

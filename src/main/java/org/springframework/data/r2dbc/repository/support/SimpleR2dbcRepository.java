@@ -284,7 +284,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         ConnectionFactory connectionFactory = entityOperations.getDatabaseClient().getConnectionFactory();
         return Mono.from(connectionFactory.create()).flatMapMany(connection -> {
             String tableName = entityOperations.getDataAccessStrategy().toSql(this.entity.getTableName()).toLowerCase();
-            PostgresqlConnection postgresqlConnection = (PostgresqlConnection) ((Wrapped<Connection>) connection).unwrap();
+            PostgresqlConnection postgresqlConnection = (PostgresqlConnection) connection;
             return postgresqlConnection.createStatement("LISTEN " + tableName)
                     .execute()
                     .flatMap(PostgresqlResult::getRowsUpdated)

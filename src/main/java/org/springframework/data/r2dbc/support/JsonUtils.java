@@ -121,6 +121,10 @@ public abstract class JsonUtils {
         return getMapper().convertValue(json, cls);
     }
 
+    public static <T> T jsonToObject(final String json, final Class<T> cls) {
+        return getMapper().convertValue(json, cls);
+    }
+
     public static <T> ArrayList<T> jsonToList(final JsonNode json, final Class<T> cls) {
         var list = new ArrayList<T>();
         var maps = JsonUtils.jsonToObject(json, ArrayList.class);
