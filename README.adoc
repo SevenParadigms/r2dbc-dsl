@@ -118,7 +118,7 @@ BEGIN
 END;
 $$;
 ----
-And set to tables notifier by trigger:
+and set to tables notifier by trigger:
 [source,postgresql]
 ----
 create trigger table_notify
@@ -126,6 +126,16 @@ create trigger table_notify
     on table
     for each row
 execute procedure notify_sender();
+----
+
+and last in source code:
+[source,kotlin]
+----
+dslRepository.listener()
+             .onBackpressureLatest()
+             .flatMap {
+                 ...
+             }.subscribe()
 ----
 
 ## Ranked full text search:
