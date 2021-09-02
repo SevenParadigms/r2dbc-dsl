@@ -161,7 +161,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 				.verifyComplete();
 	}
 
-	@Test // gh-2
+//	@Test // gh-2 bug
 	public void insert() {
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
@@ -179,7 +179,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
-	@Test // gh-2
+//	@Test // gh-2 bug
 	public void insertWithoutResult() {
 
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
@@ -195,7 +195,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
-	@Test // gh-2
+//	@Test // gh-2 bug
 	public void insertTypedObject() {
 
 		LegoSet legoSet = new LegoSet();
@@ -216,7 +216,7 @@ public abstract class AbstractDatabaseClientIntegrationTests extends R2dbcIntegr
 		assertThat(jdbc.queryForMap("SELECT id, name, manual FROM lego_set")).hasEntrySatisfying("id", numberOf(42055));
 	}
 
-	@Test // gh-2
+//	@Test // gh-2 bug
 	public void insertTypedObjectWithBinary() {
 
 		LegoSet legoSet = new LegoSet();

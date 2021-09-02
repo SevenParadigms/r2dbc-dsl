@@ -15,18 +15,11 @@
  */
 package org.springframework.data.r2dbc.testing;
 
-import io.r2dbc.spi.Batch;
-import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.ConnectionFactoryMetadata;
-import io.r2dbc.spi.ConnectionMetadata;
-import io.r2dbc.spi.IsolationLevel;
-import io.r2dbc.spi.Result;
-import io.r2dbc.spi.Statement;
-import io.r2dbc.spi.ValidationDepth;
+import io.r2dbc.spi.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -162,6 +155,11 @@ public class StatementRecorder implements ConnectionFactory {
 		}
 
 		@Override
+		public Publisher<Void> beginTransaction(TransactionDefinition transactionDefinition) {
+			return createStatement("BEGIN").execute().then();
+		}
+
+		@Override
 		public Publisher<Void> close() {
 			return createStatement("CLOSE").execute().then();
 		}
@@ -236,6 +234,16 @@ public class StatementRecorder implements ConnectionFactory {
 		@Override
 		public Publisher<Void> setAutoCommit(boolean autoCommit) {
 			return createStatement("SET AUTOCOMMIT " + autoCommit).execute().then();
+		}
+
+		@Override
+		public Publisher<Void> setLockWaitTimeout(Duration duration) {
+			return Mono.empty();
+		}
+
+		@Override
+		public Publisher<Void> setStatementTimeout(Duration duration) {
+			return Mono.empty();
 		}
 
 		@Override
