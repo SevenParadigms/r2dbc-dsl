@@ -22,7 +22,7 @@ public class Dsl {
         return new Dsl(StringUtil.EMPTY_STRING);
     }
 
-    public static final String COMMANDS = "(##|!#|==|!=|>>|>=|<<|<=|~~)";
+    public static final String COMMANDS = "(##|!#|==|!=|>>|>=|<<|<=|~~|@@)";
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^#!=><~@]";
     public static final String delimiter = ";";
@@ -210,6 +210,13 @@ public class Dsl {
     public Dsl like(String field, String filter) {
         if (field != null && filter != null) {
             query = start(query) + field + "~~" + filter.trim();
+        }
+        return this;
+    }
+
+    public Dsl fts(String filter) {
+        if (filter != null) {
+            query = start(query) + "tsv@@" + filter.trim();
         }
         return this;
     }
