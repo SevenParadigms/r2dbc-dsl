@@ -159,11 +159,12 @@ CREATE TABLE public.jobject
 ) PARTITION BY LIST (jfolder_id);
 
 CREATE INDEX idx_jobject_tsv ON jobject USING rum (tsv rum_tsvector_ops);
+----
 
 and in source code:
+
 [source,kotlin]
 ----
 dslRepository.fullTextSearch(Dsl.create().fts("cool | pencil"))
              .subscribe()
 ----
-
