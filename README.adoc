@@ -11,7 +11,18 @@ Add the Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.1.0</version>
+  <version>3.1.1</version>
+</dependency>
+----
+
+Also needed common library (it is convenient when using Reactive Feign Client):
+
+[source,xml]
+----
+<dependency>
+  <groupId>io.github.sevenparadigms</groupId>
+  <artifactId>spring-data-r2dbc-dsl-common</artifactId>
+  <version>3.1.1</version>
 </dependency>
 ----
 

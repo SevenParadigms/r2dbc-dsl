@@ -231,7 +231,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.verifyComplete();
 
 
-		repository.findOne(Dsl.create().id(1)).as(StepVerifier::create)
+		repository.findOne(Dsl.create().id(1l)).as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");
 				})

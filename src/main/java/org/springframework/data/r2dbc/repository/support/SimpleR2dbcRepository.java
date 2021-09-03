@@ -19,11 +19,8 @@ import io.netty.util.internal.StringUtil;
 import io.r2dbc.postgresql.api.Notification;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.postgresql.api.PostgresqlResult;
-import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.Wrapped;
 import org.postgresql.ds.PGConnectionPoolDataSource;
-import org.postgresql.jdbc2.optional.ConnectionPool;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -35,9 +32,7 @@ import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.core.StatementMapper;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
-import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
-import org.springframework.data.r2dbc.query.BoundCondition;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.query.Dsl;
@@ -57,14 +52,12 @@ import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Streamable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.PreparedOperation;
-import org.springframework.r2dbc.core.binding.BindMarkers;
 import org.springframework.r2dbc.core.binding.Bindings;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -603,7 +596,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));
         var joins = new HashMap<String, Table>();
         var entityColumns = accessStrategy.getAllColumns(entity.getJavaType()).stream().map(accessStrategy::toSql).collect(Collectors.toList());
-        var queryFields = dsl.getCriteriaFields();
+        var queryFields = DslUtils.getCriteriaFields(dsl);
         if (!queryFields.isEmpty()) {
             for (String field : queryFields) {
                 if (!joins.containsKey(field) && field.contains(".")) {
@@ -653,14 +646,14 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var updateMapper = new CustomUpdateMapper(dialect, converter);
         var bindMarkers = dialect.getBindMarkersFactory().create();
         var bindings = Bindings.empty();
-        org.springframework.data.r2dbc.query.Criteria criteria = dsl.getCriteriaBy(entity.getJavaType());
+        org.springframework.data.r2dbc.query.Criteria criteria = DslUtils.getCriteriaBy(dsl, entity.getJavaType());
         if (criteria != null) {
             var mappedObject = updateMapper.getMappedObject(bindMarkers, criteria, joins);
             bindings = mappedObject.getBindings();
             selectBuilder.where(mappedObject.getCondition());
         }
         if (dsl.isSorted()) {
-            var mappedSort = updateMapper.getMappedObject(dsl.getSorted(), null);
+            var mappedSort = updateMapper.getMappedObject(DslUtils.getSorted(dsl), null);
             var fields = new ArrayList<OrderByField>();
             for (var order : mappedSort) {
                 var orderByField = OrderByField.from(table.column(order.getProperty()));

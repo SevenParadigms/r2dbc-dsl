@@ -3,12 +3,21 @@ package org.springframework.data.r2dbc.support;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.codec.binary.Hex;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.r2dbc.query.Criteria;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 
-import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.springframework.data.r2dbc.support.WordUtils.camelToSql;
 
 /**
  * Utilities for dsl interaction.
@@ -16,9 +25,10 @@ import java.util.*;
  * @author Lao Tsing
  */
 public abstract class DslUtils {
-    public static final String UUID_REGEX = "[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}";
-    public static final String NUMBER_REGEX = "^\\d+$";
-    public static final String FLOAT_REGEX = "\\d+\\.\\d+";
+    public static final String COMMANDS = "(##|!#|==|!=|>>|>=|<<|<=|~~|@@)";
+    public static final String PREFIX = "(!|@|!@)";
+    public static final String CLEAN = "[^#!=><~@]";
+    public static final String delimiter = ";";
 
     public static String toJsonbPath(final String path) {
         if (path.contains(".")) {
@@ -108,12 +118,69 @@ public abstract class DslUtils {
         return buildQuery;
     }
 
-    public static Object getObject(final String object) {
-        if (object.matches(NUMBER_REGEX)) return Long.parseLong(object);
-        if (object.matches(FLOAT_REGEX)) return Double.parseDouble(object);
-        if (Arrays.asList(Boolean.TRUE.toString(), Boolean.FALSE.toString()).contains(object.toLowerCase()))
-            return Boolean.TRUE.toString().equalsIgnoreCase(object);
-        if (object.matches(UUID_REGEX)) return UUID.fromString(object);
-        return null;
+    public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type) {
+        Criteria criteriaBy = null;
+        if (!dsl.query.isEmpty()) {
+            String[] criterias = dsl.getQuery().split(delimiter);
+            for (String criteria : criterias) {
+                String[] parts = criteria.split(COMMANDS);
+                String field = parts[0].replaceAll(PREFIX, "");
+                Criteria.CriteriaStep step = criteriaBy != null ? criteriaBy.and(camelToSql(field)) : Criteria.where(camelToSql(field));
+                String value = parts.length > 1 ? parts[1] : null;
+                switch (criteria.replaceAll(CLEAN, "")) {
+                    case "##": criteriaBy = step.in(DslUtils.stringToObject(value.split(" "), field, type)); break;
+                    case "!#": criteriaBy = step.notIn(DslUtils.stringToObject(value.split(" "), field, type)); break;
+                    case "==": criteriaBy = step.is(DslUtils.stringToObject(value, field, type)); break;
+                    case "!=": criteriaBy = step.not(DslUtils.stringToObject(value, field, type)); break;
+                    case "": criteriaBy = step.is(true); break;
+                    case "!": criteriaBy = step.not(true); break;
+                    case "@": criteriaBy = step.isNull(); break;
+                    case "!@": criteriaBy = step.isNotNull(); break;
+                    case ">>": criteriaBy = step.greaterThan(Long.valueOf(value)); break;
+                    case ">=": criteriaBy = step.greaterThanOrEquals(Long.valueOf(value)); break;
+                    case "<<": criteriaBy = step.lessThan(Long.valueOf(value)); break;
+                    case "<=": criteriaBy = step.lessThanOrEquals(Long.valueOf(value)); break;
+                    case "~~": criteriaBy = step.like("%" + value + "%"); break;
+                    default: criteriaBy = null;
+                }
+            }
+        }
+        return criteriaBy;
     }
+
+    public static List<String> getCriteriaFields(Dsl dsl) {
+        List<String> list = new ArrayList<>();
+        if (!dsl.query.isEmpty()) {
+            String[] criterias = dsl.getQuery().split(delimiter);
+            for (String criteria : criterias) {
+                String[] parts = criteria.split(COMMANDS);
+                list.add(parts[0].replace(PREFIX, ""));
+            }
+        }
+        return list;
+    }
+
+    public static Pageable getPageable(Dsl dsl) {
+        if (dsl.isPaged())
+            return PageRequest.of(dsl.page, dsl.size, getSorted(dsl));
+        else
+            return Pageable.unpaged();
+    }
+
+    public static Sort getSorted(Dsl dsl) {
+        if (dsl.isSorted()) {
+            return Sort.by(Stream.of(dsl.sort.split(",")).map(it -> {
+                String[] parts = it.split(":");
+                String name;
+                if (parts[0].contains(".")) {
+                    name = DslUtils.toJsonbPath(parts[0]);
+                } else
+                    name = parts[0];
+                return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), name);
+            }).collect(Collectors.toList()));
+        }
+        else return Sort.unsorted();
+    }
+
+
 }
