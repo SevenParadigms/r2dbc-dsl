@@ -4,7 +4,7 @@ This module provides `R2dbcRepository` for Web Querying throw REST API and Crite
 
 The internal extension of the base repository `R2dbcRepository` in Spring Data R2dbc is due to the use of features by all methods, and not just those related to DSL. Also modified a lot of integration tests with DSL features.
 
-Add the Maven Central dependency instead of the library `spring-data-r2dbc`:
+The Maven Central dependency instead of the library `spring-data-r2dbc`:
 
 [source,xml]
 ----
@@ -15,7 +15,7 @@ Add the Maven Central dependency instead of the library `spring-data-r2dbc`:
 </dependency>
 ----
 
-Also needed common library (it is convenient when using Reactive Feign Client):
+also needed common jar with Dsl model (it is convenient when using Reactive Feign Client):
 
 [source,xml]
 ----
