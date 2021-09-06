@@ -21,6 +21,7 @@ import io.r2dbc.postgresql.api.Notification;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.postgresql.api.PostgresqlResult;
 import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.Result;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -320,7 +321,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T,ID> {
     }
 
     @Override
-    public <S> Flux<PostgresqlResult> saveBatch(Iterable<S> models) {
+    public <S> Flux<Result> saveBatch(Iterable<S> models) {
         var connectionFactory = (PostgresqlConnectionFactory) databaseClient.getConnectionFactory();
         try {
             var fields = new ArrayList<String>();

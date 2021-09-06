@@ -16,7 +16,7 @@
 package org.springframework.data.r2dbc.repository;
 
 import io.r2dbc.postgresql.api.Notification;
-import io.r2dbc.postgresql.api.PostgresqlResult;
+import io.r2dbc.spi.Result;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
@@ -37,5 +37,5 @@ public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>
     Mono<T> findOne(Dsl dsl);
     Flux<Notification> listener();
     Flux<T> fullTextSearch(Dsl dsl);
-    <S> Flux<PostgresqlResult> saveBatch(Iterable<S> models);
+    <S> Flux<Result> saveBatch(Iterable<S> models);
 }
