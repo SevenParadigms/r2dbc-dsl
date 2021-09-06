@@ -42,7 +42,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -274,6 +277,17 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> {
 					assertThat(actual.getId().longValue() == 1);
 				})
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldBatch() {
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+
+		repository.saveBatch(List.of(legoSet1, legoSet2))
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
 				.verifyComplete();
 	}
 }

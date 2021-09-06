@@ -102,7 +102,7 @@ public abstract class DslUtils {
     }
 
     public static String binding(String builder, Object target) {
-        var buildQuery = WordUtils.trimInline(builder.toString());
+        var buildQuery = WordUtils.trimInline(builder);
         for (var field : FastMethodInvoker.reflectionStorage(target.getClass())) {
             if (buildQuery.contains(":" + field.getName()) && !field.getName().equals(Dsl.idProperty)) {
                 var value = FastMethodInvoker.getValue(target, field.getName());
@@ -123,7 +123,7 @@ public abstract class DslUtils {
 
     public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type) {
         Criteria criteriaBy = null;
-        if (!dsl.query.isEmpty()) {
+        if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(delimiter);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
@@ -180,7 +180,7 @@ public abstract class DslUtils {
 
     public static List<String> getCriteriaFields(Dsl dsl) {
         List<String> list = new ArrayList<>();
-        if (dsl.query != null && !dsl.query.isEmpty()) {
+        if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(delimiter);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
@@ -192,14 +192,14 @@ public abstract class DslUtils {
 
     public static Pageable getPageable(Dsl dsl) {
         if (dsl.isPaged())
-            return PageRequest.of(dsl.page, dsl.size, getSorted(dsl));
+            return PageRequest.of(dsl.getPage(), dsl.getSize(), getSorted(dsl));
         else
             return Pageable.unpaged();
     }
 
     public static Sort getSorted(Dsl dsl) {
         if (dsl.isSorted()) {
-            return Sort.by(Stream.of(dsl.sort.split(delimiter)).map(it -> {
+            return Sort.by(Stream.of(dsl.getSort().split(delimiter)).map(it -> {
                 String[] parts = it.split(":");
                 String name;
                 if (parts[0].contains(dot)) {

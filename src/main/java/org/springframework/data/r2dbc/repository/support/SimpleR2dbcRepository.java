@@ -16,11 +16,11 @@
 package org.springframework.data.r2dbc.repository.support;
 
 import io.netty.util.internal.StringUtil;
+import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.Notification;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.postgresql.api.PostgresqlResult;
 import io.r2dbc.spi.ConnectionFactory;
-import org.postgresql.ds.PGConnectionPoolDataSource;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -74,7 +74,7 @@ import static org.springframework.data.r2dbc.support.DslUtils.toJsonbPath;
  * @author Lao Tsing
  */
 @Transactional(readOnly = true)
-public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
+public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T,ID> {
 
     private final RelationalEntityInformation<T, ID> entity;
     private final R2dbcEntityOperations entityOperations;
@@ -287,15 +287,15 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     @Override
     public Flux<T> fullTextSearch(Dsl dsl) {
-        var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.lang);
-        var parts = dsl.query.split("@@");
+        var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
+        var parts = dsl.getQuery().split("@@");
         var fields = "";
-        if (dsl.fields.length == 0)
+        if (dsl.getFields().length == 0)
             fields = "*";
         else {
             var mutableList = new ArrayList<String>();
             var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType());
-            for (String field : dsl.fields) {
+            for (String field : dsl.getFields()) {
                 if (field.contains(".")) {
                     String[] tmp = field.split("\\.");
                     if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
@@ -320,8 +320,8 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     @Override
-    public <S> Long saveBatch(Iterable<S> models) {
-        var dataSource = (PGConnectionPoolDataSource) databaseClient.getConnectionFactory();
+    public <S> Flux<PostgresqlResult> saveBatch(Iterable<S> models) {
+        var connectionFactory = (PostgresqlConnectionFactory) databaseClient.getConnectionFactory();
         try {
             var fields = new ArrayList<String>();
             var reflectionStorage = FastMethodInvoker.reflectionStorage(entity.getJavaType());
@@ -330,14 +330,14 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     fields.add(":".concat(field.getName()));
                 }
             }
-            var buildFields = fields.stream().collect(Collectors.joining(","));
+            var buildFields = String.join(",", fields);
             var template = "INSERT INTO " + entity.getTableName() + "(" + WordUtils.camelToSql(buildFields.replaceAll(":", "")) + ") " +
                     "VALUES(" + buildFields + ");";
             var query = new StringBuilder();
             for (S target : models) {
                 query.append(DslUtils.binding(template, target));
             }
-            return dataSource.getPooledConnection().getConnection().createStatement().executeLargeUpdate(query.toString());
+            return connectionFactory.create().flatMap(c -> c.createBatch().add(query.toString()).execute().collectList()).flatMapMany(Flux::fromIterable);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -663,7 +663,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             selectBuilder.orderBy(fields);
         }
         if (dsl.isPaged()) {
-            selectBuilder.limitOffset(dsl.size, ((long) dsl.size * dsl.page));
+            selectBuilder.limitOffset(dsl.getSize(), ((long) dsl.getSize() * dsl.getPage()));
         }
         return new DslPreparedOperation(
                 selectBuilder.build(),
