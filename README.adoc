@@ -149,7 +149,7 @@ dslRepository.listener()
               if (json["operation"].asText() == "INSERT") {
                   info("database event: $json")
               }
-          }.subscribe()             
+          }          
 ----
 
 ## Ranked full text search:
@@ -179,5 +179,4 @@ and in source code:
 [source,kotlin]
 ----
 dslRepository.fullTextSearch(Dsl.create().fts("cool | pencil"))
-             .subscribe()
 ----
