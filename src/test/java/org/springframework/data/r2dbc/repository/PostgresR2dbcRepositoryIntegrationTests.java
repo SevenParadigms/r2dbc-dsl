@@ -42,8 +42,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -223,6 +222,13 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				})
 				.verifyComplete();
 
+		repository.findOne(Dsl.create().notEquals("manual", 13))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");
+				})
+				.verifyComplete();
+
 		repository.findOne(Dsl.create().equals("name", "FORSCHUNGSSCHIFF"))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
@@ -230,14 +236,29 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				})
 				.verifyComplete();
 
+		repository.findOne(Dsl.create().like("name", "UNGSS"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					assertThat(actual.getManual()).isEqualTo(13);
+				})
+				.verifyComplete();
 
-		repository.findOne(Dsl.create().id(1l)).as(StepVerifier::create)
+		repository.findOne(Dsl.create().id(1L))
+				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");
 				})
 				.verifyComplete();
 
-		repository.findAll(Dsl.create()).as(StepVerifier::create)
+		repository.findOne(Dsl.create().in("id", new HashSet<>(List.of(1L))))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");
+				})
+				.verifyComplete();
+
+		repository.findAll(Dsl.create())
+				.as(StepVerifier::create)
 				.expectNextCount(2) //
 				.verifyComplete();
 	}
