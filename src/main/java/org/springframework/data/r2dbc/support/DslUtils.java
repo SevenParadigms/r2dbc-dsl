@@ -28,11 +28,13 @@ public abstract class DslUtils {
     public static final String COMMANDS = "(##|!#|==|!=|>>|>=|<<|<=|~~|@@)";
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^#!=><~@]";
-    public static final String delimiter = ";";
+    public static final String delimiter = ",";
+    public static final String space = " ";
+    public static final String dot = ".";
 
     public static String toJsonbPath(final String path) {
-        if (path.contains(".")) {
-            final var paths = path.split(".");
+        if (path.contains(dot)) {
+            final var paths = path.split(dot);
             final var order = new StringBuilder(paths[0]);
             for (int i = 1; i < paths.length; i++) {
                 if (i < paths.length - 1)
@@ -45,8 +47,8 @@ public abstract class DslUtils {
     }
 
     public static <T> String toJsonbPath(final String dotter, final Class<T> type) {
-        if (dotter.contains(".")) {
-            final var fieldName = dotter.split(".")[0];
+        if (dotter.contains(dot)) {
+            final var fieldName = dotter.split(dot)[0];
             final var reflectionStorage = FastMethodInvoker.reflectionStorage(type);
             for (var field : reflectionStorage) {
                 if (fieldName.equals(field.getName()) && field.getType() == JsonNode.class) {
@@ -73,9 +75,10 @@ public abstract class DslUtils {
                     case "UUID":
                         return UUID.fromString(it);
                     case "LocalDateTime":
-                        return "'$this'::timestamp";
+                    case "ZonedDateTime":
+                        return "'" + it + "'::timestamp";
                     case "LocalDate":
-                        return "'$this'::date";
+                        return "'" + it + "'::date";
                     case "Short":
                         return Short.valueOf(it);
                     case "Integer":
@@ -128,20 +131,47 @@ public abstract class DslUtils {
                 Criteria.CriteriaStep step = criteriaBy != null ? criteriaBy.and(camelToSql(field)) : Criteria.where(camelToSql(field));
                 String value = parts.length > 1 ? parts[1] : null;
                 switch (criteria.replaceAll(CLEAN, "")) {
-                    case "##": criteriaBy = step.in(DslUtils.stringToObject(value.split(" "), field, type)); break;
-                    case "!#": criteriaBy = step.notIn(DslUtils.stringToObject(value.split(" "), field, type)); break;
-                    case "==": criteriaBy = step.is(DslUtils.stringToObject(value, field, type)); break;
-                    case "!=": criteriaBy = step.not(DslUtils.stringToObject(value, field, type)); break;
-                    case "": criteriaBy = step.is(true); break;
-                    case "!": criteriaBy = step.not(true); break;
-                    case "@": criteriaBy = step.isNull(); break;
-                    case "!@": criteriaBy = step.isNotNull(); break;
-                    case ">>": criteriaBy = step.greaterThan(Long.valueOf(value)); break;
-                    case ">=": criteriaBy = step.greaterThanOrEquals(Long.valueOf(value)); break;
-                    case "<<": criteriaBy = step.lessThan(Long.valueOf(value)); break;
-                    case "<=": criteriaBy = step.lessThanOrEquals(Long.valueOf(value)); break;
-                    case "~~": criteriaBy = step.like("%" + value + "%"); break;
-                    default: criteriaBy = null;
+                    case "##":
+                        criteriaBy = step.in(DslUtils.stringToObject(value.split(space), field, type));
+                        break;
+                    case "!#":
+                        criteriaBy = step.notIn(DslUtils.stringToObject(value.split(space), field, type));
+                        break;
+                    case "==":
+                        criteriaBy = step.is(DslUtils.stringToObject(value, field, type));
+                        break;
+                    case "!=":
+                        criteriaBy = step.not(DslUtils.stringToObject(value, field, type));
+                        break;
+                    case "":
+                        criteriaBy = step.is(true);
+                        break;
+                    case "!":
+                        criteriaBy = step.not(true);
+                        break;
+                    case "@":
+                        criteriaBy = step.isNull();
+                        break;
+                    case "!@":
+                        criteriaBy = step.isNotNull();
+                        break;
+                    case ">>":
+                        criteriaBy = step.greaterThan(Long.valueOf(value));
+                        break;
+                    case ">=":
+                        criteriaBy = step.greaterThanOrEquals(Long.valueOf(value));
+                        break;
+                    case "<<":
+                        criteriaBy = step.lessThan(Long.valueOf(value));
+                        break;
+                    case "<=":
+                        criteriaBy = step.lessThanOrEquals(Long.valueOf(value));
+                        break;
+                    case "~~":
+                        criteriaBy = step.like("%" + value + "%");
+                        break;
+                    default:
+                        criteriaBy = null;
                 }
             }
         }
@@ -150,7 +180,7 @@ public abstract class DslUtils {
 
     public static List<String> getCriteriaFields(Dsl dsl) {
         List<String> list = new ArrayList<>();
-        if (!dsl.query.isEmpty()) {
+        if (dsl.query != null && !dsl.query.isEmpty()) {
             String[] criterias = dsl.getQuery().split(delimiter);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
@@ -169,17 +199,16 @@ public abstract class DslUtils {
 
     public static Sort getSorted(Dsl dsl) {
         if (dsl.isSorted()) {
-            return Sort.by(Stream.of(dsl.sort.split(",")).map(it -> {
+            return Sort.by(Stream.of(dsl.sort.split(delimiter)).map(it -> {
                 String[] parts = it.split(":");
                 String name;
-                if (parts[0].contains(".")) {
+                if (parts[0].contains(dot)) {
                     name = DslUtils.toJsonbPath(parts[0]);
                 } else
                     name = parts[0];
                 return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), name);
             }).collect(Collectors.toList()));
-        }
-        else return Sort.unsorted();
+        } else return Sort.unsorted();
     }
 
 

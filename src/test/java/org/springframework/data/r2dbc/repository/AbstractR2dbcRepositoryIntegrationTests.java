@@ -38,6 +38,7 @@ import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
@@ -95,7 +96,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 	protected abstract Class<? extends LegoSetRepository> getRepositoryInterfaceType();
 
 	@Test
-	void shouldInsertNewItems() {
+	List<LegoSet> shouldInsertNewItems() {
 
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
@@ -104,6 +105,11 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
+
+		legoSet1.setId(1);
+		legoSet2.setId(2);
+
+		return List.of(legoSet1, legoSet2);
 	}
 
 	@Test
