@@ -181,3 +181,13 @@ and in source code:
 ----
 dslRepository.fullTextSearch(Dsl.create().fts("cool | pencil"))
 ----
+
+## Batch insert:
+
+Any type of object can be inserted from List because the operation is massive at high speed:
+
+[source,kotlin]
+----
+dslRepository.saveBatch(listOf(cool1, cool2, pencil1, pencil2))
+----
+
