@@ -144,11 +144,13 @@ and last in source code:
 [source,kotlin]
 ----
 dslRepository.listener()
-          .doOnNext { notification ->
+          .onBackpressureLatest()
+          .flatMap { notification ->
               val json = notification.parameter.toJsonNode()
               if (json["operation"].asText() == "INSERT") {
                   info("database event: $json")
               }
+              notification.toMono()
           }          
 ----
 
