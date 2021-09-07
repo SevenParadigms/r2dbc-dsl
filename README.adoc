@@ -145,12 +145,11 @@ and last in source code:
 ----
 dslRepository.listener()
           .onBackpressureLatest()
-          .flatMap { notification ->
+          .concatMap { notification ->
               val json = notification.parameter.toJsonNode()
               if (json["operation"].asText() == "INSERT") {
                   info("database event: $json")
-              }
-              notification.toMono()
+              }            
           }          
 ----
 
