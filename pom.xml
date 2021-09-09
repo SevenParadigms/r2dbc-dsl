@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>3.2.1</version>
+	<version>3.2.2</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -85,6 +85,7 @@
 	<properties>
 
 		<dist.key>DATAR2DBC</dist.key>
+		<spring.core>5.3.9</spring.core>
 		<springdata.commons>2.5.4</springdata.commons>
 		<springdata.jdbc>2.2.4</springdata.jdbc>
 		<springdata.relational>${springdata.jdbc}</springdata.relational>
@@ -114,7 +115,7 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-framework-bom</artifactId>
-				<version>[5.3.9,)</version>
+				<version>${spring.core}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.r2dbc</groupId>
@@ -163,7 +164,6 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-r2dbc</artifactId>
-			<version>5.3.9</version>
 		</dependency>
 
 		<dependency>
