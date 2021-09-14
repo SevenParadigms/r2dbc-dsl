@@ -165,8 +165,8 @@ In table needed field with name `tsv` (in next generation also name setting in a
 CREATE TABLE public.jobject
 (
     id         uuid                     DEFAULT uuid_generate_v1mc() NOT NULL,
-    jtree      jsonb                                                 NOT NULL,
-    jfolder_id uuid                                                  NOT NULL REFERENCES jfolder (id),
+    jtree      jsonb                    NOT NULL,
+    jfolder_id uuid                     NOT NULL REFERENCES jfolder (id),
     created_at timestamp with time zone DEFAULT timezone('utc'::text, CURRENT_TIMESTAMP),
     tsv        tsvector,
     PRIMARY KEY (jfolder_id, id)
