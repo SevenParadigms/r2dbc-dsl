@@ -291,6 +291,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T,ID> {
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
         var parts = dsl.getQuery().split("@@");
         var fields = "";
+
         if (dsl.getFields().length == 0)
             fields = "*";
         else {
@@ -313,7 +314,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T,ID> {
         var sql = "SELECT * FROM ( SELECT " + fields +
                 " FROM " + entity.getTableName() + ", websearch_to_tsquery(:lang, :value) AS q" +
                 " WHERE (" + parts[0] + " @@ q)) AS s" +
-                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery(:lang, :value))) DESC";
+                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery(:lang, :value))) DESC ";
+        if (dsl.isPaged()) {
+            sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
+        }
         return databaseClient.execute(sql)
                 .bind("lang", lang)
                 .bind("value", parts[1])

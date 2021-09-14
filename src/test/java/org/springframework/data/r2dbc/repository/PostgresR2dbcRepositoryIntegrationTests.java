@@ -43,7 +43,6 @@ import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -253,7 +252,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				})
 				.verifyComplete();
 
-		repository.findOne(Dsl.create().in("id", new HashSet<>(List.of(1L))))
+		repository.findOne(Dsl.create().in("id", 1L))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");

@@ -28,8 +28,6 @@ public abstract class DslUtils {
     public static final String COMMANDS = "(##|!#|==|!=|>>|>=|<<|<=|~~|@@)";
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^#!=><~@]";
-    public static final String delimiter = ",";
-    public static final String space = " ";
     public static final String dot = ".";
 
     public static String toJsonbPath(final String path) {
@@ -106,7 +104,7 @@ public abstract class DslUtils {
         for (var field : FastMethodInvoker.reflectionStorage(target.getClass())) {
             if (buildQuery.contains(":" + field.getName()) && !field.getName().equals(Dsl.idProperty)) {
                 var value = FastMethodInvoker.getValue(target, field.getName());
-                var result = "null";
+                String result = null;
                 if (value != null) {
                     if (value instanceof String) result = "'" + value + "'";
                     if (value instanceof UUID) result = "'" + value + "'::uuid";
@@ -115,7 +113,7 @@ public abstract class DslUtils {
                     if (value instanceof JsonNode) result = "'" + value.toString().replaceAll("'", "") + "'";
                     if (result == null) result = ConvertUtils.convert(value, String.class).toString();
                 }
-                buildQuery = buildQuery.replaceAll(":" + field.getName(), result);
+                buildQuery = buildQuery.replaceAll(":" + field.getName(), result == null ? "null" : result);
             }
         }
         return buildQuery;
@@ -124,7 +122,7 @@ public abstract class DslUtils {
     public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type) {
         Criteria criteriaBy = null;
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
-            String[] criterias = dsl.getQuery().split(delimiter);
+            String[] criterias = dsl.getQuery().split(Dsl.comma);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
                 String field = parts[0].replaceAll(PREFIX, "");
@@ -132,10 +130,10 @@ public abstract class DslUtils {
                 String value = parts.length > 1 ? parts[1] : null;
                 switch (criteria.replaceAll(CLEAN, "")) {
                     case "##":
-                        criteriaBy = step.in(DslUtils.stringToObject(value.split(space), field, type));
+                        criteriaBy = step.in(DslUtils.stringToObject(value.split(Dsl.space), field, type));
                         break;
                     case "!#":
-                        criteriaBy = step.notIn(DslUtils.stringToObject(value.split(space), field, type));
+                        criteriaBy = step.notIn(DslUtils.stringToObject(value.split(Dsl.space), field, type));
                         break;
                     case "==":
                         criteriaBy = step.is(DslUtils.stringToObject(value, field, type));
@@ -181,7 +179,7 @@ public abstract class DslUtils {
     public static List<String> getCriteriaFields(Dsl dsl) {
         List<String> list = new ArrayList<>();
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
-            String[] criterias = dsl.getQuery().split(delimiter);
+            String[] criterias = dsl.getQuery().split(Dsl.comma);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
                 list.add(parts[0].replace(PREFIX, ""));
@@ -199,7 +197,7 @@ public abstract class DslUtils {
 
     public static Sort getSorted(Dsl dsl) {
         if (dsl.isSorted()) {
-            return Sort.by(Stream.of(dsl.getSort().split(delimiter)).map(it -> {
+            return Sort.by(Stream.of(dsl.getSort().split(Dsl.comma)).map(it -> {
                 String[] parts = it.split(":");
                 String name;
                 if (parts[0].contains(dot)) {

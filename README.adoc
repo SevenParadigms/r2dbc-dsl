@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.2.1</version>
+  <version>3.2.3</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ also needed common jar with Dsl model (it is convenient when using Reactive Feig
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>3.2.1</version>
+  <version>3.2.3</version>
 </dependency>
 ----
 
@@ -179,7 +179,7 @@ and in source code:
 
 [source,kotlin]
 ----
-dslRepository.fullTextSearch(Dsl.create().fts("cool | pencil"))
+dslRepository.fullTextSearch(Dsl.create().fts("cool | pencil").pageable(0, 20))
 ----
 
 ## Batch insert:
