@@ -75,7 +75,7 @@ import static org.springframework.data.r2dbc.support.DslUtils.toJsonbPath;
  * @author Lao Tsing
  */
 @Transactional(readOnly = true)
-public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T,ID> {
+public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     private final RelationalEntityInformation<T, ID> entity;
     private final R2dbcEntityOperations entityOperations;
@@ -289,6 +289,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T,ID> {
     @Override
     public Flux<T> fullTextSearch(Dsl dsl) {
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
+        if (lang.isEmpty()) {
+            lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
+        }
         var parts = dsl.getQuery().split("@@");
         var fields = "";
 
@@ -312,9 +315,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T,ID> {
 
         if (!fields.equals("*") && !fields.contains("tsv")) fields += ",tsv";
         var sql = "SELECT * FROM ( SELECT " + fields +
-                " FROM " + entity.getTableName() + ", websearch_to_tsquery(:lang, :value) AS q" +
+                " FROM " + entity.getTableName() + ", websearch_to_tsquery(" + lang + ", " + parts[1] + ") AS q" +
                 " WHERE (" + parts[0] + " @@ q)) AS s" +
-                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery(:lang, :value))) DESC ";
+                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery(" + lang + ", " + parts[1] + "))) DESC ";
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
         }
