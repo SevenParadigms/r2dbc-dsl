@@ -315,16 +315,13 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
         if (!fields.equals("*") && !fields.contains("tsv")) fields += ",tsv";
         var sql = "SELECT * FROM ( SELECT " + fields +
-                " FROM " + entity.getTableName() + ", websearch_to_tsquery(" + lang + ", " + parts[1] + ") AS q" +
+                " FROM " + entity.getTableName() + ", websearch_to_tsquery('" + lang + "', '" + parts[1] + "') AS q" +
                 " WHERE (" + parts[0] + " @@ q)) AS s" +
-                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery(" + lang + ", " + parts[1] + "))) DESC ";
+                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery('" + lang + "', '" + parts[1] + "'))) DESC ";
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
         }
-        return databaseClient.execute(sql)
-                .bind("lang", lang)
-                .bind("value", parts[1])
-                .as(entity.getJavaType()).fetch().all();
+        return databaseClient.execute(sql).as(entity.getJavaType()).fetch().all();
     }
 
     @Override
