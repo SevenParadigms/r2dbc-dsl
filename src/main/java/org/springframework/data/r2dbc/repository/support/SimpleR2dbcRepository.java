@@ -317,7 +317,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var sql = "SELECT * FROM ( SELECT " + fields +
                 " FROM " + entity.getTableName() + ", websearch_to_tsquery('" + lang + "', '" + parts[1] + "') AS q" +
                 " WHERE (" + parts[0] + " @@ q)) AS s" +
-                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery('" + lang + "', '" + parts[1] + "'))) DESC ";
+                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery('" + lang + "', '" + parts[1] + "')) DESC ";
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
         }
