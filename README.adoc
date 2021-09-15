@@ -32,9 +32,9 @@ That library produce `R2dbcDslRepository` interface:
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
-    fun listener(): Flux<Notification>          /* bye for one PostgreSQL, in the next generation others DB will be added  */
-    fun fullTextSearch(dsl: Dsl): Flux<T>       /* bye for one PostgreSQL, in the next generation others DB will be added  */
-    fun saveBatch(models: Iterable<S>): Flux<Result>    /* bye for one PostgreSQL, in the next generation others DB will be added  */
+    fun listener(): Flux<Notification>
+    fun fullTextSearch(dsl: Dsl): Flux<T>
+    fun saveBatch(models: Iterable<S>): Flux<Result>
 }
 ----
 
@@ -165,8 +165,8 @@ In table needed field with name `tsv` (in next generation also name setting in a
 CREATE TABLE public.jobject
 (
     id         uuid                     DEFAULT uuid_generate_v1mc() NOT NULL,
-    jtree      jsonb                                                 NOT NULL,
-    jfolder_id uuid                                                  NOT NULL REFERENCES jfolder (id),
+    jtree      jsonb                    NOT NULL,
+    jfolder_id uuid                     NOT NULL REFERENCES jfolder (id),
     created_at timestamp with time zone DEFAULT timezone('utc'::text, CURRENT_TIMESTAMP),
     tsv        tsvector,
     PRIMARY KEY (jfolder_id, id)
