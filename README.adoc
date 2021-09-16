@@ -17,7 +17,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 </dependency>
 ----
 
-also needed common jar with Dsl model (it is convenient when using Reactive Feign Client):
+also common jar with Dsl model (it is convenient when using Reactive Feign Client):
 
 [source,xml]
 ----
