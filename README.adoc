@@ -157,15 +157,13 @@ dslRepository.listener()
 
 ## Ranked full text search:
 
-Default language may be setting in:
+Default language may be setting in: `spring.r2dbc.dsl.fts-lang`
 
-`spring.r2dbc.dsl.fts-lang`
+or get if nothing from: `Locale.getCurrent()`
 
-or get if nothing from:
+also can dynamically setting in Dsl class: `Dsl.create().lang('English')`
 
-`Locale.getCurrent()`
-
-In table look field with name `tsv`, but can be choosed in `Dsl.create().fts("ts_vector","web query text")`.
+In table look field with name `tsv`, but can be setting in `Dsl.create().fts("ts_vector","web query text")`.
 [source,postgresql]
 ----
 CREATE TABLE public.jobject
