@@ -63,9 +63,9 @@ data class Dsl {
 
 4. Joins to any tables and build criteria on joined columns, also can select joined columns in result
 
-5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`, the camel name automatic convert to sql underlined
+5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
 
-6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name
+6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
 7. JsonNode type in Java-model automatically converted to JSONB type of PostgreSQL database and back
 
