@@ -24,7 +24,7 @@ also common jar with Dsl model (it is convenient when using Reactive Feign Clien
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>3.4.0</version>
+  <version>3.5.0</version>
 </dependency>
 ----
 
