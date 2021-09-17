@@ -2,6 +2,8 @@
 
 This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL. 
 
+R2DBC-DSL contains the current version of the Spring Data R2dbc, and each commit to the master of Spring Data R2dbc repository is immediately published there under the new version into Maven Central, i.e. all changes in the Spring Data R2dbc master are realtime relevant here.
+
 The internal extension of the base repository `R2dbcRepository` in Spring Data R2dbc is due to the use of features by all methods, and not just those related to DSL. Also modified a lot of integration tests with DSL features.
 
 The Maven Central dependency instead of the library `spring-data-r2dbc`:
@@ -15,7 +17,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 </dependency>
 ----
 
-also needed common jar with Dsl model (it is convenient when using Reactive Feign Client):
+also common jar with Dsl model (it is convenient when using Reactive Feign Client):
 
 [source,xml]
 ----
@@ -61,15 +63,15 @@ data class Dsl {
 
 4. Joins to any tables and build criteria on joined columns, also can select joined columns in result
 
-5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`, the camel name automatic convert to sql underlined
+5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
 
-6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name
+6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
 7. JsonNode type in Java-model automatically converted to JSONB type of PostgreSQL database and back
 
-8. Repository `listener` method can subscribe to listen of all changes of table from database over `Sink<Notification>`
+8. Repository `listener` method can subscribe to listen of all changes of table from database in realtime over `Sink<Notification>`
 
-9. Ranked full text search by field `tsv` with RUM index operator in `fullTextSearch` method
+9. Ranked full text search by field `tsv` as default with RUM index operator in `fullTextSearch` method
 
 10. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
 
@@ -155,11 +157,13 @@ dslRepository.listener()
 
 ## Ranked full text search:
 
-Default language is English, but may be setting in:
+Default language may be setting in: `spring.r2dbc.dsl.fts-lang`
 
-`spring.r2dbc.dsl.fts-lang`
+or get if nothing from: `Locale.getCurrent()`
 
-In table needed field with name `tsv` (in next generation also name setting in application.yml):
+also can dynamically setting in Dsl class: `Dsl.create().lang('English')`
+
+In table look field with name `tsv`, but can be setting in `Dsl.create().fts("ts_vector","web query text")`.
 [source,postgresql]
 ----
 CREATE TABLE public.jobject
