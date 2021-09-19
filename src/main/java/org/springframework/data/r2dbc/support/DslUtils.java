@@ -29,6 +29,7 @@ public abstract class DslUtils {
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^#!=><~@]";
     public static final String dot = ".";
+    public static final String jsonb = "->>'";
 
     public static String toJsonbPath(final String path) {
         if (path.contains(dot)) {
@@ -38,18 +39,17 @@ public abstract class DslUtils {
                 if (i < paths.length - 1)
                     order.append("->'").append(paths[i]).append("'");
                 else
-                    order.append("->>'").append(paths[i]).append("'");
+                    order.append(jsonb).append(paths[i]).append("'");
             }
             return order.toString();
         } else return path;
     }
 
     public static String getJsonName(final String jsonPath) {
-        return jsonPath.substring(jsonPath.indexOf("->>'") + 4, jsonPath.length() - 1);
-    }
-
-    public static void main(String[] args) {
-        System.out.println(getJsonName("sdf->dfgg->sdfh->>'fafa'"));
+        if (jsonPath.contains(jsonb)) {
+            return jsonPath.substring(jsonPath.indexOf(jsonb) + 4, jsonPath.length() - 1);
+        }
+        return jsonPath;
     }
 
     public static <T> String toJsonbPath(final String dotter, final Class<T> type) {
@@ -76,7 +76,7 @@ public abstract class DslUtils {
     public static <T> Object stringToObject(final String it, final String fieldName, final Class<T> type) {
         final var reflectionStorage = FastMethodInvoker.reflectionStorage(type);
         for (var field : reflectionStorage) {
-            if (WordUtils.dotToCamel(fieldName).equals(field.getName())) {
+            if (fieldName.equals(field.getName())) {
                 switch (field.getType().getSimpleName()) {
                     case "UUID":
                         return UUID.fromString(it);
@@ -216,6 +216,4 @@ public abstract class DslUtils {
             }).collect(Collectors.toList()));
         } else return Sort.unsorted();
     }
-
-
 }

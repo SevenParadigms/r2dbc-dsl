@@ -305,7 +305,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                 if (field.contains(".")) {
                     String[] tmp = field.split("\\.");
                     if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
-                        mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + WordUtils.dotToSql(field));
+                        mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + field);
                         continue;
                     }
                 }
@@ -634,7 +634,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     }
                     if (entityColumns.contains(tableName)) {
                         var jsonPath = toJsonbPath(sqlFieldName);
-                        columns.add(Column.create( jsonPath+ " as " + getJsonName(jsonPath), table));
+                        columns.add(Column.create( jsonPath + " as " + getJsonName(jsonPath), table));
                         continue;
                     }
                 }
