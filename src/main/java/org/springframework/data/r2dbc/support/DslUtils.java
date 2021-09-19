@@ -44,6 +44,14 @@ public abstract class DslUtils {
         } else return path;
     }
 
+    public static String getJsonName(final String jsonPath) {
+        return jsonPath.substring(jsonPath.indexOf("->>'") + 4, jsonPath.length() - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(getJsonName("sdf->dfgg->sdfh->>'fafa'"));
+    }
+
     public static <T> String toJsonbPath(final String dotter, final Class<T> type) {
         if (dotter.contains(dot)) {
             final var fieldName = dotter.split(dot)[0];

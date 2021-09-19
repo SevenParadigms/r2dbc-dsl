@@ -62,6 +62,7 @@ import reactor.core.publisher.Mono;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.springframework.data.r2dbc.support.DslUtils.getJsonName;
 import static org.springframework.data.r2dbc.support.DslUtils.toJsonbPath;
 
 /**
@@ -628,11 +629,12 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                         if (!joins.containsKey(tableName)) {
                             joins.put(tableName, Table.create(tableName));
                         }
-                        columns.add(Column.create(parts[1] + " as " + WordUtils.dotToSql(sqlFieldName), joins.get(tableName)));
+                        columns.add(Column.create(parts[1], joins.get(tableName)));
                         continue;
                     }
                     if (entityColumns.contains(tableName)) {
-                        columns.add(Column.create(toJsonbPath(sqlFieldName) + " as " + WordUtils.dotToSql(sqlFieldName), table));
+                        var jsonPath = toJsonbPath(sqlFieldName);
+                        columns.add(Column.create( jsonPath+ " as " + getJsonName(jsonPath), table));
                         continue;
                     }
                 }

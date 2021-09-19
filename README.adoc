@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.5.1</version>
+  <version>3.5.2</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ also common jar with Dsl model (it is convenient when using Reactive Feign Clien
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>3.5.1</version>
+  <version>3.5.2</version>
 </dependency>
 ----
 
@@ -109,7 +109,7 @@ then generated SQL:
 * column.header.title -> `column->'header'->>'title'` if column have JsonNode type
 
 In `fields` property also can selected joined columns or jsonb path to output result.
-For example `columnType` or `columnHeaderTitle` from previous example and model must contain these variables.
+For example column `type` of table `shops` or `title` of jsonb colunm can be choosed in resulted fields.
 
 ## Subscribe to async database UPDATE/INSERT events:
 
