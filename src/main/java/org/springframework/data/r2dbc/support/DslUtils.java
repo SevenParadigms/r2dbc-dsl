@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.data.r2dbc.support.WordUtils.camelToSql;
 
 /**
@@ -138,10 +139,10 @@ public abstract class DslUtils {
                 String value = parts.length > 1 ? parts[1] : null;
                 switch (criteria.replaceAll(CLEAN, "")) {
                     case "##":
-                        criteriaBy = step.in(DslUtils.stringToObject(value.split(Dsl.space), field, type));
+                        criteriaBy = step.in(DslUtils.stringToObject(value.split(SPACE), field, type));
                         break;
                     case "!#":
-                        criteriaBy = step.notIn(DslUtils.stringToObject(value.split(Dsl.space), field, type));
+                        criteriaBy = step.notIn(DslUtils.stringToObject(value.split(SPACE), field, type));
                         break;
                     case "==":
                         criteriaBy = step.is(DslUtils.stringToObject(value, field, type));
