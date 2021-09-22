@@ -15,10 +15,7 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
@@ -85,7 +82,6 @@ public class R2dbcRepositoryFactory extends ReactiveRepositoryFactorySupport {
 		this.operations = new R2dbcEntityTemplate(this.databaseClient, this.dataAccessStrategy);
 		setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 		this.applicationContext = applicationContext;
-		tryRegisterR2dbcRepositoryFactoryAsBean();
 	}
 
 	/**
@@ -105,23 +101,6 @@ public class R2dbcRepositoryFactory extends ReactiveRepositoryFactorySupport {
 		this.operations = operations;
 		setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 		this.applicationContext = applicationContext;
-		tryRegisterR2dbcRepositoryFactoryAsBean();
-	}
-
-	private void tryRegisterR2dbcRepositoryFactoryAsBean() {
-		try {
-			GenericApplicationContext context = applicationContext.getBean(GenericApplicationContext.class);
-			if (context != null) {
-				GenericBeanDefinition definition = new GenericBeanDefinition();
-				definition.setSource(this);
-				definition.setBeanClass(R2dbcRepositoryFactory.class);
-				context.registerBeanDefinition(R2dbcRepositoryFactory.class.getSimpleName(), definition);
-
-				R2dbcRepositoryFactory f = applicationContext.getBean(R2dbcRepositoryFactory.class);
-				System.out.println("> " + f.getDataAccessStrategy());
-			}
-		} catch (BeansException ex) {
-		}
 	}
 
 	/*
