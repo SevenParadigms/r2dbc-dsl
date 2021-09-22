@@ -80,7 +80,7 @@ public abstract class DslUtils {
             if (fieldName.equals(field.getName())) {
                 switch (field.getType().getSimpleName()) {
                     case "UUID":
-                        return UUID.fromString(it);
+                        return "'" + UUID.fromString(it) + "'::uuid";
                     case "LocalDateTime":
                     case "ZonedDateTime":
                         return "'" + it + "'::timestamp";
