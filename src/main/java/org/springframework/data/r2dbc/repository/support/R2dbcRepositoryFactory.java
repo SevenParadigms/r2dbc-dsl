@@ -15,6 +15,7 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
+import org.sevenparadigms.kotlin.beans.Beans;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
@@ -64,12 +65,16 @@ public class R2dbcRepositoryFactory extends ReactiveRepositoryFactorySupport {
 	private final R2dbcEntityOperations operations;
 	private final ApplicationContext applicationContext;
 
-	/**
-	 * Creates a new {@link R2dbcRepositoryFactory} given {@link DatabaseClient} and {@link MappingContext}.
-	 *
-	 * @param databaseClient must not be {@literal null}.
-	 * @param dataAccessStrategy must not be {@literal null}.
-	 */
+	public R2dbcRepositoryFactory(DatabaseClient databaseClient, ReactiveDataAccessStrategy dataAccessStrategy) {
+		this(databaseClient, dataAccessStrategy, Beans.getApplicationContext());
+	}
+
+		/**
+         * Creates a new {@link R2dbcRepositoryFactory} given {@link DatabaseClient} and {@link MappingContext}.
+         *
+         * @param databaseClient must not be {@literal null}.
+         * @param dataAccessStrategy must not be {@literal null}.
+         */
 	public R2dbcRepositoryFactory(DatabaseClient databaseClient, ReactiveDataAccessStrategy dataAccessStrategy, ApplicationContext applicationContext) {
 
 		Assert.notNull(databaseClient, "DatabaseClient must not be null!");

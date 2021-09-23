@@ -77,10 +77,10 @@ public abstract class DslUtils {
     public static <T> Object stringToObject(final String it, final String fieldName, final Class<T> type) {
         final var reflectionStorage = FastMethodInvoker.reflectionStorage(type);
         for (var field : reflectionStorage) {
-            if (fieldName.equals(field.getName())) {
+            if (WordUtils.sqlToCamel(fieldName).equals(field.getName())) {
                 switch (field.getType().getSimpleName()) {
                     case "UUID":
-                        return "'" + UUID.fromString(it) + "'::uuid";
+                        return UUID.fromString(it);
                     case "LocalDateTime":
                     case "ZonedDateTime":
                         return "'" + it + "'::timestamp";
