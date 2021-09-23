@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.SPACE;
-import static org.springframework.data.r2dbc.support.WordUtils.camelToSql;
+import static org.springframework.data.r2dbc.support.WordUtils.*;
 
 /**
  * Utilities for dsl interaction.
@@ -77,7 +77,7 @@ public abstract class DslUtils {
     public static <T> Object stringToObject(final String it, final String fieldName, final Class<T> type) {
         final var reflectionStorage = FastMethodInvoker.reflectionStorage(type);
         for (var field : reflectionStorage) {
-            if (WordUtils.sqlToCamel(fieldName).equals(field.getName())) {
+            if (sqlToCamel(lastOctet(fieldName)).equals(field.getName())) {
                 switch (field.getType().getSimpleName()) {
                     case "UUID":
                         return UUID.fromString(it);
@@ -109,7 +109,7 @@ public abstract class DslUtils {
     }
 
     public static String binding(String builder, Object target) {
-        var buildQuery = WordUtils.trimInline(builder);
+        var buildQuery = trimInline(builder);
         for (var field : FastMethodInvoker.reflectionStorage(target.getClass())) {
             if (buildQuery.contains(":" + field.getName()) && !field.getName().equals(Dsl.idProperty)) {
                 var value = FastMethodInvoker.getValue(target, field.getName());
