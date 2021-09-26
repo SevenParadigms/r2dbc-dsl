@@ -23,6 +23,7 @@ import io.r2dbc.postgresql.api.PostgresqlResult;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
 import org.reactivestreams.Publisher;
+import org.sevenparadigms.kotlin.beans.Beans;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
@@ -84,7 +85,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     private final RelationalExampleMapper exampleMapper;
     private final R2dbcConverter converter;
     private final org.springframework.data.r2dbc.core.DatabaseClient databaseClient;
-    private final ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     /**
      * Create a new {@link SimpleR2dbcRepository}.
@@ -289,6 +290,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     @Override
     public Flux<T> fullTextSearch(Dsl dsl) {
+        if (applicationContext == null) applicationContext = Beans.getApplicationContext();
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
         if (lang.isEmpty()) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
@@ -596,6 +598,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     private PreparedOperation<Select> getMappedObject(Dsl dsl) {
+        if (applicationContext == null) applicationContext = Beans.getApplicationContext();
         var connectionFactory = applicationContext.getBean(ConnectionFactory.class);
         var dialect = DialectResolver.getDialect(connectionFactory);
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();

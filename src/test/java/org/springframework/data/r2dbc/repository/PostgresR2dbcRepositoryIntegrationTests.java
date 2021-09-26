@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.sevenparadigms.kotlin.beans.Beans;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -288,5 +289,10 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.as(StepVerifier::create)
 				.expectNextCount(2) //
 				.verifyComplete();
+	}
+
+	@Test
+	void shouldBeans() {
+		assert Beans.getApplicationContext() != null;
 	}
 }

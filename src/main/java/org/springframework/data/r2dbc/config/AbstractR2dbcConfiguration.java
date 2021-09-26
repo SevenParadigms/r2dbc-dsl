@@ -16,17 +16,13 @@
 package org.springframework.data.r2dbc.config;
 
 import io.r2dbc.spi.ConnectionFactory;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
+import org.sevenparadigms.kotlin.beans.BeansConfiguration;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.CustomConversions.StoreConversions;
@@ -45,6 +41,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * Base class for Spring Data R2DBC configuration containing bean declarations that must be registered for Spring Data
  * R2DBC to work.
@@ -55,6 +56,7 @@ import org.springframework.util.Assert;
  * @see org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
  */
 @Configuration(proxyBeanMethods = false)
+@Import(BeansConfiguration.class)
 public abstract class AbstractR2dbcConfiguration implements ApplicationContextAware {
 
 	private static final String CONNECTION_FACTORY_BEAN_NAME = "connectionFactory";
