@@ -109,7 +109,7 @@ then generated SQL:
 * column.header.title -> `column->'header'->>'title'` if column have JsonNode type
 
 In `fields` property also can be selected joined columns or jsonb path to output result:
-for example column `shops.type` or `column->'header'->>'title'` in result mapped to fields `type` and `title`.
+for example column `shops.type` and `column->'header'->>'title'` in result mapped to fields `type` and `title`.
 
 ## Subscribe to async database UPDATE/INSERT events:
 
