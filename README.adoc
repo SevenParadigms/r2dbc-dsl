@@ -116,7 +116,7 @@ for example column `shops.type` and `column->'header'->>'title'` in result is ma
 [source,kotlin]
 ----
 Dsl.create()
-   .equals("brotherTable.jtree->hobby->'name'", "Konami")
+   .equals("brotherTable.jtree->hobby->>'name'", "Konami")
    .isTrue("isMonicStyle")
    .isNull("sisterTable.age)
    .fields("age", "sisterTable.name", "jtree->hobby->>'description'")
