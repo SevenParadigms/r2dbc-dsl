@@ -67,13 +67,15 @@ data class Dsl {
 
 6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
-7. JsonNode type in Java-model automatically converted to JSONB type of PostgreSQL database and back
+7. JsonNode type in Java-model automatically converted to JSONB type of PostgreSQL and back
 
 8. Repository `listener` method can subscribe to listen of all changes of table from database in realtime over `Sink<Notification>`
 
 9. Ranked full text search by field `tsv` as default with RUM index operator in `fullTextSearch` method
 
-10. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access. 
+10. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access.
+
+11. Utility class `Beans` is a powerfull Spring beans usage conversation with cache: can get beans, dynamic register new beans and get properties 
 
 ## Concepts
 
@@ -109,7 +111,17 @@ then generated SQL:
 * column.header.title -> `column->'header'->>'title'` if column have JsonNode type
 
 In `fields` property also can be selected joined columns or jsonb path to output result:
-for example column `shops.type` and `column->'header'->>'title'` in result mapped to fields `type` and `title`.
+for example column `shops.type` and `column->'header'->>'title'` in result is mapped to class fields `type` and `title`.
+
+[source,kotlin]
+----
+Dsl.create()
+   .equals("brotherTable.jtree->hobby->>'name'", "Konami")
+   .isTrue("isMonicStyle")
+   .isNull("sisterTable.age)
+   .fields("age", "sisterTable.name", "jtree->hobby->>'description'")
+----
+where after executing the next fields will be setted: age, name, description. 
 
 ## Subscribe to async database UPDATE/INSERT events:
 
