@@ -217,6 +217,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	void shouldSimpleDsl() {
 
 		List<LegoSet> legoSets = shouldInsertNewItems();
+		assert legoSets.size() == 2;
 
 		repository.findOne(Dsl.create().equals("manual", 13))
 				.as(StepVerifier::create)
@@ -277,6 +278,16 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> {
 					assertThat(actual.getId().longValue() == 1);
 				})
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().limit(2))
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().limit(1))
+				.as(StepVerifier::create)
+				.expectNextCount(1) //
 				.verifyComplete();
 	}
 

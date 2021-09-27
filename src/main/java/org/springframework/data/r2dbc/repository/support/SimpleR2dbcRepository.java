@@ -674,7 +674,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         }
         if (dsl.isPaged()) {
             selectBuilder.limitOffset(dsl.getSize(), ((long) dsl.getSize() * dsl.getPage()));
-        }
+        } else
+            if (dsl.getSize() > 0) {
+                selectBuilder.limitOffset(dsl.getSize(), 0);
+            }
         return new DslPreparedOperation(
                 selectBuilder.build(),
                 new RenderContextFactory(dialect).createRenderContext(), bindings);
