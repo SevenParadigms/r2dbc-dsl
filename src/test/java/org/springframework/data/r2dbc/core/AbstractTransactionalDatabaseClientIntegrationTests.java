@@ -22,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataAccessException;
@@ -31,8 +30,6 @@ import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.r2dbc.core.DatabaseClient;
-import org.springframework.transaction.ReactiveTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -269,7 +266,7 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 	}
 
 	@Configuration
-	@EnableTransactionManagement
+//	@EnableTransactionManagement
 	static class Config extends AbstractR2dbcConfiguration {
 
 		@Autowired GenericApplicationContext context;
@@ -283,10 +280,10 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 			return context.getBean("theConnectionFactory", ConnectionFactory.class);
 		}
 
-		@Bean
-		ReactiveTransactionManager txMgr(ConnectionFactory connectionFactory) {
-			return new R2dbcTransactionManager(connectionFactory);
-		}
+//		@Bean
+//		ReactiveTransactionManager txMgr(ConnectionFactory connectionFactory) {
+//			return new R2dbcTransactionManager(connectionFactory);
+//		}
 	}
 
 	static class TransactionalService {
