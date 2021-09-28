@@ -29,12 +29,13 @@ public abstract class DslUtils {
     public static final String COMMANDS = "(##|!#|==|!=|>>|>=|<<|<=|~~|@@)";
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^#!=><~@]";
-    public static final String dot = ".";
+    public static final String DOT = ".";
+    public static final String DOT_REGEX = "\\.";
     public static final String jsonb = "->>'";
 
     public static String toJsonbPath(final String path) {
-        if (path.contains(dot)) {
-            final var paths = path.split(dot);
+        if (path.contains(DOT)) {
+            final var paths = path.split(DOT);
             final var order = new StringBuilder(paths[0]);
             for (int i = 1; i < paths.length; i++) {
                 if (i < paths.length - 1)
@@ -54,8 +55,8 @@ public abstract class DslUtils {
     }
 
     public static <T> String toJsonbPath(final String dotter, final Class<T> type) {
-        if (dotter.contains(dot)) {
-            final var fieldName = dotter.split(dot)[0];
+        if (dotter.contains(DOT)) {
+            final var fieldName = dotter.split(DOT)[0];
             final var reflectionStorage = FastMethodInvoker.reflectionStorage(type);
             for (var field : reflectionStorage) {
                 if (fieldName.equals(field.getName()) && field.getType() == JsonNode.class) {
@@ -209,7 +210,7 @@ public abstract class DslUtils {
             return Sort.by(Stream.of(dsl.getSort().split(Dsl.comma)).map(it -> {
                 String[] parts = it.split(":");
                 String name;
-                if (parts[0].contains(dot)) {
+                if (parts[0].contains(DOT)) {
                     name = DslUtils.toJsonbPath(parts[0]);
                 } else
                     name = parts[0];

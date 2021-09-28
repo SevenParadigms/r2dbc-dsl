@@ -63,8 +63,7 @@ import reactor.core.publisher.Mono;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.springframework.data.r2dbc.support.DslUtils.getJsonName;
-import static org.springframework.data.r2dbc.support.DslUtils.toJsonbPath;
+import static org.springframework.data.r2dbc.support.DslUtils.*;
 
 /**
  * Simple {@link ReactiveSortingRepository} implementation using R2DBC through {@link DatabaseClient}.
@@ -304,8 +303,8 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             var mutableList = new ArrayList<String>();
             var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType());
             for (String field : dsl.getFields()) {
-                if (field.contains(".")) {
-                    String[] tmp = field.split("\\.");
+                if (field.contains(DOT)) {
+                    String[] tmp = field.split(DOT_REGEX);
                     if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
                         mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + field);
                         continue;
@@ -608,8 +607,8 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var queryFields = DslUtils.getCriteriaFields(dsl);
         if (!queryFields.isEmpty()) {
             for (String field : queryFields) {
-                if (!joins.containsKey(field) && field.contains(".")) {
-                    String tableField = WordUtils.camelToSql(field).split(".")[0];
+                if (!joins.containsKey(field) && field.contains(DOT)) {
+                    String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
                     if (entityColumns.contains(tableField + "_id")) {
                         joins.put(tableField, Table.create(tableField));
                     }
@@ -625,8 +624,8 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             if (entityColumns.contains(sqlFieldName)) {
                 columns.add(Column.create(sqlFieldName, table));
             } else {
-                if (sqlFieldName.contains(".")) {
-                    var parts = sqlFieldName.split(".");
+                if (sqlFieldName.contains(DOT)) {
+                    var parts = sqlFieldName.split(DOT_REGEX);
                     var tableName = parts[0];
                     if (entityColumns.contains(tableName + "_id")) {
                         if (!joins.containsKey(tableName)) {

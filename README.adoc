@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.6.5</version>
+  <version>3.6.6</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ also common jar with Dsl model (it is convenient when using Reactive Feign Clien
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>3.6.5</version>
+  <version>3.6.6</version>
 </dependency>
 ----
 
@@ -113,15 +113,15 @@ then generated SQL:
 * column.header.title -> `column->'header'->>'title'` if column have JsonNode type
 
 In `fields` property also can be selected joined columns or jsonb path to output result:
-for example column `shops.type` and `column->'header'->>'title'` in result is mapped to class fields `type` and `title`.
+for example column `shops.type` and `jtree.header.title` in result is mapped to class fields `type` and `title` (in sql mapper to `column->'header'->>'title'`).
 
 [source,kotlin]
 ----
 Dsl.create()
-   .equals("brotherTable.jtree->hobby->>'name'", "Konami")
+   .equals("brotherTable.jtree.hobby.name", "Konami")
    .isTrue("isMonicStyle")
    .isNull("sisterTable.age)
-   .fields("age", "sisterTable.name", "jtree->hobby->>'description'")
+   .fields("age", "sisterTable.name", "jtree.hobby.description")
 ----
 where after executing the next fields will be setted: age, name, description. 
 
