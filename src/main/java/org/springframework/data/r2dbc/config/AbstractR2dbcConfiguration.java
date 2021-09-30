@@ -16,7 +16,7 @@
 package org.springframework.data.r2dbc.config;
 
 import io.r2dbc.spi.ConnectionFactory;
-import org.sevenparadigms.kotlin.beans.BeansConfiguration;
+import org.springframework.data.r2dbc.config.beans.*;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -150,7 +150,7 @@ public abstract class AbstractR2dbcConfiguration implements ApplicationContextAw
 
 	/**
 	 * Creates a {@link ReactiveDataAccessStrategy} using the configured
-	 * {@link #r2dbcConverter(Optional, R2dbcCustomConversions)} R2dbcConverter}.
+	 * {@link # r2dbcConverter(Optional, R2dbcCustomConversions)} R2dbcConverter}.
 	 *
 	 * @param converter the configured {@link R2dbcConverter}.
 	 * @return must not be {@literal null}.

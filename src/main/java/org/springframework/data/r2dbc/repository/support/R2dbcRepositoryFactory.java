@@ -15,10 +15,10 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
-import org.sevenparadigms.kotlin.beans.Beans;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.r2dbc.config.beans.Beans;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;

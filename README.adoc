@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.6.6</version>
+  <version>3.7.0</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ also common jar with Dsl model (it is convenient when using Reactive Feign Clien
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>3.6.6</version>
+  <version>3.7.0</version>
 </dependency>
 ----
 
@@ -55,29 +55,31 @@ data class Dsl {
 
 ## Features
 
-1. Paging and Sorting full support with ordering in several columns at once
+* Paging and Sorting full support with ordering in several columns at once
 
-2. Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
+* Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
 
-3. Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
+* Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
 
-4. Joins to any tables and build criteria on joined columns, also can select joined columns in result
+* Joins to any tables and build criteria on joined columns, also can select joined columns in result
 
-5. Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
+* Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
 
-6. Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
+* Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
-7. JsonNode type in Java-model automatically converted to JSONB type of PostgreSQL and back
+* JsonNode type in Java-model automatically converted to JSONB type of PostgreSQL and back
 
-8. Repository `listener` method can subscribe to listen of all changes of table from database in realtime over `Flux<Notification>`
+* Repository `listener` method can subscribe to listen of all changes of table from database in realtime over `Flux<Notification>`
 
-9. Ranked full text search by field `tsv` as default with RUM index operator in `fullTextSearch` method
+* Ranked full text search by field `tsv` as default with RUM index operator in `fullTextSearch` method
 
-10. Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access.
+* Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access.
 
-11. Utility class `Beans` is a powerfull Spring beans usage conversation with cache: can get beans, dynamic register beans and get properties
+* Utility class `Beans` is a powerfull Spring beans usage conversation with cache: can get beans, dynamic register beans and get properties
 
-12. Transaction manager is enabled by default connection
+* Transaction manager is enabled by default with current Connection bean
+
+* Utility class `R2dbcUtils` can create repository from database url and interface: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
 
 ## Concepts
 

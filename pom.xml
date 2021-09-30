@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>3.6.6</version>
+	<version>3.7.0</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -148,6 +148,12 @@
 			<groupId>io.github.sevenparadigms</groupId>
 			<artifactId>spring-data-r2dbc-dsl-common</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-autoconfigure</artifactId>
+			<version>${springdata.commons}</version>
 		</dependency>
 
 		<dependency>
@@ -418,74 +424,4 @@
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement>
-
-	<profiles>
-		<profile>
-			<id>release</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.1.1</version>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<show>public</show>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>3.2.1</version>
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
-							<stagingProgressTimeoutMinutes>30</stagingProgressTimeoutMinutes>
-							<keepStagingRepositoryOnFailure>true</keepStagingRepositoryOnFailure>
-							<keepStagingRepositoryOnCloseRuleFailure>true</keepStagingRepositoryOnCloseRuleFailure>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
-
 </project>
