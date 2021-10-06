@@ -17,9 +17,6 @@ package org.springframework.data.r2dbc.convert;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-
-import java.util.function.BiFunction;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.EntityWriter;
@@ -29,6 +26,8 @@ import org.springframework.data.relational.core.conversion.RelationalConverter;
 import org.springframework.data.relational.core.dialect.ArrayColumns;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
+
+import java.util.function.BiFunction;
 
 /**
  * Central R2DBC specific converter interface.
@@ -76,7 +75,7 @@ public interface R2dbcConverter
 	 * Return whether the {@code type} is a simple type. Simple types are database primitives or types with a custom
 	 * mapping strategy.
 	 *
-	 * @param valueType the type to inspect, must not be {@literal null}.
+	 * @param type the type to inspect, must not be {@literal null}.
 	 * @return {@literal true} if the type is a simple one.
 	 * @see org.springframework.data.mapping.model.SimpleTypeHolder
 	 * @since 1.2

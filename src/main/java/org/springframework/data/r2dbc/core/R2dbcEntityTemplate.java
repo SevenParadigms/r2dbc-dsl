@@ -242,7 +242,7 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking
 	 * {@link org.springframework.data.mapping.callback.ReactiveEntityCallbacks callbacks} like the
 	 * {@link BeforeSaveCallback}.
-	 * <p />
+	 * <p>
 	 * Overrides potentially existing {@link ReactiveEntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
@@ -367,12 +367,11 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 		StatementMapper statementMapper = dataAccessStrategy.getStatementMapper().forType(entityClass);
 
 		SqlIdentifier columnName = SqlIdentifier.unquoted("*");
-		if (!entity.hasIdProperty() && isIdContains(entityClass)) {
-			columnName = getIdSqlIdentifier(entityClass);
-		} else
-			if (entity.hasIdProperty()) {
-				columnName = entity.getRequiredIdProperty().getColumnName();
-			}
+		if (entity.hasIdProperty()) {
+			columnName = entity.getRequiredIdProperty().getColumnName();
+		} else if (isIdContains(entityClass)) {
+			columnName = new DefaultSqlIdentifier(Dsl.idProperty, false);
+		}
 
 		StatementMapper.SelectSpec selectSpec = statementMapper //
 				.createSelect(tableName) //
@@ -854,9 +853,9 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 //		}
 
 //		IdentifierAccessor identifierAccessor = persistentEntity.getIdentifierAccessor(entity);
-//		Object id = identifierAccessor.getRequiredIdentifier();
-		Object id = FastMethodInvoker.getValue(entity, getIdSqlIdentifier(entity.getClass()).getReference());
-		return Query.query(Criteria.where(getIdSqlIdentifier(entity.getClass()).getReference()).is(id));
+		String idName = getIdSqlIdentifier(entity.getClass()).getReference();
+		Object id = FastMethodInvoker.getValue(entity, idName);
+		return Query.query(Criteria.where(idName).is(id));
 	}
 
 	SqlIdentifier getTableName(Class<?> entityClass) {
