@@ -65,6 +65,10 @@ public class R2dbcRepositoryFactory extends ReactiveRepositoryFactorySupport {
 	private final R2dbcEntityOperations operations;
 	private final ApplicationContext applicationContext;
 
+	public R2dbcRepositoryFactory(R2dbcEntityTemplate r2dbcEntityTemplate) {
+		this(r2dbcEntityTemplate.getDatabaseClient(), r2dbcEntityTemplate.getDataAccessStrategy(), Beans.getApplicationContext());
+	}
+
 	public R2dbcRepositoryFactory(DatabaseClient databaseClient, ReactiveDataAccessStrategy dataAccessStrategy) {
 		this(databaseClient, dataAccessStrategy, Beans.getApplicationContext());
 	}
