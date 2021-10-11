@@ -5,7 +5,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
@@ -26,22 +25,26 @@ public class Beans implements ApplicationContextAware {
         return bean;
     }
 
-    @NonNull
     public static String getProperty(String name, String defaultValue) {
-        String result = getApplicationContext().getEnvironment().getProperty(name);
-        if (result == null) {
-            return defaultValue;
+        try {
+            String result = getApplicationContext().getEnvironment().getProperty(name);
+            if (result != null) {
+                return result;
+            }
+        } catch (Exception e) {
         }
-        return result;
+        return defaultValue;
     }
 
-    @NonNull
     public static <T> T getProperty(String name, Class<T> target, T defaultValue) {
         try {
-            return getApplicationContext().getEnvironment().getProperty(name, target);
-        } catch (Exception e1) {
-            return defaultValue;
+            T result = getApplicationContext().getEnvironment().getProperty(name, target);
+            if (result != null) {
+                return result;
+            }
+        } catch (Exception e) {
         }
+        return defaultValue;
     }
 
     private static <T> T cache(Class<T> requiredType, Callable<T> callable) {
