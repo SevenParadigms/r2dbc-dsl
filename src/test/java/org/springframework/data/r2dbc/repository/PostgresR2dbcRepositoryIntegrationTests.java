@@ -305,5 +305,6 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	@Test
 	void shouldBeans() {
 		assert Beans.getApplicationContext() != null;
+		assert Beans.of(DatabaseClient.class) != null;
 	}
 }

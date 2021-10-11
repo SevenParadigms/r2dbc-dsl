@@ -1,6 +1,7 @@
 package org.springframework.data.r2dbc.support;
 
 import io.r2dbc.spi.ConnectionFactories;
+import org.springframework.data.r2dbc.config.beans.Beans;
 import org.springframework.data.r2dbc.core.DefaultReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactory;
@@ -17,6 +18,15 @@ public abstract class R2dbcUtils {
         return new R2dbcRepositoryFactory(
                 DatabaseClient.builder().connectionFactory(connectionFactory).build(),
                 new DefaultReactiveDataAccessStrategy(DialectResolver.getDialect(connectionFactory))
+        ).getRepository(cls);
+    }
+
+    public static <T> T getRepository(Class<T> cls) {
+        var databaseClient = Beans.of(DatabaseClient.class);
+        var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
+        return new R2dbcRepositoryFactory(
+                databaseClient,
+                new DefaultReactiveDataAccessStrategy(dialect)
         ).getRepository(cls);
     }
 }

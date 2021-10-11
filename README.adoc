@@ -13,18 +13,18 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.7.2</version>
+  <version>3.7.3</version>
 </dependency>
 ----
 
-also common jar with Dsl model (it is convenient when using Reactive Feign Client):
+there included common jar with Dsl model (it is convenient when using Reactive Feign Client):
 
 [source,xml]
 ----
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>3.7.2</version>
+  <version>3.7.3</version>
 </dependency>
 ----
 
