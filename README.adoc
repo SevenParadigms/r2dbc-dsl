@@ -28,7 +28,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 </dependency>
 ----
 
-That library produce `R2dbcDslRepository` interface:
+That library produce `R2dbcRepository` interface with Dsl extention:
 [source,kotlin]
 ----
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
