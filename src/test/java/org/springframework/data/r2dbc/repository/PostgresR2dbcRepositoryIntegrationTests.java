@@ -38,6 +38,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -304,7 +305,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	@Test
 	void shouldBeans() {
-		assert Beans.getApplicationContext() != null;
-		assert Beans.of(DatabaseClient.class) != null;
+		Assert.notNull(Beans.getApplicationContext(), "Application context must not be null!");
+		Assert.notNull(Beans.of(DatabaseClient.class), "DatabaseClient must not be null!");
 	}
 }
