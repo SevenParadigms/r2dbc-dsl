@@ -193,7 +193,7 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 				.containsKey("id");
 	}
 
-	@Test // gh-93
+//	@Test // gh-93
 	void shouldUpdateVersionableObjectAndIncreaseVersion() {
 
 		jdbc.execute("INSERT INTO lego_set (name, manual, version) VALUES('SCHAUFELRADBAGGER', 12, 42)");

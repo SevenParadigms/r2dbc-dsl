@@ -1,6 +1,7 @@
 package org.springframework.data.r2dbc.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import kotlin.Pair;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.data.domain.PageRequest;
@@ -191,11 +192,25 @@ public abstract class DslUtils {
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(Dsl.comma);
             for (String criteria : criterias) {
+                if (criteria.contains("@@")) continue;
                 String[] parts = criteria.split(COMMANDS);
                 list.add(parts[0].replace(PREFIX, ""));
             }
         }
         return list;
+    }
+
+    public static Pair<String, String> getFtsPair(Dsl dsl) {
+        if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
+            String[] criterias = dsl.getQuery().split(Dsl.comma);
+            for (String criteria : criterias) {
+                if (criteria.contains("@@")) {
+                    String[] parts = criteria.split(COMMANDS);
+                    return new Pair<>(parts[0], parts[1]);
+                }
+            }
+        }
+        return null;
     }
 
     public static Pageable getPageable(Dsl dsl) {

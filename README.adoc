@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>3.7.4</version>
+  <version>3.8.0</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>3.7.4</version>
+  <version>3.8.0</version>
 </dependency>
 ----
 
@@ -35,7 +35,6 @@ interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
     fun listener(): Flux<Notification>
-    fun fullTextSearch(dsl: Dsl): Flux<T>
     fun saveBatch(models: Iterable<S>): Flux<Result>
 }
 ----
@@ -179,7 +178,7 @@ or get if nothing from: `Locale.getCurrent()`
 
 also can dynamically setting in Dsl class: `Dsl.create().lang('English')`
 
-In table look field with name `tsv`, but can be setting in `Dsl.create().fts("ts_vector","web query text")`.
+In table look field by default name `tsv`: `Dsl.create().fts("web query text")`, but field name can be setting in parameter  `Dsl.create().fts("ts_vector", "web query text")`.
 [source,postgresql]
 ----
 CREATE TABLE public.jobject

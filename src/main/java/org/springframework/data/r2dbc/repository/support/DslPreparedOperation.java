@@ -21,6 +21,10 @@ class DslPreparedOperation<T> implements PreparedOperation<T> {
         this.bindings = bindings;
     }
 
+    public Bindings getBindings() {
+        return bindings;
+    }
+
     @Override
     public T getSource() {
         return source;

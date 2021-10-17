@@ -294,14 +294,15 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         if (lang.isEmpty()) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
         }
-        var parts = dsl.getQuery().split("@@");
+        var parts = DslUtils.getFtsPair(dsl);
         var fields = "";
 
         if (dsl.getFields().length == 0)
             fields = "*";
         else {
             var mutableList = new ArrayList<String>();
-            var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType());
+            var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType())
+                    .stream().map(SqlIdentifier::getReference).collect(Collectors.toList());
             for (String field : dsl.getFields()) {
                 if (field.contains(DOT)) {
                     String[] tmp = field.split(DOT_REGEX);
@@ -312,18 +313,33 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                 }
                 mutableList.add(WordUtils.camelToSql(field));
             }
-            fields = mutableList.stream().collect(Collectors.joining(","));
+            fields = String.join(",", mutableList);
         }
 
-        if (!fields.equals("*") && !fields.contains("tsv")) fields += ",tsv";
-        var sql = "SELECT * FROM ( SELECT " + fields +
-                " FROM " + entity.getTableName() + ", websearch_to_tsquery('" + lang + "', '" + parts[1] + "') AS q" +
-                " WHERE (" + parts[0] + " @@ q)) AS s" +
-                " ORDER BY ts_rank_cd(s." + parts[0] + ", websearch_to_tsquery('" + lang + "', '" + parts[1] + "')) DESC ";
+        if (!fields.equals("*") && !fields.contains(parts.component1())) fields += "," + parts.component1();
+        var sql = "SELECT * FROM (SELECT " + fields +
+                " FROM " + entity.getTableName().getReference() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
+                " WHERE (" + parts.component1() + " @@ q)) AS s";
+        var operation = getMappedObject(dsl);
+        var criteria = operation.get().replaceAll(entity.getTableName().getReference(), "s");
+        if (criteria.indexOf("WHERE") > 0) {
+            int lastIndex = criteria.indexOf("FOR UPDATE") - 1;
+            if (criteria.indexOf("LIMIT") > 0) lastIndex = criteria.indexOf("LIMIT") - 1;
+            if (criteria.indexOf("ORDER") > 0) lastIndex = criteria.indexOf("ORDER") - 1;
+            criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
+            sql += criteria;
+        }
+        sql += " ORDER BY ts_rank_cd(s." + parts.component1() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
         }
-        return databaseClient.execute(sql).as(entity.getJavaType()).fetch().all();
+        var client = databaseClient.execute(sql);
+        if (criteria.indexOf("WHERE") > 0) {
+            for (Bindings.Binding bind : operation.getBindings()) {
+                client.bind(bind.getBindMarker().getPlaceholder(), Objects.requireNonNull(bind.getValue()));
+            }
+        }
+        return client.as(entity.getJavaType()).fetch().all();
     }
 
     @Override
@@ -352,6 +368,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     @Override
     public Flux<T> findAll(Dsl dsl) {
+        if (dsl.getQuery().contains("@@")) return fullTextSearch(dsl);
         return databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all();
     }
 
@@ -596,7 +613,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         return Query.query(Criteria.where(getIdProperty().getName()).is(id));
     }
 
-    private PreparedOperation<Select> getMappedObject(Dsl dsl) {
+    private DslPreparedOperation<Select> getMappedObject(Dsl dsl) {
         if (applicationContext == null) applicationContext = Beans.getApplicationContext();
         var connectionFactory = applicationContext.getBean(ConnectionFactory.class);
         var dialect = DialectResolver.getDialect(connectionFactory);

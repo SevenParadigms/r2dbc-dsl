@@ -216,7 +216,6 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	@Test
 	void shouldSimpleDsl() {
-
 		List<LegoSet> legoSets = shouldInsertNewItems();
 		assert legoSets.size() == 2;
 
@@ -281,12 +280,12 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				})
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().limit(2))
+		repository.findAll(Dsl.create().greaterThanOrEquals("id", 1L).limit(2))
 				.as(StepVerifier::create)
 				.expectNextCount(2) //
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().limit(1))
+		repository.findAll(Dsl.create().greaterThanOrEquals("id", 2L).limit(1))
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
