@@ -5,12 +5,12 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>3.8.1</version>
+	<version>4.0.0</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>2.5.5</version>
+		<version>2.5.6</version>
 	</parent>
 
 	<name>Spring Data R2DBC DSL</name>
@@ -86,15 +86,15 @@
 	<properties>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring.core>5.3.10</spring.core>
-		<springdata.commons>2.5.5</springdata.commons>
+		<spring.core>5.3.12</spring.core>
+		<springdata.commons>2.5.6</springdata.commons>
 		<springdata.jdbc>2.2.4</springdata.jdbc>
 		<springdata.relational>${springdata.jdbc}</springdata.relational>
 		<java-module-name>spring.data.r2dbc</java-module-name>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
 
 		<degraph-check.version>0.1.4</degraph-check.version>
-		<postgresql.version>42.2.23</postgresql.version>
+		<postgresql.version>42.3.1</postgresql.version>
 		<mysql.version>8.0.26</mysql.version>
 		<r2dbc-spi-test.version>0.8.5.RELEASE</r2dbc-spi-test.version>
 		<mssql-jdbc.version>9.4.0.jre8</mssql-jdbc.version>
@@ -102,7 +102,8 @@
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
 		<netty>4.1.66.Final</netty>
-		<test.container>1.16.0</test.container>
+		<testcontainer>1.16.0</testcontainer>
+		<mockk>1.12.0</mockk>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
@@ -128,7 +129,7 @@
 			<dependency>
 				<groupId>org.testcontainers</groupId>
 				<artifactId>testcontainers-bom</artifactId>
-				<version>${test.container}</version>
+				<version>${testcontainer}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -228,6 +229,7 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>${postgresql.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -263,7 +265,8 @@
 		<dependency>
 			<groupId>io.r2dbc</groupId>
 			<artifactId>r2dbc-postgresql</artifactId>
-			<version>0.8.8.RELEASE</version>
+			<version>0.8.10.RELEASE</version>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -383,7 +386,7 @@
 		<dependency>
 			<groupId>io.mockk</groupId>
 			<artifactId>mockk</artifactId>
-			<version>1.12.0</version>
+			<version>${mockk}</version>
 			<scope>test</scope>
 		</dependency>
 

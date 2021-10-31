@@ -56,7 +56,7 @@ import java.util.Optional;
  * @see org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
  */
 @Configuration(proxyBeanMethods = false)
-@Import(BeansConfiguration.class)
+@Import(MapperConfig.class)
 public abstract class AbstractR2dbcConfiguration implements ApplicationContextAware {
 
 	private static final String CONNECTION_FACTORY_BEAN_NAME = "connectionFactory";

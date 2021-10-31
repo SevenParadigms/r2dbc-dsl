@@ -4,11 +4,13 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import java.util.concurrent.Callable;
 
+@Configuration
 public class Beans implements ApplicationContextAware {
     private static ConcurrentReferenceHashMap OBJECTS_CACHE = new ConcurrentReferenceHashMap(720);
     private static ApplicationContext applicationContext = null;

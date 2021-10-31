@@ -147,7 +147,8 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 	 * @return the value read from the {@link Row}. May be {@literal null}.
 	 */
 	@Nullable
-	private Object readFrom(Row row, @Nullable RowMetadata metadata, RelationalPersistentProperty property, String prefix) {
+	private Object readFrom(Row row, @Nullable RowMetadata metadata, RelationalPersistentProperty property,
+			String prefix) {
 
 		String identifier = prefix + property.getColumnName().getReference();
 
@@ -158,16 +159,16 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 				value = row.get(identifier);
 			}
 
-			if (value != null && getConversions().hasCustomReadTarget(value.getClass(), property.getType())) {
+			if (value == null) {
+				return null;
+			}
+
+			if (getConversions().hasCustomReadTarget(value.getClass(), property.getType())) {
 				return readValue(value, property.getTypeInformation());
 			}
 
 			if (property.isEntity()) {
 				return readEntityFrom(row, metadata, property);
-			}
-
-			if (value == null) {
-				return null;
 			}
 
 			return readValue(value, property.getTypeInformation());
@@ -589,17 +590,17 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 		RelationalPersistentEntity<?> entity = getMappingContext().getRequiredPersistentEntity(userClass);
 
 		return (row, metadata) -> {
+			PersistentPropertyAccessor<?> propertyAccessor = entity.getPropertyAccessor(object);
 			RelationalPersistentProperty idProperty = null;
 			if (FastMethodInvoker.isField(object, Dsl.idProperty)) {
 				RelationalPersistentEntity<?> persist = getMappingContext().getPersistentEntity(object.getClass());
-				assert persist != null;
 				idProperty = persist.getPersistentProperty(Dsl.idProperty);
 			} else {
 				idProperty = entity.getRequiredIdProperty();
 			}
 
-			PersistentPropertyAccessor<?> propertyAccessor = entity.getPropertyAccessor(object);
 			boolean idPropertyUpdateNeeded = false;
+
 			Object id = propertyAccessor.getProperty(idProperty);
 			if (idProperty.getType().isPrimitive()) {
 				idPropertyUpdateNeeded = id instanceof Number && ((Number) id).longValue() == 0;
@@ -609,8 +610,8 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 
 			if (idPropertyUpdateNeeded) {
 				return potentiallySetId(row, metadata, propertyAccessor, idProperty) //
-					? (T) propertyAccessor.getBean() //
-					: object;
+						? (T) propertyAccessor.getBean() //
+						: object;
 			}
 
 			return object;
