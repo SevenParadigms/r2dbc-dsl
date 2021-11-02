@@ -304,7 +304,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType())
                     .stream().map(SqlIdentifier::getReference).collect(Collectors.toList());
             for (String field : dsl.getFields()) {
-                if (field.contains(Dsl.DOT)) {
+                if (field.contains(DOT)) {
                     String[] tmp = field.split(DOT_REGEX);
                     if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
                         mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + field);
@@ -624,7 +624,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var queryFields = DslUtils.getCriteriaFields(dsl);
         if (!queryFields.isEmpty()) {
             for (String field : queryFields) {
-                if (!joins.containsKey(field) && field.contains(Dsl.DOT)) {
+                if (!joins.containsKey(field) && field.contains(DOT)) {
                     String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
                     if (entityColumns.contains(tableField + "_" + Dsl.idProperty)) {
                         joins.put(tableField, Table.create(tableField));
@@ -641,7 +641,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             if (entityColumns.contains(sqlFieldName)) {
                 columns.add(Column.create(sqlFieldName, table));
             } else {
-                if (sqlFieldName.contains(Dsl.DOT)) {
+                if (sqlFieldName.contains(DOT)) {
                     var parts = sqlFieldName.split(DOT_REGEX);
                     var tableName = parts[0];
                     if (entityColumns.contains(tableName + "_" + Dsl.idProperty)) {
