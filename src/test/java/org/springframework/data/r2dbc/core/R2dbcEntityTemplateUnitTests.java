@@ -27,7 +27,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.auditing.ReactiveIsNewAwareAuditingHandler;
@@ -290,8 +289,8 @@ public class R2dbcEntityTemplateUnitTests {
 
 		StatementRecorder.RecordedStatement statement = recorder.getCreatedStatement(s -> s.startsWith("INSERT"));
 
-		assertThat(statement.getSql()).isEqualTo("INSERT INTO person_with_primitive_id (name) VALUES ($1)");
-		assertThat(statement.getBindings()).hasSize(1).containsEntry(0, Parameter.from("bar"));
+		assertThat(statement.getSql()).isEqualTo("INSERT INTO person_with_primitive_id (id, name) VALUES ($1, $2)");
+		assertThat(statement.getBindings()).hasSize(2);
 	}
 
 	@Test // gh-557, gh-402
@@ -311,9 +310,8 @@ public class R2dbcEntityTemplateUnitTests {
 		StatementRecorder.RecordedStatement statement = recorder.getCreatedStatement(s -> s.startsWith("INSERT"));
 
 		assertThat(statement.getSql())
-				.isEqualTo("INSERT INTO versioned_person_with_primitive_id (version, name) VALUES ($1, $2)");
-		assertThat(statement.getBindings()).hasSize(2).containsEntry(0, Parameter.from(1L)).containsEntry(1,
-				Parameter.from("bar"));
+				.isEqualTo("INSERT INTO versioned_person_with_primitive_id (id, version, name) VALUES ($1, $2, $3)");
+		assertThat(statement.getBindings()).hasSize(3);
 	}
 
 	@Test // gh-451
@@ -465,6 +463,14 @@ public class R2dbcEntityTemplateUnitTests {
 		@Column("THE_NAME") String name;
 
 		String description;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	@Value
@@ -482,8 +488,7 @@ public class R2dbcEntityTemplateUnitTests {
 	@With
 	private static class PersonWithPrimitiveId {
 
-		@Id
-		int id;
+		/*@Id */int id;
 
 		String name;
 	}
@@ -492,8 +497,7 @@ public class R2dbcEntityTemplateUnitTests {
 	@With
 	private static class VersionedPersonWithPrimitiveId {
 
-		@Id
-		int id;
+		/*@Id */int id;
 
 		@Version long version;
 

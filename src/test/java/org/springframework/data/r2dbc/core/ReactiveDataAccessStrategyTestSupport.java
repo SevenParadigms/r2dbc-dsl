@@ -15,31 +15,27 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
+import io.r2dbc.spi.test.MockColumnMetadata;
+import io.r2dbc.spi.test.MockRowMetadata;
 import lombok.Data;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.r2dbc.core.Parameter;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.*;
+import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Abstract base class for {@link R2dbcDialect}-aware {@link DefaultReactiveDataAccessStrategy} tests.
@@ -192,14 +188,12 @@ public abstract class ReactiveDataAccessStrategyTestSupport {
 	}
 
 	private <T> void testType(BiConsumer<PrimitiveTypes, T> setter, Function<PrimitiveTypes, T> getter, T testValue,
-			String fieldname) {
+							  String fieldname) {
 
 		ReactiveDataAccessStrategy strategy = getStrategy();
 		Row rowMock = mock(Row.class);
-		RowMetadata metadataMock = mock(RowMetadata.class);
-		Collection<String> columnNames = mock(Collection.class);
-		when(metadataMock.getColumnNames()).thenReturn(columnNames);
-		when(columnNames.contains(fieldname)).thenReturn(true);
+		RowMetadata metadataMock = MockRowMetadata.builder()
+				.columnMetadata(MockColumnMetadata.builder().name(fieldname).build()).build();
 
 		PrimitiveTypes toSave = new PrimitiveTypes();
 		setter.accept(toSave, testValue);

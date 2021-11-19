@@ -15,11 +15,7 @@
  */
 package org.springframework.data.r2dbc.core;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.StatementMapper.UpdateSpec;
@@ -28,6 +24,10 @@ import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.r2dbc.core.PreparedOperation;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Unit tests for {@link DefaultStatementMapper}.
@@ -77,6 +77,7 @@ class StatementMapperUnitTests {
 
 		PreparedOperation<?> preparedOperation = mapper.getMappedObject(selectSpec);
 
-		assertThat(preparedOperation.toQuery()).isEqualTo("SELECT table.* FROM table ORDER BY id DESC LIMIT 2 OFFSET 2");
+		assertThat(preparedOperation.toQuery())
+				.isEqualTo("SELECT table.* FROM table ORDER BY id DESC LIMIT 2 OFFSET 2");
 	}
 }
