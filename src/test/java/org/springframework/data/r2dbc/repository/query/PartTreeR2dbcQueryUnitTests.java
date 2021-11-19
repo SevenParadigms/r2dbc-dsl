@@ -429,7 +429,7 @@ class PartTreeR2dbcQueryUnitTests {
 
 		assertThat(preparedOperation.get())
 				.isEqualTo(
-						"SELECT " + ALL_FIELDS + " FROM " + TABLE + " WHERE " + TABLE + ".age = $1 ORDER BY users.last_name DESC");
+						"SELECT " + ALL_FIELDS + " FROM " + TABLE + " WHERE " + TABLE + ".age = $1 ORDER BY last_name DESC");
 	}
 
 	@Test // gh-282
@@ -442,7 +442,7 @@ class PartTreeR2dbcQueryUnitTests {
 
 		assertThat(preparedOperation.get())
 				.isEqualTo(
-						"SELECT " + ALL_FIELDS + " FROM " + TABLE + " WHERE " + TABLE + ".age = $1 ORDER BY users.last_name ASC");
+						"SELECT " + ALL_FIELDS + " FROM " + TABLE + " WHERE " + TABLE + ".age = $1 ORDER BY last_name ASC");
 	}
 
 	@Test // gh-282
