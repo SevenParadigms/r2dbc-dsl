@@ -117,17 +117,21 @@ public abstract class DslUtils {
                 var value = FastMethodInvoker.getValue(target, field.getName());
                 String result = null;
                 if (value != null) {
-                    if (value instanceof String) result = "'" + value + "'";
-                    if (value instanceof UUID) result = "'" + value + "'::uuid";
-                    if (value instanceof byte[]) result = "decode('" + Hex.encodeHex((byte[]) value) + "', 'hex')";
-                    if (value instanceof Enum) result = "'" + ((Enum) value).name() + "'";
-                    if (value instanceof JsonNode) result = "'" + value.toString().replaceAll("'", "") + "'";
-                    if (result == null) result = ConvertUtils.convert(value, String.class).toString();
+                    result = objectToSql(value);
                 }
                 buildQuery = buildQuery.replaceAll(Dsl.COLON + field.getName(), result == null ? "null" : result);
             }
         }
         return buildQuery;
+    }
+
+    public static String objectToSql(Object value) {
+        if (value instanceof String) return "'" + value + "'";
+        if (value instanceof UUID) return "'" + value + "'::uuid";
+        if (value instanceof byte[]) return "decode('" + String.valueOf(Hex.encodeHex((byte[]) value)) + "', 'hex')";
+        if (value instanceof Enum) return "'" + ((Enum) value).name() + "'";
+        if (value instanceof JsonNode) return "'" + value.toString().replaceAll("'", "") + "'";
+        return ConvertUtils.convert(value, String.class).toString();
     }
 
     public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type) {

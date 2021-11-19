@@ -26,7 +26,6 @@ import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
 import org.springframework.data.relational.repository.support.MappingRelationalEntityInformation;
-import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.r2dbc.core.DatabaseClient;
 
@@ -61,17 +60,6 @@ public class R2dbcRepositoryFactoryUnitTests {
 
 		assertThat(entityInformation).isInstanceOf(MappingRelationalEntityInformation.class);
 	}
-
-//	@Test todo
-	public void createsRepositoryWithIdTypeLong() {
-
-		R2dbcRepositoryFactory factory = new R2dbcRepositoryFactory(databaseClient, dataAccessStrategy, applicationContext);
-		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
-
-		assertThat(repository).isNotNull();
-	}
-
-	interface MyPersonRepository extends Repository<Person, Long> {}
 
 	static class Person {
 		/*@Id */long id;

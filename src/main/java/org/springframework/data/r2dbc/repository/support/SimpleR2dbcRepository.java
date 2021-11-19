@@ -22,9 +22,13 @@ import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.postgresql.api.PostgresqlResult;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
+import org.apache.commons.beanutils.ConvertUtils;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.config.beans.Beans;
@@ -60,6 +64,9 @@ import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -177,28 +184,63 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     .first().flatMap(s -> Mono.just(s))
                     .defaultIfEmpty(objectToSave);
         } else {
-            ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
-            StatementMapper mapper = accessStrategy.getStatementMapper();
-            OutboundRow columns = accessStrategy.getOutboundRow(objectToSave);
-            Update update = null;
-            Iterator<?> iterator = columns.keySet().iterator();
-            while (iterator.hasNext()) {
-                SqlIdentifier column = (SqlIdentifier) iterator.next();
-                if (update == null) {
-                    update = Update.update(accessStrategy.toSql(column), columns.get(column));
-                }
-                update = update.set(accessStrategy.toSql(column), columns.get(column));
+            var version = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
+            if (version != null) {
+                return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(objectToSave)))
+                        .flatMap(previous -> {
+                            var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
+                            var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
+                            if (versionValue.equals(previousVersionValue)) {
+                                if (version.getType() == Long.class) {
+                                    var value = (Long) versionValue + 1;
+                                    FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+                                }
+                                if (version.getType() == Integer.class) {
+                                    var value = (Integer) versionValue + 1;
+                                    FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+                                }
+                                if (version.getType() == Short.class) {
+                                    var value = (Short) versionValue + 1;
+                                    FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+                                }
+                                if (version.getType() == LocalDateTime.class) {
+                                    FastMethodInvoker.setValue(objectToSave, version.getName(), LocalDateTime.now(ZoneId.systemDefault()));
+                                }
+                                if (version.getType() == ZonedDateTime.class) {
+                                    FastMethodInvoker.setValue(objectToSave, version.getName(), ZonedDateTime.now(ZoneId.systemDefault()));
+                                }
+                                return simpleSave(idPropertyName, idValue, objectToSave);
+                            }
+                            return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
+                        })
+                        .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
             }
-            PreparedOperation<?> operation = mapper.getMappedObject(
-                    mapper.createUpdate(this.entity.getTableName(), update)
-                            .withCriteria(Criteria.where(idPropertyName).is(idValue)));
-            return databaseClient.execute(operation).fetch().rowsUpdated()
-                    .handle((rowsUpdated, sSynchronousSink) -> {
-                        if (rowsUpdated > 0) {
-                            sSynchronousSink.next(objectToSave);
-                        }
-                    });
+            return simpleSave(idPropertyName, idValue, objectToSave);
         }
+    }
+
+    private <S extends T> Mono<S> simpleSave(String idPropertyName, Object idValue, S objectToSave) {
+        ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
+        StatementMapper mapper = accessStrategy.getStatementMapper();
+        OutboundRow columns = accessStrategy.getOutboundRow(objectToSave);
+        Update update = null;
+        Iterator<?> iterator = columns.keySet().iterator();
+        while (iterator.hasNext()) {
+            SqlIdentifier column = (SqlIdentifier) iterator.next();
+            if (update == null) {
+                update = Update.update(accessStrategy.toSql(column), columns.get(column));
+            }
+            update = update.set(accessStrategy.toSql(column), columns.get(column));
+        }
+        PreparedOperation<?> operation = mapper.getMappedObject(
+                mapper.createUpdate(this.entity.getTableName(), update)
+                        .withCriteria(Criteria.where(idPropertyName).is(idValue)));
+        return databaseClient.execute(operation).fetch().rowsUpdated()
+                .handle((rowsUpdated, sSynchronousSink) -> {
+                    if (rowsUpdated > 0) {
+                        sSynchronousSink.next(objectToSave);
+                    }
+                });
     }
 
     /*
@@ -333,13 +375,13 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
         }
-        var client = databaseClient.execute(sql);
         if (criteria.indexOf("WHERE") > 0) {
+            var index = 1;
             for (Bindings.Binding bind : operation.getBindings()) {
-                client.bind(bind.getBindMarker().getPlaceholder(), Objects.requireNonNull(bind.getValue()));
+                sql = sql.replaceAll("\\$" + index++, bind.getValue() == null ? "null" : DslUtils.objectToSql(bind.getValue()));
             }
         }
-        return client.as(entity.getJavaType()).fetch().all();
+        return databaseClient.execute(sql).as(entity.getJavaType()).fetch().all();
     }
 
     @Override
@@ -615,8 +657,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     private DslPreparedOperation<Select> getMappedObject(Dsl dsl) {
         if (applicationContext == null) applicationContext = Beans.getApplicationContext();
-        var connectionFactory = applicationContext.getBean(ConnectionFactory.class);
-        var dialect = DialectResolver.getDialect(connectionFactory);
+        var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));
         var joins = new HashMap<String, Table>();

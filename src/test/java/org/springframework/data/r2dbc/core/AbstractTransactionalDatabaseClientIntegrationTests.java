@@ -192,7 +192,7 @@ public abstract class AbstractTransactionalDatabaseClientIntegrationTests extend
 		assertThat(count).isEqualTo(0);
 	}
 
-//	@Test // gh-2, gh-75, gh-107 bug
+	@Test // gh-2, gh-75, gh-107 
 	public void emitTransactionIds() {
 
 		Flux<Object> txId = databaseClient.sql(getCurrentTransactionIdStatement()) //

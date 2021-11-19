@@ -74,6 +74,7 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 	@Autowired private ApplicationContext applicationContext;
 
 	SimpleR2dbcRepository<LegoSet, Integer> repository;
+
 	SimpleR2dbcRepository<LegoSetWithNonScalarId, Integer> repositoryWithNonScalarId;
 	JdbcTemplate jdbc;
 
@@ -84,7 +85,6 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 
 		RelationalEntityInformation<LegoSet, Integer> entityInformation = new MappingRelationalEntityInformation<>(
 				(RelationalPersistentEntity<LegoSet>) mappingContext.getRequiredPersistentEntity(LegoSet.class));
-
 		this.repository = new SimpleR2dbcRepository<>(entityInformation, databaseClient, converter, strategy, applicationContext);
 
 		RelationalEntityInformation<LegoSetWithNonScalarId, Integer> boxedEntityInformation = new MappingRelationalEntityInformation<>(
@@ -121,61 +121,61 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 	 */
 	protected abstract String getCreateTableStatement();
 
-//	@Test // gh-444
+	@Test // gh-444
 	void shouldSaveNewObject() {
-
-		repository.save(new LegoSet(0, "SCHAUFELRADBAGGER", 12)) //
-				.as(StepVerifier::create) //
-				.consumeNextWith(actual -> {
-
-				}).verifyComplete();
-
-		repository.save(new LegoSet(0, "SCHAUFELRADBAGGER", 12)) //
+		repository.save(new LegoSet(null, "SCHAUFELRADBAGGER", 12)) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> assertThat(actual.getId()).isGreaterThan(0)) //
 				.verifyComplete();
 	}
 
-//	@Test // gh-93
+	@Test // gh-93
 	void shouldSaveNewObjectAndSetVersionIfWrapperVersionPropertyExists() {
+		jdbc.execute("INSERT INTO lego_set (name, manual, version) VALUES('SCHAUFELRADBAGGER', 12, 1)");
+		Integer id = jdbc.queryForObject("SELECT id from lego_set", Integer.class);
 
-		LegoSetVersionable legoSet = new LegoSetVersionable(0, "SCHAUFELRADBAGGER", 12, null);
+		LegoSet legoSet = new LegoSet(id, "SCHAUFELRADBAGGER", 14, 1);
 
 		repository.save(legoSet) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(actual -> assertThat(actual.getVersion()).isEqualTo(0)) //
+				.consumeNextWith(actual -> assertThat(actual.getVersion()).isEqualTo(2)) //
 				.verifyComplete();
 
 		Map<String, Object> map = jdbc.queryForMap("SELECT * from lego_set");
 		assertThat(map) //
 				.containsEntry("name", "SCHAUFELRADBAGGER") //
-				.containsEntry("manual", 12) //
-				.containsEntry("version", 0) //
+				.containsEntry("manual", 14) //
+				.containsEntry("version", 2) //
 				.containsKey("id");
 	}
 
-//	@Test // gh-93
+	@Test // gh-93
 	void shouldSaveNewObjectAndSetVersionIfPrimitiveVersionPropertyExists() {
 
-		LegoSetPrimitiveVersionable legoSet = new LegoSetPrimitiveVersionable(0, "SCHAUFELRADBAGGER", 12, 0);
+		LegoSet legoSet = new LegoSet(null, "SCHAUFELRADBAGGER", 12, 1);
 
 		repository.save(legoSet) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> assertThat(actual.getVersion()).isEqualTo(1)) //
 				.verifyComplete();
 
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> assertThat(actual.getVersion()).isEqualTo(2)) //
+				.verifyComplete();
+
 		Map<String, Object> map = jdbc.queryForMap("SELECT * from lego_set");
 		assertThat(map) //
 				.containsEntry("name", "SCHAUFELRADBAGGER") //
 				.containsEntry("manual", 12) //
-				.containsEntry("version", 1) //
+				.containsEntry("version", 2) //
 				.containsKey("id");
 	}
 
 	@Test
 	void shouldUpdateObject() {
 
-		jdbc.execute("INSERT INTO lego_set (name, manual) VALUES('SCHAUFELRADBAGGER', 12)");
+		jdbc.execute("INSERT INTO lego_set (name, manual, version) VALUES('SCHAUFELRADBAGGER', 12, 1)");
 		Integer id = jdbc.queryForObject("SELECT id from lego_set", Integer.class);
 
 		LegoSet legoSet = new LegoSet(id, "SCHAUFELRADBAGGER", 12);
@@ -193,13 +193,13 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 				.containsKey("id");
 	}
 
-//	@Test // gh-93
+	@Test // gh-93
 	void shouldUpdateVersionableObjectAndIncreaseVersion() {
 
 		jdbc.execute("INSERT INTO lego_set (name, manual, version) VALUES('SCHAUFELRADBAGGER', 12, 42)");
 		Integer id = jdbc.queryForObject("SELECT id from lego_set", Integer.class);
 
-		LegoSetVersionable legoSet = new LegoSetVersionable(id, "SCHAUFELRADBAGGER", 12, 42);
+		LegoSet legoSet = new LegoSet(id, "SCHAUFELRADBAGGER", 12, 42);
 		legoSet.setManual(14);
 
 		repository.save(legoSet) //
@@ -207,23 +207,23 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		assertThat(legoSet.getVersion()).isEqualTo(42);
+		assertThat(legoSet.getVersion()).isEqualTo(43);
 
 		Map<String, Object> map = jdbc.queryForMap("SELECT * from lego_set");
 		assertThat(map) //
 				.containsEntry("name", "SCHAUFELRADBAGGER") //
 				.containsEntry("manual", 14) //
-				.containsEntry("version", 42) //
+				.containsEntry("version", 43) //
 				.containsKey("id");
 	}
 
-//	@Test // gh-93
+	@Test // gh-93
 	void shouldFailWithOptimistickLockingWhenVersionDoesNotMatchOnUpdate() {
 
 		jdbc.execute("INSERT INTO lego_set (name, manual, version) VALUES('SCHAUFELRADBAGGER', 12, 42)");
 		Integer id = jdbc.queryForObject("SELECT id from lego_set WHERE manual = 12 and version = 42", Integer.class);
 
-		LegoSetVersionable legoSet = new LegoSetVersionable(id, "SCHAUFELRADBAGGER", 12, 0);
+		LegoSet legoSet = new LegoSet(id, "SCHAUFELRADBAGGER", 12, 0);
 
 		repository.save(legoSet) //
 				.as(StepVerifier::create) //
@@ -231,13 +231,13 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 				.verify();
 	}
 
-//	@Test
+	@Test
 	void shouldSaveObjectsUsingIterable() {
 
-		LegoSet legoSet1 = new LegoSet(0, "SCHAUFELRADBAGGER", 12);
-		LegoSet legoSet2 = new LegoSet(0, "FORSCHUNGSSCHIFF", 13);
-		LegoSet legoSet3 = new LegoSet(0, "RALLYEAUTO", 14);
-		LegoSet legoSet4 = new LegoSet(0, "VOLTRON", 15);
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		LegoSet legoSet3 = new LegoSet(null, "RALLYEAUTO", 14);
+		LegoSet legoSet4 = new LegoSet(null, "VOLTRON", 15);
 
 		repository.saveAll(Arrays.asList(legoSet1, legoSet2, legoSet3, legoSet4)) //
 				.map(LegoSet::getManual) //
@@ -779,9 +779,17 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 	@NoArgsConstructor
 	static class LegoSet {
 
-		/*@Id */int id;
+		/*@Id */Integer id;
 		String name;
 		Integer manual;
+		@Version Integer version;
+
+		LegoSet(Integer id, String name, Integer manual) {
+			this.id = id;
+			this.name = name;
+			this.manual = manual;
+			this.version = 1;
+		}
 	}
 
 	@Data
@@ -789,36 +797,9 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 	@AllArgsConstructor
 	@NoArgsConstructor
 	static class LegoSetWithNonScalarId {
-
 		/*@Id */Integer id;
 		String name;
 		Integer manual;
 		String extra;
-	}
-
-	@Data
-	@Table("lego_set")
-	@NoArgsConstructor
-	static class LegoSetVersionable extends LegoSet {
-
-		@Version Integer version;
-
-		LegoSetVersionable(int id, String name, Integer manual, Integer version) {
-			super(id, name, manual);
-			this.version = version;
-		}
-	}
-
-	@Data
-	@Table("lego_set")
-	@NoArgsConstructor
-	static class LegoSetPrimitiveVersionable extends LegoSet {
-
-		@Version int version;
-
-		LegoSetPrimitiveVersionable(int id, String name, Integer manual, int version) {
-			super(id, name, manual);
-			this.version = version;
-		}
 	}
 }

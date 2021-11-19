@@ -328,7 +328,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 				.verifyComplete();
 	}
 
-//	@Test // gh-468 // bug
+//	@Test // gh-468
 	void derivedQueryWithExists() {
 
 		shouldInsertNewItems();
