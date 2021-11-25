@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.convert.MappingR2dbcConverter;
@@ -782,7 +781,7 @@ public abstract class AbstractSimpleR2dbcRepositoryIntegrationTests extends R2db
 		/*@Id */Integer id;
 		String name;
 		Integer manual;
-		@Version Integer version;
+		/*@Version */Integer version;
 
 		LegoSet(Integer id, String name, Integer manual) {
 			this.id = id;

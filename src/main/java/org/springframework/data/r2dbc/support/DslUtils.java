@@ -32,7 +32,7 @@ public abstract class DslUtils {
     public static final String CLEAN = "[^#!=><~@]";
     public static final String DOT = ".";
     public static final String DOT_REGEX = "\\.";
-    public static final String jsonb = "->>'";
+    public static final String JSONB = "->>'";
 
     public static String toJsonbPath(final String path) {
         if (path.contains(DOT)) {
@@ -42,15 +42,15 @@ public abstract class DslUtils {
                 if (i < paths.length - 1)
                     order.append("->'").append(paths[i]).append("'");
                 else
-                    order.append(jsonb).append(paths[i]).append("'");
+                    order.append(JSONB).append(paths[i]).append("'");
             }
             return order.toString();
         } else return path;
     }
 
     public static String getJsonName(final String jsonPath) {
-        if (jsonPath.contains(jsonb)) {
-            return jsonPath.substring(jsonPath.indexOf(jsonb) + 4, jsonPath.length() - 1);
+        if (jsonPath.contains(JSONB)) {
+            return jsonPath.substring(jsonPath.indexOf(JSONB) + 4, jsonPath.length() - 1);
         }
         return jsonPath;
     }

@@ -64,6 +64,7 @@ import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -71,6 +72,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.r2dbc.support.DslUtils.*;
+import static org.springframework.data.r2dbc.support.R2dbcUtils.VERSION;
 
 /**
  * Simple {@link ReactiveSortingRepository} implementation using R2DBC through {@link DatabaseClient}.
@@ -184,8 +186,16 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     .first().flatMap(s -> Mono.just(s))
                     .defaultIfEmpty(objectToSave);
         } else {
-            var version = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
-            if (version != null) {
+            var versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
+            if (versionField == null && FastMethodInvoker.isField(objectToSave.getClass(), VERSION)) {
+                versionField = FastMethodInvoker.getField(objectToSave, VERSION);
+                if (!Arrays.asList(Long.class, Integer.class, Short.class, ZonedDateTime.class, LocalDateTime.class)
+                        .contains(versionField.getType())) {
+                    versionField = null;
+                }
+            }
+            if (versionField != null) {
+                final Field version = versionField;
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(objectToSave)))
                         .flatMap(previous -> {
                             var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());

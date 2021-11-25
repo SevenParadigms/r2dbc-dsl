@@ -13,6 +13,8 @@ import org.springframework.r2dbc.core.DatabaseClient;
  * @author Lao Tsing
  */
 public abstract class R2dbcUtils {
+    public static final String VERSION = "version";
+
     public static <T> T getRepository(String r2dbcUrl, Class<T> cls) {
         var connectionFactory = ConnectionFactories.get(r2dbcUrl);
         return new R2dbcRepositoryFactory(

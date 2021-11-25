@@ -510,7 +510,8 @@ public class R2dbcEntityTemplateUnitTests {
 
 		/*@Id */String id;
 
-		@Version long version;
+		@Version
+		long version;
 
 		String name;
 
