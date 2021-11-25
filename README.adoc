@@ -200,7 +200,7 @@ and in source code:
 
 [source,kotlin]
 ----
-dslRepository.fullTextSearch(Dsl.create().fts("cool | pencil").pageable(0, 20))
+dslRepository.findAll(Dsl.create().fts("cool | pencil").equals("jfolderId", folderId).pageable(0, 20))
 ----
 
 ## Batch insert:
