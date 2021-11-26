@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.data.r2dbc.support.WordUtils.*;
+import static org.springframework.data.r2dbc.support.WordUtils.camelToSql;
 
 /**
  * Utilities for dsl interaction.
@@ -233,7 +234,7 @@ public abstract class DslUtils {
                     name = toJsonbPath(parts[0]);
                 } else
                     name = parts[0];
-                return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), name);
+                return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), camelToSql(name));
             }).collect(Collectors.toList()));
         } else return Sort.unsorted();
     }

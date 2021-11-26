@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.1.1</version>
+  <version>4.1.2</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.1.1</version>
+  <version>4.1.2</version>
 </dependency>
 ----
 
@@ -80,7 +80,7 @@ data class Dsl {
 
 * Utility class `R2dbcUtils` can create repository from database url and interface: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
 
-* On field with name `version` do not required @Version annotation if it have type `Long`, `Integer`, `Short`, ZonedDateTime` or `LocalDateTime` for optimistic locking
+* On field with name `version` do not required @Version annotation if it have type `Long`, `Integer`, `Short`, `ZonedDateTime` or `LocalDateTime` for optimistic locking
 
 ## Concepts
 
