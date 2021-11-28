@@ -28,9 +28,9 @@ import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.*;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
-import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.ArrayUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.relational.core.conversion.BasicRelationalConverter;
 import org.springframework.data.relational.core.conversion.RelationalConverter;
 import org.springframework.data.relational.core.dialect.ArrayColumns;
@@ -593,9 +593,9 @@ public class MappingR2dbcConverter extends BasicRelationalConverter implements R
 		return (row, metadata) -> {
 			PersistentPropertyAccessor<?> propertyAccessor = entity.getPropertyAccessor(object);
 			RelationalPersistentProperty idProperty = null;
-			if (FastMethodInvoker.isField(object, Dsl.idProperty)) {
+			if (FastMethodInvoker.isField(object, SqlField.id)) {
 				RelationalPersistentEntity<?> persist = getMappingContext().getPersistentEntity(object.getClass());
-				idProperty = persist.getPersistentProperty(Dsl.idProperty);
+				idProperty = persist.getPersistentProperty(SqlField.id);
 			} else {
 				idProperty = entity.getRequiredIdProperty();
 			}

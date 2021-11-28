@@ -42,9 +42,9 @@ import org.springframework.data.r2dbc.mapping.event.AfterConvertCallback;
 import org.springframework.data.r2dbc.mapping.event.AfterSaveCallback;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.mapping.event.BeforeSaveCallback;
-import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.support.DefaultSqlIdentifier;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
@@ -314,12 +314,12 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 
 	public boolean isIdContains(Class<?> entityClass) {
 		FastMethodInvoker.reflectionStorage(entityClass);
-		return FastMethodInvoker.isField(entityClass, Dsl.idProperty);
+		return FastMethodInvoker.isField(entityClass, SqlField.id);
 	}
 
 	public SqlIdentifier getIdSqlIdentifier(Class<?> entityClass) {
 		if (isIdContains(entityClass)) {
-			return new DefaultSqlIdentifier(Dsl.idProperty, false);
+			return new DefaultSqlIdentifier(SqlField.id, false);
 		}
 		RelationalPersistentEntity<?> entity = getRequiredEntity(entityClass);
 		return entity.getRequiredIdProperty().getColumnName();
@@ -370,7 +370,7 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 		if (entity.hasIdProperty()) {
 			columnName = entity.getRequiredIdProperty().getColumnName();
 		} else if (isIdContains(entityClass)) {
-			columnName = new DefaultSqlIdentifier(Dsl.idProperty, false);
+			columnName = new DefaultSqlIdentifier(SqlField.id, false);
 		}
 
 		StatementMapper.SelectSpec selectSpec = statementMapper //

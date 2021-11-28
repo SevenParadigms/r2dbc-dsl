@@ -114,7 +114,7 @@ public abstract class DslUtils {
     public static String binding(String builder, Object target) {
         var buildQuery = trimInline(builder);
         for (var field : FastMethodInvoker.reflectionStorage(target.getClass())) {
-            if (buildQuery.contains(Dsl.COLON + field.getName()) && !field.getName().equals(Dsl.idProperty)) {
+            if (buildQuery.contains(Dsl.COLON + field.getName()) && !field.getName().equals(SqlField.id)) {
                 var value = FastMethodInvoker.getValue(target, field.getName());
                 String result = null;
                 if (value != null) {

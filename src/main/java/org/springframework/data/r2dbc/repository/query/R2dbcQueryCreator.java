@@ -20,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.core.StatementMapper;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
@@ -161,8 +162,8 @@ class R2dbcQueryCreator extends RelationalQueryCreator<PreparedOperation<?>> {
 				.collect(Collectors.toList());
 		} else if (tree.isCountProjection()) {
 
-			SqlIdentifier idColumn = SqlIdentifier.quoted(Dsl.idProperty);
-			if (!FastMethodInvoker.isField(entityToRead, Dsl.idProperty)) {
+			SqlIdentifier idColumn = SqlIdentifier.quoted(SqlField.id);
+			if (!FastMethodInvoker.isField(entityToRead, SqlField.id)) {
 				idColumn = entityMetadata.getTableEntity().getRequiredIdProperty().getColumnName();
 			}
 			expressions = Collections.singletonList(Functions.count(table.column(idColumn)));

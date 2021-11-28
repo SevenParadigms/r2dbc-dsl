@@ -31,10 +31,10 @@ import org.springframework.data.r2dbc.dialect.BindTarget;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.r2dbc.query.Update;
-import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.support.DefaultSqlIdentifier;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.r2dbc.support.R2dbcExceptionTranslator;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.CriteriaDefinition;
@@ -1345,12 +1345,12 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 		public boolean isIdContains(Class<?> entityClass) {
 			FastMethodInvoker.reflectionStorage(entityClass);
-			return FastMethodInvoker.isField(entityClass, Dsl.idProperty);
+			return FastMethodInvoker.isField(entityClass, SqlField.id);
 		}
 
 		public SqlIdentifier getIdSqlIdentifier(Class<?> entityClass) {
 			if (isIdContains(entityClass)) {
-				return new DefaultSqlIdentifier(Dsl.idProperty, false);
+				return new DefaultSqlIdentifier(SqlField.id, false);
 			}
 			RelationalPersistentEntity<?> entity = dataAccessStrategy.getConverter().getMappingContext().getRequiredPersistentEntity(entityClass);
 			return entity.getRequiredIdProperty().getColumnName();

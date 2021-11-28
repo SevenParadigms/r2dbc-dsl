@@ -44,6 +44,7 @@ import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
@@ -401,7 +402,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             var fields = new ArrayList<String>();
             var reflectionStorage = FastMethodInvoker.reflectionStorage(entity.getJavaType());
             for (var field : reflectionStorage) {
-                if (!field.isAnnotationPresent(Id.class) && !field.getName().equals(Dsl.idProperty)) {
+                if (!field.isAnnotationPresent(Id.class) && !field.getName().equals(SqlField.id)) {
                     fields.add(":".concat(field.getName()));
                 }
             }
@@ -460,7 +461,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                 return Flux.empty();
             }
 
-            String idProperty = getIdProperty().getName();
+            String idProperty = getIdColumnName();
 
             return this.entityOperations.select(Query.query(Criteria.where(idProperty).in(ids)), this.entity.getJavaType());
         });
@@ -504,7 +505,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                 return Flux.empty();
             }
 
-            String idProperty = getIdProperty().getName();
+            String idProperty = getIdColumnName();
 
             return this.entityOperations.delete(Query.query(Criteria.where(idProperty).in(ids)), this.entity.getJavaType());
         }).then();
@@ -532,7 +533,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         Assert.notNull(ids, "The iterable of Id's must not be null!");
 
         List<? extends ID> idsList = Streamable.of(ids).toList();
-        String idProperty = getIdProperty().getName();
+        String idProperty = getIdColumnName();
         return this.entityOperations.delete(Query.query(Criteria.where(idProperty).in(idsList)), this.entity.getJavaType())
                 .then();
     }
@@ -644,13 +645,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         return this.entityOperations.exists(query, example.getProbeType());
     }
 
-    private RelationalPersistentProperty getIdProperty() {
-        return this.idProperty.get();
-    }
-
     private String getIdColumnName() {
-        if (entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType()).stream().anyMatch(i -> i.getReference().equals(Dsl.idProperty)))
-            return Dsl.idProperty;
+        if (entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType()).stream().anyMatch(i -> i.getReference().equals(SqlField.id)))
+            return SqlField.id;
         else
             return entityOperations.getDataAccessStrategy().toSql(
                     converter
@@ -662,7 +659,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     private Query getIdQuery(Object id) {
-        return Query.query(Criteria.where(getIdProperty().getName()).is(id));
+        return Query.query(Criteria.where(getIdColumnName()).is(id));
     }
 
     private DslPreparedOperation<Select> getMappedObject(Dsl dsl) {
@@ -677,7 +674,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             for (String field : queryFields) {
                 if (!joins.containsKey(field) && field.contains(DOT)) {
                     String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
-                    if (entityColumns.contains(tableField + "_" + Dsl.idProperty)) {
+                    if (entityColumns.contains(tableField + "_" + SqlField.id)) {
                         joins.put(tableField, Table.create(tableField));
                     }
                 }
@@ -695,7 +692,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                 if (sqlFieldName.contains(DOT)) {
                     var parts = sqlFieldName.split(DOT_REGEX);
                     var tableName = parts[0];
-                    if (entityColumns.contains(tableName + "_" + Dsl.idProperty)) {
+                    if (entityColumns.contains(tableName + "_" + SqlField.id)) {
                         if (!joins.containsKey(tableName)) {
                             joins.put(tableName, Table.create(tableName));
                         }
@@ -715,7 +712,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         for (var joinKey : joins.keySet()) {
             selectBuilder.join(
                     new CustomSelectBuilder.JoinBuilder(joins.get(joinKey), selectBuilder)
-                            .on(Column.create(joinKey + "_" + Dsl.idProperty, table)).equals(Column.create(Dsl.idProperty, joins.get(joinKey)))
+                            .on(Column.create(joinKey + "_" + SqlField.id, table)).equals(Column.create(SqlField.id, joins.get(joinKey)))
                             .finishJoin()
             );
         }
