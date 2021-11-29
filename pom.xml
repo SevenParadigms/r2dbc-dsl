@@ -5,12 +5,12 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.2.1</version>
+	<version>4.2.2</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>2.6.0</version>
+		<version>2.5.7</version>
 	</parent>
 
 	<name>Spring Data R2DBC DSL</name>
@@ -88,7 +88,7 @@
 		<kotlinx.version>1.5.2-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring.core>5.6.0</spring.core>
+		<spring.core>5.3.13</spring.core>
 		<springdata.commons>2.6.0</springdata.commons>
 		<springdata.jdbc>2.2.4</springdata.jdbc>
 		<springdata.relational>${springdata.jdbc}</springdata.relational>
