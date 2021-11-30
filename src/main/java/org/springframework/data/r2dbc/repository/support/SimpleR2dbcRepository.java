@@ -197,7 +197,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             }
             if (versionField != null) {
                 final Field version = versionField;
-                return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(objectToSave)))
+                return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
                         .flatMap(previous -> {
                             var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
                             var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
