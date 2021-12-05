@@ -314,7 +314,7 @@ public class R2dbcEntityTemplate implements R2dbcEntityOperations, BeanFactoryAw
 
 	public boolean isIdContains(Class<?> entityClass) {
 		FastMethodInvoker.reflectionStorage(entityClass);
-		return FastMethodInvoker.isField(entityClass, SqlField.id);
+		return FastMethodInvoker.has(entityClass, SqlField.id);
 	}
 
 	public SqlIdentifier getIdSqlIdentifier(Class<?> entityClass) {

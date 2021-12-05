@@ -190,7 +190,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     .defaultIfEmpty(objectToSave);
         } else {
             var versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
-            if (versionField == null && FastMethodInvoker.isField(objectToSave.getClass(), VERSION)) {
+            if (versionField == null && FastMethodInvoker.has(objectToSave.getClass(), VERSION)) {
                 versionField = FastMethodInvoker.getField(objectToSave, VERSION);
                 if (!Arrays.asList(Long.class, Integer.class, Short.class, ZonedDateTime.class, LocalDateTime.class)
                         .contains(versionField.getType())) {

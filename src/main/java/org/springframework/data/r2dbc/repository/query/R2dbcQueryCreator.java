@@ -163,7 +163,7 @@ class R2dbcQueryCreator extends RelationalQueryCreator<PreparedOperation<?>> {
 		} else if (tree.isCountProjection()) {
 
 			SqlIdentifier idColumn = SqlIdentifier.quoted(SqlField.id);
-			if (!FastMethodInvoker.isField(entityToRead, SqlField.id)) {
+			if (!FastMethodInvoker.has(entityToRead, SqlField.id)) {
 				idColumn = entityMetadata.getTableEntity().getRequiredIdProperty().getColumnName();
 			}
 			expressions = Collections.singletonList(Functions.count(table.column(idColumn)));
