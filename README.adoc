@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.3.4</version>
+  <version>4.4.0</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.3.4</version>
+  <version>4.4.0</version>
 </dependency>
 ----
 
@@ -66,25 +66,27 @@ data class Dsl {
 
 * Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
-* JsonNode type in Java-model automatically converted to JSONB type of PostgreSQL and back
+* JsonNode type in model automatically converted to JSONB type of PostgreSQL and back
 
-* Repository `listener` method can subscribe to listen of all changes of table from database in realtime over `Flux<Notification>`
+* Repository `listener` method is subscribe to listen of all changes of table from database in realtime over `Flux<Notification>`
 
-* Ranked full text search by field `tsv` as default with RUM index operator in `fullTextSearch` method
+* Ranked full text search by field `tsv` as default with RUM index operator in `Dsl.fts` method
 
 * Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access.
 
-* Utility class `Beans` is a powerfull Spring beans usage conversation with cache: can get beans, dynamic register beans and get properties
+* Utility class `Beans` is a powerful Spring beans usage conversation with cache: get beans, dynamic register and get application properties
 
-* Transaction manager is enabled by default with current Connection bean
+* Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
 
-* Utility class `R2dbcUtils` can create repository from database url and interface: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
+* On field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `Short`, `ZonedDateTime` or `LocalDateTime` for optimistic locking
 
-* On field with name `version` do not required @Version annotation if it have type `Long`, `Integer`, `Short`, `ZonedDateTime` or `LocalDateTime` for optimistic locking
+* On field with @ReadOnly annotation on each update the value getting from previous record of database
+
+* On field with @Equality annotation on each update the value is comparing with previous value from database
 
 ## Concepts
 
-The main idea is to reduce development time when all kinds of criteria can be formed at the frontend:
+The primary idea is to reduce development time when all kinds of criteria can be formed at the frontend:
 
 `localhost:8080/items?query=shops.type==mega,name~~biggest,price>=100 & fields=id,name & page=0 & size=20 & sort=itemType:asc,createdAt:desc`
 
@@ -126,7 +128,7 @@ Dsl.create()
    .isNull("sisterTable.age)
    .fields("age", "sisterTable.name", "jtree.hobby.description")
 ----
-where after executing the next fields will be setted: age, name, description. 
+where after executing the next fields in the model will be set: age, name, description. The secondary idea is using dsl in tests as more readable than jdbcTemplate.
 
 ## Subscribe to async database UPDATE/INSERT events:
 

@@ -41,6 +41,8 @@ import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.repository.query.Equality;
+import org.springframework.data.r2dbc.repository.query.ReadOnly;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.r2dbc.support.SqlField;
@@ -67,7 +69,6 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -75,7 +76,6 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.r2dbc.support.DslUtils.*;
-import static org.springframework.data.r2dbc.support.R2dbcUtils.VERSION;
 
 /**
  * Simple {@link ReactiveSortingRepository} implementation using R2DBC through {@link DatabaseClient}.
@@ -179,9 +179,21 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
         Assert.notNull(objectToSave, "Object to save must not be null!");
 
+        Field versionFieldValue = null;
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
+        var versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
+        if (versionField.isEmpty() && FastMethodInvoker.has(objectToSave.getClass(), Version.class.getSimpleName().toLowerCase())) {
+            versionFieldValue = FastMethodInvoker.getField(objectToSave, Version.class.getSimpleName().toLowerCase());
+            if (!Arrays.asList(Long.class, Integer.class, Short.class, ZonedDateTime.class, LocalDateTime.class)
+                    .contains(versionFieldValue.getType())) {
+                versionFieldValue = null;
+            }
+        }
         if (idValue == null) {
+            if (versionFieldValue != null) {
+                initVersion(objectToSave, versionFieldValue);
+            }
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
@@ -189,42 +201,32 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     .first().flatMap(s -> Mono.just(s))
                     .defaultIfEmpty(objectToSave);
         } else {
-            var versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
-            if (versionField == null && FastMethodInvoker.has(objectToSave.getClass(), VERSION)) {
-                versionField = FastMethodInvoker.getField(objectToSave, VERSION);
-                if (!Arrays.asList(Long.class, Integer.class, Short.class, ZonedDateTime.class, LocalDateTime.class)
-                        .contains(versionField.getType())) {
-                    versionField = null;
-                }
-            }
-            if (versionField != null) {
-                final Field version = versionField;
+            final var readOnlyFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), ReadOnly.class);
+            final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
+            if (versionFieldValue != null || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
+                final Field version = versionFieldValue;
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
                         .flatMap(previous -> {
-                            var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
-                            var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
-                            if (versionValue.equals(previousVersionValue)) {
-                                if (version.getType() == Long.class) {
-                                    var value = (Long) versionValue + 1;
-                                    FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+                            if (version != null) {
+                                var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
+                                var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
+                                if (!Objects.equals(versionValue, previousVersionValue)) {
+                                    return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
                                 }
-                                if (version.getType() == Integer.class) {
-                                    var value = (Integer) versionValue + 1;
-                                    FastMethodInvoker.setValue(objectToSave, version.getName(), value);
-                                }
-                                if (version.getType() == Short.class) {
-                                    var value = (Short) versionValue + 1;
-                                    FastMethodInvoker.setValue(objectToSave, version.getName(), value);
-                                }
-                                if (version.getType() == LocalDateTime.class) {
-                                    FastMethodInvoker.setValue(objectToSave, version.getName(), LocalDateTime.now(ZoneId.systemDefault()));
-                                }
-                                if (version.getType() == ZonedDateTime.class) {
-                                    FastMethodInvoker.setValue(objectToSave, version.getName(), ZonedDateTime.now(ZoneId.systemDefault()));
-                                }
-                                return simpleSave(idPropertyName, idValue, objectToSave);
+                                setVersion(objectToSave, version, versionValue);
                             }
-                            return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
+                            for (Field field : readOnlyFields) {
+                                var previousValue = FastMethodInvoker.getValue(previous, field.getName());
+                                FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);
+                            }
+                            for (Field field : equalityFields) {
+                                var value = FastMethodInvoker.getValue(objectToSave, field.getName());
+                                var previousValue = FastMethodInvoker.getValue(previous, field.getName());
+                                if (!Objects.equals(value, previousValue)) {
+                                    return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
+                                }
+                            }
+                            return simpleSave(idPropertyName, idValue, objectToSave);
                         })
                         .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
             }

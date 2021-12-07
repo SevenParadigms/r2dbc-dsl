@@ -10,8 +10,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.query.Criteria;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +24,6 @@ import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.data.r2dbc.support.WordUtils.*;
-import static org.springframework.data.r2dbc.support.WordUtils.camelToSql;
 
 /**
  * Utilities for dsl interaction.
@@ -237,5 +240,47 @@ public abstract class DslUtils {
                 return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), camelToSql(name));
             }).collect(Collectors.toList()));
         } else return Sort.unsorted();
+    }
+
+    public static void initVersion(Object objectToSave, Field version) {
+        var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
+        if (versionValue == null) {
+            if (version.getType() == Long.class) {
+                FastMethodInvoker.setValue(objectToSave, version.getName(), 1L);
+            }
+            if (version.getType() == Integer.class) {
+                FastMethodInvoker.setValue(objectToSave, version.getName(), 1);
+            }
+            if (version.getType() == Short.class) {
+                FastMethodInvoker.setValue(objectToSave, version.getName(), Short.valueOf("1"));
+            }
+            if (version.getType() == LocalDateTime.class) {
+                FastMethodInvoker.setValue(objectToSave, version.getName(), LocalDateTime.now(ZoneId.systemDefault()));
+            }
+            if (version.getType() == ZonedDateTime.class) {
+                FastMethodInvoker.setValue(objectToSave, version.getName(), ZonedDateTime.now(ZoneId.systemDefault()));
+            }
+        }
+    }
+
+    public static void setVersion(Object objectToSave, Field version, Object versionValue) {
+        if (version.getType() == Long.class) {
+            var value = (Long) versionValue + 1;
+            FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+        }
+        if (version.getType() == Integer.class) {
+            var value = (Integer) versionValue + 1;
+            FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+        }
+        if (version.getType() == Short.class) {
+            var value = (Short) versionValue + 1;
+            FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+        }
+        if (version.getType() == LocalDateTime.class) {
+            FastMethodInvoker.setValue(objectToSave, version.getName(), LocalDateTime.now(ZoneId.systemDefault()));
+        }
+        if (version.getType() == ZonedDateTime.class) {
+            FastMethodInvoker.setValue(objectToSave, version.getName(), ZonedDateTime.now(ZoneId.systemDefault()));
+        }
     }
 }
