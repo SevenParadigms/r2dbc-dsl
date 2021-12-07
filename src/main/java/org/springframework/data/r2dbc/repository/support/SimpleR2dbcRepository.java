@@ -43,6 +43,7 @@ import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.query.Equality;
+import org.springframework.data.r2dbc.repository.query.Now;
 import org.springframework.data.r2dbc.repository.query.ReadOnly;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
@@ -181,16 +182,24 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
         var versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
-        if (versionField.isEmpty() && FastMethodInvoker.has(objectToSave.getClass(), Version.class.getSimpleName().toLowerCase())) {
-            versionFieldValue = FastMethodInvoker.getField(objectToSave, Version.class.getSimpleName().toLowerCase());
+        if (versionField.isEmpty() && FastMethodInvoker.has(objectToSave.getClass(), Fields.version.name())) {
+            versionFieldValue = FastMethodInvoker.getField(objectToSave, Fields.version.name());
             if (!Arrays.asList(Long.class, Integer.class, Short.class, ZonedDateTime.class, LocalDateTime.class)
                     .contains(versionFieldValue.getType())) {
                 versionFieldValue = null;
             }
         }
+        if (FastMethodInvoker.has(objectToSave.getClass(), Fields.updatedAt.name()) &&
+                FastMethodInvoker.getValue(objectToSave, Fields.updatedAt.name()) == null) {
+            setNowStamp(objectToSave, FastMethodInvoker.getField(objectToSave, Fields.updatedAt.name()));
+        }
         if (idValue == null) {
             if (versionFieldValue != null) {
                 initVersion(objectToSave, versionFieldValue);
+            }
+            if (FastMethodInvoker.has(objectToSave.getClass(), Fields.createdAt.name()) &&
+                    FastMethodInvoker.getValue(objectToSave, Fields.createdAt.name()) == null) {
+                setNowStamp(objectToSave, FastMethodInvoker.getField(objectToSave, Fields.createdAt.name()));
             }
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
@@ -201,7 +210,12 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         } else {
             final var readOnlyFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), ReadOnly.class);
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
-            if (versionFieldValue != null || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
+            final var nowFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Now.class);
+            if (FastMethodInvoker.has(objectToSave.getClass(), Fields.createdAt.name()) &&
+                    FastMethodInvoker.getValue(objectToSave, Fields.createdAt.name()) == null) {
+                readOnlyFields.add(FastMethodInvoker.getField(objectToSave, Fields.createdAt.name()));
+            }
+            if (versionFieldValue != null || !readOnlyFields.isEmpty() || !equalityFields.isEmpty() || !nowFields.isEmpty()) {
                 final Field version = versionFieldValue;
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
                         .flatMap(previous -> {
@@ -223,6 +237,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                 if (!Objects.equals(value, previousValue)) {
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
+                            }
+                            for (Field field : nowFields) {
+                                setNowStamp(objectToSave, field);
                             }
                             return simpleSave(idPropertyName, idValue, objectToSave);
                         })

@@ -2,7 +2,7 @@
 
 This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL. 
 
-R2DBC-DSL contains the current version of the Spring Data R2DBC, and each commit to the master of Spring Data R2dbc repository is immediately published there under the new version into Maven Central.
+R2DBC-DSL contains the last commits of the Spring Data R2DBC, each commit to the master of Spring Data R2DBC repository is published there under the new subversion into Maven Central.
 
 The internal extension of the base repository `R2dbcRepository` in Spring Data R2DBC is due to the use of features by all methods, and not just those related to DSL. Also modified a lot of integration tests with DSL features.
 
@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.4.0</version>
+  <version>4.4.1</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.4.0</version>
+  <version>4.4.1</version>
 </dependency>
 ----
 
@@ -78,11 +78,17 @@ data class Dsl {
 
 * Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
 
-* On field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `Short`, `ZonedDateTime` or `LocalDateTime` for optimistic locking
+* Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `Short`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking
 
-* On field with @ReadOnly annotation on each update the value getting from previous record of database
+* Field with @ReadOnly annotation on each update the value getting from previous record of table
 
-* On field with @Equality annotation on each update the value is comparing with previous value from database
+* Field with @Equality annotation on each update the value is comparing with previous value from table
+
+* Field with @Now annotation and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` annotation on each update is setting to current timestamp
+
+* Field with name `createdAt` on update using @ReadOnly annotation logic
+
+* Field with name `updatedAt` on update using @Now annotation logic
 
 ## Concepts
 
