@@ -89,7 +89,7 @@
 
 		<dist.key>DATAR2DBC</dist.key>
 		<spring.core>5.3.13</spring.core>
-		<springdata.commons>2.6.0</springdata.commons>
+		<springdata.commons>2.5.7</springdata.commons>
 		<springdata.jdbc>2.2.4</springdata.jdbc>
 		<springdata.relational>${springdata.jdbc}</springdata.relational>
 		<java-module-name>spring.data.r2dbc</java-module-name>
