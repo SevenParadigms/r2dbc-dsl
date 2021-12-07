@@ -15,7 +15,6 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -254,9 +253,6 @@ public abstract class DslUtils {
             if (version.getType() == Integer.class) {
                 FastMethodInvoker.setValue(objectToSave, version.getName(), 1);
             }
-            if (version.getType() == Short.class) {
-                FastMethodInvoker.setValue(objectToSave, version.getName(), Short.valueOf("1"));
-            }
             setNowStamp(objectToSave, version);
         }
     }
@@ -270,22 +266,18 @@ public abstract class DslUtils {
             var value = (Integer) versionValue + 1;
             FastMethodInvoker.setValue(objectToSave, version.getName(), value);
         }
-        if (version.getType() == Short.class) {
-            var value = (Short) versionValue + 1;
-            FastMethodInvoker.setValue(objectToSave, version.getName(), value);
-        }
         setNowStamp(objectToSave, version);
     }
 
     public static void setNowStamp(Object objectToSave, Field field) {
         if (field.getType() == LocalDateTime.class) {
-            FastMethodInvoker.setValue(objectToSave, field.getName(), LocalDateTime.now(ZoneId.systemDefault()));
+            FastMethodInvoker.setValue(objectToSave, field.getName(), LocalDateTime.now());
         }
         if (field.getType() == ZonedDateTime.class) {
-            FastMethodInvoker.setValue(objectToSave, field.getName(), ZonedDateTime.now(ZoneId.systemDefault()));
+            FastMethodInvoker.setValue(objectToSave, field.getName(), ZonedDateTime.now());
         }
         if (field.getType() == OffsetDateTime.class) {
-            FastMethodInvoker.setValue(objectToSave, field.getName(), OffsetDateTime.now(ZoneId.systemDefault()));
+            FastMethodInvoker.setValue(objectToSave, field.getName(), OffsetDateTime.now());
         }
     }
 }

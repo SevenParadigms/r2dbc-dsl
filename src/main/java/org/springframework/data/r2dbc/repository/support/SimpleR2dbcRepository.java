@@ -210,12 +210,12 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         } else {
             final var readOnlyFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), ReadOnly.class);
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
-            final var nowFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Now.class);
+            final var nowStampFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Now.class);
             if (FastMethodInvoker.has(objectToSave.getClass(), Fields.createdAt.name()) &&
                     FastMethodInvoker.getValue(objectToSave, Fields.createdAt.name()) == null) {
                 readOnlyFields.add(FastMethodInvoker.getField(objectToSave, Fields.createdAt.name()));
             }
-            if (versionFieldValue != null || !readOnlyFields.isEmpty() || !equalityFields.isEmpty() || !nowFields.isEmpty()) {
+            if (versionFieldValue != null || !readOnlyFields.isEmpty() || !equalityFields.isEmpty() || !nowStampFields.isEmpty()) {
                 final Field version = versionFieldValue;
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
                         .flatMap(previous -> {
@@ -238,7 +238,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
-                            for (Field field : nowFields) {
+                            for (Field field : nowStampFields) {
                                 setNowStamp(objectToSave, field);
                             }
                             return simpleSave(idPropertyName, idValue, objectToSave);
