@@ -36,6 +36,7 @@ public class H2TestSupport {
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
+			+ "    now         timestamp NULL\n," //
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 
@@ -44,6 +45,7 @@ public class H2TestSupport {
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    extra       varchar(255) NULL,\n" //
+			+ "    now         timestamp NULL\n," //
 			+ "    manual      integer NULL\n" //
 			+ ");";
 

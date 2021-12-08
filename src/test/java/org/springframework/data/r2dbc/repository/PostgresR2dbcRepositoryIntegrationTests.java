@@ -215,6 +215,41 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	}
 
 	@Test
+	void shouldAnnotationsVerify() {
+		List<LegoSet> legoSets = shouldInsertNewItems();
+
+		repository.findById(2)
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					assertThat(actual.getName()).isEqualTo("FORSCHUNGSSCHIFF");
+					assertThat(actual.getManual()).isEqualTo(13);
+					assertThat(actual.getVersion()).isEqualTo(1);
+					assertThat(actual.getNow()).isNotNull();
+				})
+				.verifyComplete();
+
+		// try to change equality attr name and get exception
+		var legoSet = legoSets.get(legoSets.size() - 1);
+		legoSet.setName("123");
+
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.expectError(IllegalStateException.class);
+
+		// try to change readonly attr manual and get old value
+		legoSet.setName("FORSCHUNGSSCHIFF");
+		legoSet.setManual(123);
+
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getManual()).isEqualTo(13);
+				})
+				.verifyComplete();
+
+	}
+
+	@Test
 	void shouldSimpleDsl() {
 		List<LegoSet> legoSets = shouldInsertNewItems();
 		assert legoSets.size() == 2;
