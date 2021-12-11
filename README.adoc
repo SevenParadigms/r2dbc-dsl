@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.4.3</version>
+  <version>4.4.4</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.4.3</version>
+  <version>4.4.4</version>
 </dependency>
 ----
 
@@ -84,11 +84,11 @@ data class Dsl {
 
 * Field with @Equality annotation on each update the value is comparing with previous value from table
 
-* Field with @Now annotation and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` annotation on each update is setting to current timestamp
+* Field with @Now annotation and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on each update is setting to current timestamp
 
-* Field with name `createdAt` on update using @ReadOnly annotation logic
+* Field with name `createdAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @ReadOnly annotation logic
 
-* Field with name `updatedAt` on update using @Now annotation logic
+* Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @Now annotation logic
 
 ## Concepts
 
