@@ -569,6 +569,6 @@ public class DefaultDatabaseClientUnitTests {
 
 	static class IdOnly {
 
-		/*@Id */String id;
+		@Id String id;
 	}
 }

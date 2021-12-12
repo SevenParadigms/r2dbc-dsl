@@ -27,20 +27,16 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.r2dbc.UncategorizedR2dbcException;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionFactoryUtils;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionProxy;
+import org.springframework.data.r2dbc.convert.ColumnMapRowMapper;
 import org.springframework.data.r2dbc.dialect.BindTarget;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.r2dbc.query.Update;
-import org.springframework.data.r2dbc.repository.support.DefaultSqlIdentifier;
-import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.r2dbc.support.R2dbcExceptionTranslator;
-import org.springframework.data.r2dbc.support.SqlField;
-import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
 import org.springframework.lang.Nullable;
-import org.springframework.r2dbc.core.ColumnMapRowMapper;
 import org.springframework.r2dbc.core.Parameter;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.util.Assert;
@@ -67,6 +63,7 @@ import java.util.stream.Collectors;
  * @author Bogdan Ilchyshyn
  * @deprecated since 1.2.
  */
+@Deprecated
 class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 	private final Log logger = LogFactory.getLog(getClass());
@@ -1343,25 +1340,12 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 			return fetch().rowsUpdated().then();
 		}
 
-		public boolean isIdContains(Class<?> entityClass) {
-			FastMethodInvoker.reflectionStorage(entityClass);
-			return FastMethodInvoker.has(entityClass, SqlField.id);
-		}
-
-		public SqlIdentifier getIdSqlIdentifier(Class<?> entityClass) {
-			if (isIdContains(entityClass)) {
-				return new DefaultSqlIdentifier(SqlField.id, false);
-			}
-			RelationalPersistentEntity<?> entity = dataAccessStrategy.getConverter().getMappingContext().getRequiredPersistentEntity(entityClass);
-			return entity.getRequiredIdProperty().getColumnName();
-		}
 
 		private UpdatedRowsFetchSpec exchange(SqlIdentifier table) {
 
 			StatementMapper mapper = dataAccessStrategy.getStatementMapper();
 			Map<SqlIdentifier, Parameter> columns = dataAccessStrategy.getOutboundRow(this.objectToUpdate);
-			List<SqlIdentifier> ids = Arrays.asList(getIdSqlIdentifier(this.typeToUpdate));
-//					 dataAccessStrategy.getIdentifierColumns(this.typeToUpdate);
+			List<SqlIdentifier> ids = dataAccessStrategy.getIdentifierColumns(this.typeToUpdate);
 
 			if (ids.isEmpty()) {
 				throw new IllegalStateException("No identifier columns in " + this.typeToUpdate.getName() + "!");
@@ -1490,7 +1474,7 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 		String sql = getRequiredSql(operation);
 		Function<Connection, Statement> insertFunction = wrapPreparedOperation(sql, operation)
-				.andThen(statement -> statement.returnGeneratedValues());
+				.andThen(Statement::returnGeneratedValues);
 		Function<Connection, Flux<Result>> resultFunction = toFunction(sql, StatementFilterFunctions.empty(),
 				insertFunction);
 
@@ -1591,6 +1575,7 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 	}
 
 	private static String getRequiredSql(Supplier<String> sqlSupplier) {
+
 		String sql = sqlSupplier.get();
 		Assert.state(StringUtils.hasText(sql), "SQL returned by SQL supplier must not be empty!");
 		return sql;

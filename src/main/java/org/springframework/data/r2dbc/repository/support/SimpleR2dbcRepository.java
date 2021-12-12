@@ -27,8 +27,9 @@ import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.r2dbc.repository.query.Version;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.config.beans.Beans;
@@ -41,10 +42,7 @@ import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import org.springframework.data.r2dbc.repository.query.Dsl;
-import org.springframework.data.r2dbc.repository.query.Equality;
-import org.springframework.data.r2dbc.repository.query.Now;
-import org.springframework.data.r2dbc.repository.query.ReadOnly;
+import org.springframework.data.r2dbc.repository.query.*;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.r2dbc.support.SqlField;
@@ -182,6 +180,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
         var versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
+        if (versionField.isEmpty()) {
+            versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), org.springframework.data.annotation.Version.class);
+        }
         if (versionField.isPresent()) {
             versionFieldValue = versionField.get();
         } else
@@ -197,6 +198,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                 FastMethodInvoker.getValue(objectToSave, Fields.updatedAt.name()) == null) {
             nowStampFields.add(FastMethodInvoker.getField(objectToSave, Fields.updatedAt.name()));
         }
+        var modifiedDate = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), LastModifiedDate.class);
+        modifiedDate.ifPresent(nowStampFields::add);
+        var updatedAt = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), UpdatedAt.class);
+        updatedAt.ifPresent(nowStampFields::add);
         for (Field field : nowStampFields) {
             setNowStamp(objectToSave, field);
         }
@@ -208,6 +213,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     FastMethodInvoker.getValue(objectToSave, Fields.createdAt.name()) == null) {
                 setNowStamp(objectToSave, FastMethodInvoker.getField(objectToSave, Fields.createdAt.name()));
             }
+            var createdDate = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedDate.class);
+            createdDate.ifPresent(field -> setNowStamp(objectToSave, field));
+            var createdAt = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedAt.class);
+            createdAt.ifPresent(field -> setNowStamp(objectToSave, field));
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
@@ -233,6 +242,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                 }
                                 setVersion(objectToSave, version, versionValue);
                             }
+                            var createdDate = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedDate.class);
+                            createdDate.ifPresent(readOnlyFields::add);
+                            var createdAt = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedAt.class);
+                            createdAt.ifPresent(readOnlyFields::add);
                             for (Field field : readOnlyFields) {
                                 var previousValue = FastMethodInvoker.getValue(previous, field.getName());
                                 FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);

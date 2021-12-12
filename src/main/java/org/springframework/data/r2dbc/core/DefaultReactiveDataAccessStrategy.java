@@ -29,7 +29,10 @@ import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.r2dbc.query.UpdateMapper;
+import org.springframework.data.r2dbc.repository.support.DefaultSqlIdentifier;
 import org.springframework.data.r2dbc.support.ArrayUtils;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.relational.core.dialect.ArrayColumns;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
@@ -167,17 +170,18 @@ public class DefaultReactiveDataAccessStrategy implements ReactiveDataAccessStra
 	 */
 	@Override
 	public List<SqlIdentifier> getIdentifierColumns(Class<?> entityType) {
-
-		RelationalPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entityType);
-
 		List<SqlIdentifier> columnNames = new ArrayList<>();
-		for (RelationalPersistentProperty property : persistentEntity) {
-
-			if (property.isIdProperty()) {
-				columnNames.add(property.getColumnName());
+		FastMethodInvoker.reflectionStorage(entityType);
+		if (FastMethodInvoker.has(entityType, SqlField.id)) {
+			columnNames.add(new DefaultSqlIdentifier(SqlField.id, false));
+		} else {
+			RelationalPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(entityType);
+			for (RelationalPersistentProperty property : persistentEntity) {
+				if (property.isIdProperty()) {
+					columnNames.add(property.getColumnName());
+				}
 			}
 		}
-
 		return columnNames;
 	}
 
