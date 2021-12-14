@@ -67,8 +67,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -176,47 +174,13 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
         Assert.notNull(objectToSave, "Object to save must not be null!");
 
-        Field versionFieldValue = null;
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
-        var versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), Version.class);
-        if (versionField.isEmpty()) {
-            versionField = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), org.springframework.data.annotation.Version.class);
-        }
-        if (versionField.isPresent()) {
-            versionFieldValue = versionField.get();
-        } else
-            if (FastMethodInvoker.has(objectToSave.getClass(), Fields.version.name())) {
-                versionFieldValue = FastMethodInvoker.getField(objectToSave, Fields.version.name());
-                if (!Arrays.asList(Long.class, Integer.class, Short.class, ZonedDateTime.class, LocalDateTime.class)
-                        .contains(versionFieldValue.getType())) {
-                    versionFieldValue = null;
-                }
-            }
-        final var nowStampFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Now.class);
-        if (FastMethodInvoker.has(objectToSave.getClass(), Fields.updatedAt.name()) &&
-                FastMethodInvoker.getValue(objectToSave, Fields.updatedAt.name()) == null) {
-            nowStampFields.add(FastMethodInvoker.getField(objectToSave, Fields.updatedAt.name()));
-        }
-        var modifiedDate = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), LastModifiedDate.class);
-        modifiedDate.ifPresent(nowStampFields::add);
-        var updatedAt = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), UpdatedAt.class);
-        updatedAt.ifPresent(nowStampFields::add);
-        for (Field field : nowStampFields) {
-            setNowStamp(objectToSave, field);
-        }
+        final var versionFields = getFields(objectToSave, Fields.version, Version.class, org.springframework.data.annotation.Version.class);
+        final var nowStampFields = nowStamp(objectToSave, Fields.updatedAt, Now.class, LastModifiedDate.class, UpdatedAt.class);
         if (idValue == null) {
-            if (versionFieldValue != null) {
-                initVersion(objectToSave, versionFieldValue);
-            }
-            if (FastMethodInvoker.has(objectToSave.getClass(), Fields.createdAt.name()) &&
-                    FastMethodInvoker.getValue(objectToSave, Fields.createdAt.name()) == null) {
-                setNowStamp(objectToSave, FastMethodInvoker.getField(objectToSave, Fields.createdAt.name()));
-            }
-            var createdDate = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedDate.class);
-            createdDate.ifPresent(field -> setNowStamp(objectToSave, field));
-            var createdAt = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedAt.class);
-            createdAt.ifPresent(field -> setNowStamp(objectToSave, field));
+            initVersion(objectToSave, versionFields);
+            nowStamp(objectToSave, Fields.createdAt, CreatedDate.class, CreatedAt.class);
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
@@ -224,17 +188,12 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     .first().flatMap(s -> Mono.just(s))
                     .defaultIfEmpty(objectToSave);
         } else {
-            final var readOnlyFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), ReadOnly.class);
+            final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedAt.class);
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
-            if (FastMethodInvoker.has(objectToSave.getClass(), Fields.createdAt.name()) &&
-                    FastMethodInvoker.getValue(objectToSave, Fields.createdAt.name()) == null) {
-                readOnlyFields.add(FastMethodInvoker.getField(objectToSave, Fields.createdAt.name()));
-            }
-            if (versionFieldValue != null || !readOnlyFields.isEmpty() || !equalityFields.isEmpty() || !nowStampFields.isEmpty()) {
-                final Field version = versionFieldValue;
+            if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
                         .flatMap(previous -> {
-                            if (version != null) {
+                            for (Field version : versionFields) {
                                 var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
                                 var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
                                 if (!Objects.equals(versionValue, previousVersionValue)) {
@@ -242,10 +201,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                 }
                                 setVersion(objectToSave, version, versionValue);
                             }
-                            var createdDate = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedDate.class);
-                            createdDate.ifPresent(readOnlyFields::add);
-                            var createdAt = FastMethodInvoker.getFieldByAnnotation(objectToSave.getClass(), CreatedAt.class);
-                            createdAt.ifPresent(readOnlyFields::add);
                             for (Field field : readOnlyFields) {
                                 var previousValue = FastMethodInvoker.getValue(previous, field.getName());
                                 FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);

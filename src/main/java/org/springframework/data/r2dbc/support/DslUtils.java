@@ -16,9 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -244,16 +242,18 @@ public abstract class DslUtils {
         } else return Sort.unsorted();
     }
 
-    public static void initVersion(Object objectToSave, Field version) {
-        var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
-        if (versionValue == null) {
-            if (version.getType() == Long.class) {
-                FastMethodInvoker.setValue(objectToSave, version.getName(), 1L);
+    public static void initVersion(Object objectToSave, Set<Field> fields) {
+        for(Field field : fields) {
+            var versionValue = FastMethodInvoker.getValue(objectToSave, field.getName());
+            if (versionValue == null) {
+                if (field.getType() == Long.class) {
+                    FastMethodInvoker.setValue(objectToSave, field.getName(), 1L);
+                }
+                if (field.getType() == Integer.class) {
+                    FastMethodInvoker.setValue(objectToSave, field.getName(), 1);
+                }
+                setNowStamp(objectToSave, field);
             }
-            if (version.getType() == Integer.class) {
-                FastMethodInvoker.setValue(objectToSave, version.getName(), 1);
-            }
-            setNowStamp(objectToSave, version);
         }
     }
 
@@ -279,5 +279,25 @@ public abstract class DslUtils {
         if (field.getType() == OffsetDateTime.class) {
             FastMethodInvoker.setValue(objectToSave, field.getName(), OffsetDateTime.now());
         }
+    }
+
+    public static Set<Field> nowStamp(Object objectToSave, Enum<?> name, Class<?>...cls) {
+        var fields = getFields(objectToSave, name, cls);
+        for(Field field : fields) {
+            setNowStamp(objectToSave, field);
+        }
+        return fields;
+    }
+
+    public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>...cls) {
+        var result = new HashSet<Field>();
+        if (FastMethodInvoker.has(objectToSave.getClass(), name.name())) {
+            result.add(FastMethodInvoker.getField(objectToSave, name.name()));
+        }
+        for(Class<?> c : cls) {
+            var fields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), c);
+            result.addAll(fields);
+        }
+        return result;
     }
 }

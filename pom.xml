@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.4.4</version>
+	<version>4.4.5</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -104,7 +104,7 @@
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
 		<netty>4.1.66.Final</netty>
-		<testcontainer>1.16.0</testcontainer>
+		<testcontainer>1.16.2</testcontainer>
 		<mockk>1.12.0</mockk>
 
 		<java.version>11</java.version>
