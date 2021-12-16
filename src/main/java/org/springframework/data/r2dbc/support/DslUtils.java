@@ -40,7 +40,7 @@ public abstract class DslUtils {
 
     public static String toJsonbPath(final String path) {
         if (path.contains(DOT)) {
-            final var paths = path.split(DOT);
+            final var paths = path.split(DOT_REGEX);
             final var order = new StringBuilder(paths[0]);
             for (int i = 1; i < paths.length; i++) {
                 if (i < paths.length - 1)
@@ -61,7 +61,7 @@ public abstract class DslUtils {
 
     public static <T> String toJsonbPath(final String dotter, final Class<T> type) {
         if (dotter.contains(DOT)) {
-            final var fieldName = dotter.split(DOT)[0];
+            final var fieldName = dotter.split(DOT_REGEX)[0];
             final var reflectionStorage = FastMethodInvoker.reflectionStorage(type);
             for (var field : reflectionStorage) {
                 if (fieldName.equals(field.getName()) && field.getType() == JsonNode.class) {
@@ -138,13 +138,16 @@ public abstract class DslUtils {
         return ConvertUtils.convert(value, String.class).toString();
     }
 
-    public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type) {
+    public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type, List<String> jsonNodeFields) {
         Criteria criteriaBy = null;
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(Dsl.COMMA);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
                 String field = parts[0].replaceAll(PREFIX, "");
+                if (jsonNodeFields.contains(field)){
+                    field = toJsonbPath(field, type);
+                }
                 Criteria.CriteriaStep step = criteriaBy != null ? criteriaBy.and(camelToSql(field)) : Criteria.where(camelToSql(field));
                 String value = parts.length > 1 ? parts[1] : null;
                 switch (criteria.replaceAll(CLEAN, "")) {

@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.4.5</version>
+  <version>4.4.6</version>
 </dependency>
 ----
 
