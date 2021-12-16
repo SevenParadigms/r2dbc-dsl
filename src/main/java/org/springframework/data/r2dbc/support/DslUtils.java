@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.data.r2dbc.support.WordUtils.*;
 
 /**
@@ -35,6 +34,7 @@ public abstract class DslUtils {
     public static final String DOT = ".";
     public static final String DOT_REGEX = "\\.";
     public static final String JSONB = "->>'";
+    public static final String SPACE = " ";
 
     public enum Fields { createdAt, updatedAt, version }
 
@@ -295,7 +295,7 @@ public abstract class DslUtils {
     public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>...cls) {
         var result = new HashSet<Field>();
         if (FastMethodInvoker.has(objectToSave.getClass(), name.name())) {
-            result.add(FastMethodInvoker.getField(objectToSave, name.name()));
+            result.add(FastMethodInvoker.getField(objectToSave.getClass(), name.name()));
         }
         for(Class<?> c : cls) {
             var fields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), c);

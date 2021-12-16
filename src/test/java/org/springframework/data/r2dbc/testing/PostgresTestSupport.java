@@ -26,7 +26,8 @@ public class PostgresTestSupport {
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
 			+ "    now         timestamp NULL\n," //
-			+ "    cert        bytea NULL\n" //
+			+ "    cert        bytea NULL\n," //
+			+ "    jtree       jsonb NULL\n" //
 			+ ");";
 
 	public static final String DROP_TABLE_LEGOSET = "DROP TABLE lego_set";
