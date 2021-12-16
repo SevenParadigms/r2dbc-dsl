@@ -15,6 +15,7 @@
  */
 package org.springframework.data.r2dbc.repository.support;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.netty.util.internal.StringUtil;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.Notification;
@@ -63,6 +64,7 @@ import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.r2dbc.core.binding.Bindings;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -660,10 +662,15 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var joins = new HashMap<String, Table>();
         var entityColumns = accessStrategy.getAllColumns(entity.getJavaType()).stream().map(accessStrategy::toSql).collect(Collectors.toList());
         var queryFields = DslUtils.getCriteriaFields(dsl);
+        var jsonNodeFields = new ArrayList<String>();
         if (!queryFields.isEmpty()) {
             for (String field : queryFields) {
                 if (!joins.containsKey(field) && field.contains(DOT)) {
                     String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
+                    Field entityField = ReflectionUtils.findField(entity.getJavaType(), tableField);
+                    if (entityField != null && entityField.getType() == JsonNode.class) {
+                        jsonNodeFields.add(field);
+                    }
                     if (entityColumns.contains(tableField + "_" + SqlField.id)) {
                         joins.put(tableField, Table.create(tableField));
                     }
@@ -691,7 +698,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     }
                     if (entityColumns.contains(tableName)) {
                         var jsonPath = toJsonbPath(sqlFieldName);
-                        columns.add(Column.create( jsonPath + " as " + getJsonName(jsonPath), table));
+                        columns.add(Column.create(jsonPath + " as " + getJsonName(jsonPath), table));
                         continue;
                     }
                 }
@@ -710,7 +717,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var updateMapper = new CustomUpdateMapper(dialect, converter);
         var bindMarkers = dialect.getBindMarkersFactory().create();
         var bindings = Bindings.empty();
-        org.springframework.data.r2dbc.query.Criteria criteria = DslUtils.getCriteriaBy(dsl, entity.getJavaType());
+        org.springframework.data.r2dbc.query.Criteria criteria = DslUtils.getCriteriaBy(dsl, entity.getJavaType(), jsonNodeFields);
         if (criteria != null) {
             var mappedObject = updateMapper.getMappedObject(bindMarkers, criteria, joins);
             bindings = mappedObject.getBindings();
@@ -728,10 +735,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         }
         if (dsl.isPaged()) {
             selectBuilder.limitOffset(dsl.getSize(), ((long) dsl.getSize() * dsl.getPage()));
-        } else
-            if (dsl.getSize() > 0) {
-                selectBuilder.limitOffset(dsl.getSize(), 0);
-            }
+        } else if (dsl.getSize() > 0) {
+            selectBuilder.limitOffset(dsl.getSize(), 0);
+        }
         return new DslPreparedOperation(
                 selectBuilder.build(),
                 new RenderContextFactory(dialect).createRenderContext(), bindings);
