@@ -31,7 +31,7 @@ import static org.springframework.data.r2dbc.support.WordUtils.*;
 public abstract class DslUtils {
     public static final String COMMANDS = "(\\^\\^|!\\^|==|!=|>>|>=|<<|<=|~~|@@)";
     public static final String PREFIX = "(!|@|!@)";
-    public static final String CLEAN = "[!=>^<~@]";
+    public static final String CLEAN = "[^!=>\\^<~@]";
     public static final String DOT = ".";
     public static final String DOT_REGEX = "\\.";
     public static final String JSONB = "->>'";
