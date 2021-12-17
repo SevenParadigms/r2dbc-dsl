@@ -324,6 +324,21 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
+
+		repository.findAll(Dsl.create().greaterThanOrEquals("id", 2L).fields(" id", "name").limit(1))
+				.as(StepVerifier::create)
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().notIn("id", 2L).fields(" id", "name").limit(1))
+				.as(StepVerifier::create)
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().in("id", 2L).fields(" id", "name").limit(1))
+				.as(StepVerifier::create)
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	@Test

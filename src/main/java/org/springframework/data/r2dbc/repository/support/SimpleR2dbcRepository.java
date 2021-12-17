@@ -339,7 +339,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         if (lang.isEmpty()) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
         }
-        var parts = DslUtils.getFtsPair(dsl);
+        var parts = DslUtils.getFtsPair(dsl, entity.getJavaType());
         var fields = "";
 
         if (dsl.getFields().length == 0)
@@ -361,7 +361,8 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             fields = String.join(",", mutableList);
         }
 
-        if (!fields.equals("*") && !fields.contains(parts.component1())) fields += "," + parts.component1();
+        if (!fields.equals("*") && (!fields.contains(parts.component1()) && !parts.component1().contains("->>")))
+            fields += "," + parts.component1();
         var sql = "SELECT * FROM (SELECT " + fields +
                 " FROM " + entity.getTableName().getReference() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
                 " WHERE (" + parts.component1() + " @@ q)) AS s";
@@ -374,7 +375,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
             sql += criteria;
         }
-        sql += " ORDER BY ts_rank_cd(s." + parts.component1() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
+        sql += " ORDER BY ts_rank_cd(to_tsvector(s." + parts.component1() + "), websearch_to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
         }
@@ -682,7 +683,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             dsl.setResultFields(entityColumns);
         }
         for (var fieldName : dsl.getResultFields()) {
-            var sqlFieldName = WordUtils.camelToSql(fieldName);
+            var sqlFieldName = WordUtils.camelToSql(fieldName.trim());
             if (entityColumns.contains(sqlFieldName)) {
                 columns.add(Column.create(sqlFieldName, table));
             } else {
