@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.query.Criteria;
 import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -36,7 +37,7 @@ public abstract class DslUtils {
     public static final String JSONB = "->>'";
     public static final String SPACE = " ";
 
-    public enum Fields { createdAt, updatedAt, version }
+    public enum Fields {createdAt, updatedAt, version}
 
     public static String toJsonbPath(final String path) {
         if (path.contains(DOT)) {
@@ -145,7 +146,7 @@ public abstract class DslUtils {
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
                 String field = parts[0].replaceAll(PREFIX, "");
-                if (jsonNodeFields.contains(field)){
+                if (jsonNodeFields.contains(field)) {
                     field = toJsonbPath(field, type);
                 }
                 Criteria.CriteriaStep step = criteriaBy != null ? criteriaBy.and(camelToSql(field)) : Criteria.where(camelToSql(field));
@@ -211,12 +212,18 @@ public abstract class DslUtils {
         return list;
     }
 
-    public static Pair<String, String> getFtsPair(Dsl dsl) {
+    public static Pair<String, String> getFtsPair(Dsl dsl, Class<?> type) {
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(Dsl.COMMA);
             for (String criteria : criterias) {
                 if (criteria.contains(Dsl.fts)) {
                     String[] parts = criteria.split(COMMANDS);
+                    if (parts[0].contains(DOT)) {
+                        Field entityField = ReflectionUtils.findField(type, parts[0].split(DOT_REGEX)[0]);
+                        if (entityField != null && entityField.getType() == JsonNode.class) {
+                            parts[0] = toJsonbPath(parts[0], type);
+                        }
+                    }
                     return new Pair<>(parts[0], parts[1]);
                 }
             }
@@ -246,7 +253,7 @@ public abstract class DslUtils {
     }
 
     public static void initVersion(Object objectToSave, Set<Field> fields) {
-        for(Field field : fields) {
+        for (Field field : fields) {
             var versionValue = FastMethodInvoker.getValue(objectToSave, field.getName());
             if (versionValue == null) {
                 if (field.getType() == Long.class) {
@@ -284,20 +291,20 @@ public abstract class DslUtils {
         }
     }
 
-    public static Set<Field> nowStamp(Object objectToSave, Enum<?> name, Class<?>...cls) {
+    public static Set<Field> nowStamp(Object objectToSave, Enum<?> name, Class<?>... cls) {
         var fields = getFields(objectToSave, name, cls);
-        for(Field field : fields) {
+        for (Field field : fields) {
             setNowStamp(objectToSave, field);
         }
         return fields;
     }
 
-    public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>...cls) {
+    public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>... cls) {
         var result = new HashSet<Field>();
         if (FastMethodInvoker.has(objectToSave.getClass(), name.name())) {
             result.add(FastMethodInvoker.getField(objectToSave.getClass(), name.name()));
         }
-        for(Class<?> c : cls) {
+        for (Class<?> c : cls) {
             var fields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), c);
             result.addAll(fields);
         }
