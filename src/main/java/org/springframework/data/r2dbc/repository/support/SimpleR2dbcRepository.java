@@ -682,7 +682,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             dsl.setResultFields(entityColumns);
         }
         for (var fieldName : dsl.getResultFields()) {
-            var sqlFieldName = WordUtils.camelToSql(fieldName);
+            var sqlFieldName = WordUtils.camelToSql(fieldName.trim());
             if (entityColumns.contains(sqlFieldName)) {
                 columns.add(Column.create(sqlFieldName, table));
             } else {
