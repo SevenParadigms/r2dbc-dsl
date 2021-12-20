@@ -375,7 +375,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
             sql += criteria;
         }
-        sql += " ORDER BY ts_rank_cd(to_tsvector(s." + parts.component1() + "), websearch_to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
+        sql += " ORDER BY ts_rank_cd(s." + parts.component1() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
         }
