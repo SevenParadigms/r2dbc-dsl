@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.4.7</version>
+  <version>4.4.8</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.4.7</version>
+  <version>4.4.8</version>
 </dependency>
 ----
 
