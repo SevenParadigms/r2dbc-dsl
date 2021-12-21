@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.4.8</version>
+  <version>4.4.9</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.4.8</version>
+  <version>4.4.9</version>
 </dependency>
 ----
 
@@ -103,7 +103,7 @@ then generated SQL:
 #### Web query predicates (-> sql):
 
 * "column^^1 2 3" -> column in (1, 2, 3)
-* "column^1 2 3" -> column not in (1, 2, 3)
+* "column!^1 2 3" -> column not in (1, 2, 3)
 * "column==value" -> column = value
 * "column!=value" -> column != value
 * "column" -> column is true
