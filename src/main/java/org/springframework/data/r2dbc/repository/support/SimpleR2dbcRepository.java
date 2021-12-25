@@ -51,6 +51,7 @@ import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
+import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.data.relational.core.sql.*;
@@ -317,6 +318,11 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     @Override
     public Mono<T> findOne(Dsl dsl) {
         return databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().one();
+    }
+
+    @Override
+    public Mono<Void> delete(Dsl dsl) {
+        return databaseClient.execute(getDeleteMappedObject(dsl)).as(entity.getJavaType()).fetch().rowsUpdated().then();
     }
 
     @Override
@@ -655,6 +661,41 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         return Query.query(Criteria.where(getIdColumnName()).is(id));
     }
 
+    private DslPreparedOperation<Delete> getDeleteMappedObject(Dsl dsl) {
+        if (applicationContext == null) applicationContext = Beans.getApplicationContext();
+        var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
+        ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
+        var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));
+        var queryFields = DslUtils.getCriteriaFields(dsl);
+        var joins = new HashMap<String, Table>();
+        var jsonNodeFields = new ArrayList<String>();
+        DeleteBuilder.DeleteWhere deleteBuilder = StatementBuilder.delete(table);
+        if (!queryFields.isEmpty()) {
+            for (String field : queryFields) {
+                if (field.contains(DOT)) {
+                    String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
+                    Field entityField = ReflectionUtils.findField(entity.getJavaType(), tableField);
+                    if (entityField != null && entityField.getType() == JsonNode.class) {
+                        jsonNodeFields.add(field);
+                    }
+                }
+            }
+        }
+        joins.put(StringUtil.EMPTY_STRING, table);
+        var bindings = Bindings.empty();
+        var updateMapper = new CustomUpdateMapper(dialect, converter);
+        var bindMarkers = dialect.getBindMarkersFactory().create();
+        org.springframework.data.r2dbc.query.Criteria criteria = DslUtils.getCriteriaBy(dsl, entity.getJavaType(), jsonNodeFields);
+        if (criteria != null) {
+            var mappedObject = updateMapper.getMappedObject(bindMarkers, criteria, joins);
+            bindings = mappedObject.getBindings();
+            deleteBuilder.where(mappedObject.getCondition());
+        }
+        return new DslPreparedOperation<>(
+                deleteBuilder.build(),
+                new RenderContextFactory(dialect).createRenderContext(), bindings);
+    }
+
     private DslPreparedOperation<Select> getMappedObject(Dsl dsl) {
         if (applicationContext == null) applicationContext = Beans.getApplicationContext();
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
@@ -666,6 +707,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var jsonNodeFields = new ArrayList<String>();
         if (!queryFields.isEmpty()) {
             for (String field : queryFields) {
+                field = field.replaceAll(COMBINATORS, "");
                 if (!joins.containsKey(field) && field.contains(DOT)) {
                     String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
                     Field entityField = ReflectionUtils.findField(entity.getJavaType(), tableField);
@@ -739,7 +781,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         } else if (dsl.getSize() > 0) {
             selectBuilder.limitOffset(dsl.getSize(), 0);
         }
-        return new DslPreparedOperation(
+        return new DslPreparedOperation<>(
                 selectBuilder.build(),
                 new RenderContextFactory(dialect).createRenderContext(), bindings);
     }

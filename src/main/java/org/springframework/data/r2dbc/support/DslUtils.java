@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.query.Criteria;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.util.ReflectionUtils;
+import reactor.util.annotation.Nullable;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -33,6 +34,9 @@ public abstract class DslUtils {
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^!=>\\^<~@]";
     public static final String DOT = ".";
+    public static final String OR = "()";
+    public static final String GROUP_COMBINATOR = "\"";
+    public static final String COMBINATORS = "(\\(|\\)|\")";
     public static final String DOT_REGEX = "\\.";
     public static final String JSONB = "->>'";
     public static final String SPACE = " ";
@@ -139,17 +143,17 @@ public abstract class DslUtils {
         return ConvertUtils.convert(value, String.class).toString();
     }
 
-    public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type, List<String> jsonNodeFields) {
+    public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type, @Nullable List<String> jsonNodeFields) {
         Criteria criteriaBy = null;
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(Dsl.COMMA);
             for (String criteria : criterias) {
                 String[] parts = criteria.split(COMMANDS);
-                String field = parts[0].replaceAll(PREFIX, "");
-                if (jsonNodeFields.contains(field)) {
+                String field = parts[0].replaceAll(PREFIX, "").replaceAll(COMBINATORS, "");
+                if (jsonNodeFields != null && jsonNodeFields.contains(field)) {
                     field = toJsonbPath(field, type);
                 }
-                Criteria.CriteriaStep step = criteriaBy != null ? criteriaBy.and(camelToSql(field)) : Criteria.where(camelToSql(field));
+                Criteria.CriteriaStep step = getCriteriaByCombinators(criteriaBy, field, parts[0]);
                 String value = parts.length > 1 ? parts[1] : null;
                 switch (criteria.replaceAll(CLEAN, "")) {
                     case Dsl.in:
@@ -309,5 +313,35 @@ public abstract class DslUtils {
             result.addAll(fields);
         }
         return result;
+    }
+
+    private static Criteria.CriteriaStep getCriteriaByCombinators(@Nullable Criteria criteriaBy,
+                                                                  String field,
+                                                                  String part) {
+        boolean hasOrCombinator = part.contains(OR);
+        if (criteriaBy != null) {
+            if (hasOrCombinator) {
+                return criteriaBy.or(camelToSql(field));
+            } else {
+                return criteriaBy.and(camelToSql(field));
+            }
+        }
+        return Criteria.where(camelToSql(field));
+    }
+
+    private static Criteria getCriteriaByGroupCombinators(@Nullable Criteria criteriaBy,
+                                                          String part) {
+        boolean hasOrCombinator = part.contains(OR);
+        boolean hasGroupCombinator = part.contains(GROUP_COMBINATOR);
+        List<Criteria> groupCriterias = new ArrayList<>();
+        if (criteriaBy != null && hasGroupCombinator) {
+            Criteria previousCriteria = criteriaBy.getPrevious();
+            while (previousCriteria != null) {
+                groupCriterias.add(previousCriteria);
+                previousCriteria = previousCriteria.getPrevious();
+            }
+            return hasOrCombinator ? criteriaBy.or(groupCriterias) : criteriaBy.and(groupCriterias);
+        }
+        return criteriaBy;
     }
 }
