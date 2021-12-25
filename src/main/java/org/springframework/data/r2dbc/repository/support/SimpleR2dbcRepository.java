@@ -51,7 +51,6 @@ import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.data.relational.core.sql.*;
@@ -321,8 +320,8 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     @Override
-    public Mono<Void> delete(Dsl dsl) {
-        return databaseClient.execute(getDeleteMappedObject(dsl)).as(entity.getJavaType()).fetch().rowsUpdated().then();
+    public Mono<Integer> delete(Dsl dsl) {
+        return databaseClient.execute(getDeleteMappedObject(dsl)).as(entity.getJavaType()).fetch().rowsUpdated();
     }
 
     @Override
@@ -338,7 +337,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         });
     }
 
-    @Override
     public Flux<T> fullTextSearch(Dsl dsl) {
         if (applicationContext == null) applicationContext = Beans.getApplicationContext();
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());

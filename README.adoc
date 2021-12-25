@@ -34,6 +34,7 @@ That library produce `R2dbcRepository` interface with Dsl extention:
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
+    fun delete(dsl: Dsl): Mono<Void>
     fun listener(): Flux<Notification>
     fun saveBatch(models: Iterable<S>): Flux<Result>
 }
@@ -102,7 +103,7 @@ then generated SQL:
 
 #### Web query predicates (-> sql):
 
-* "condition,()condition" -> condition or condition
+* "con1,(con2),con3" -> con1 or con2 and con3
 * "column^^1 2 3" -> column in (1, 2, 3)
 * "column!^1 2 3" -> column not in (1, 2, 3)
 * "column==value" -> column = value
@@ -132,7 +133,7 @@ for example column `shops.type` and `jtree.header.title` in result is mapped to 
 Dsl.create()
    .equals("brotherTable.jtree.hobby.name", "Konami")
    .isTrue("isMonicStyle")
-   .isNull("sisterTable.age)
+   .isNull("sisterTable.age")
    .fields("age", "sisterTable.name", "jtree.hobby.description")
 ----
 where after executing the next fields in the model will be set: age, name, description. The secondary idea is using dsl in tests as more readable than jdbcTemplate.

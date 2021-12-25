@@ -35,8 +35,7 @@ import reactor.core.publisher.Mono;
 public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>, ReactiveQueryByExampleExecutor<T> {
     Flux<T> findAll(Dsl dsl);
     Mono<T> findOne(Dsl dsl);
-    Mono<Void> delete(Dsl dsl);
+    Mono<Integer> delete(Dsl dsl);
     Flux<Notification> listener();
-    Flux<T> fullTextSearch(Dsl dsl);
     <S> Flux<Result> saveBatch(Iterable<S> models);
 }
