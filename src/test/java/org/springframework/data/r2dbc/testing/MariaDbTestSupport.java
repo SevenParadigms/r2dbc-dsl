@@ -41,18 +41,24 @@ public class MariaDbTestSupport {
 			+ "    id          integer PRIMARY KEY,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
+			+ "    version     integer NULL\n," //
+			+ "    now         TIMESTAMP NULL\n," //
 			+ "    cert        varbinary(255) NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
 	public static final String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
+			+ "    version     integer NULL\n," //
+			+ "    now         TIMESTAMP NULL\n," //
 			+ "    manual      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
 	public static final String CREATE_TABLE_LEGOSET_WITH_MIXED_CASE_NAMES = "CREATE TABLE `Lego_Set` (\n" //
 			+ "    `Id`          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    `Name`        varchar(255) NOT NULL,\n" //
+			+ "     version      integer NULL\n," //
+			+ "     now          TIMESTAMP NULL\n," //
 			+ "    `Manual`      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
