@@ -34,7 +34,7 @@ public abstract class DslUtils {
     public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^!=>\\^<~@]";
     public static final String DOT = ".";
-    public static final String OR = "()";
+    public static final String OR = "(";
     public static final String GROUP_COMBINATOR = "\"";
     public static final String COMBINATORS = "(\\(|\\)|\")";
     public static final String DOT_REGEX = "\\.";
@@ -154,7 +154,7 @@ public abstract class DslUtils {
                     field = toJsonbPath(field, type);
                 }
                 Criteria.CriteriaStep step = getCriteriaByCombinators(criteriaBy, field, parts[0]);
-                String value = parts.length > 1 ? parts[1] : null;
+                String value = parts.length > 1 ? parts[1].replaceAll(COMBINATORS, "") : null;
                 switch (criteria.replaceAll(CLEAN, "")) {
                     case Dsl.in:
                         if (value != null) criteriaBy = step.in(stringToObject(value.split(SPACE), field, type));
