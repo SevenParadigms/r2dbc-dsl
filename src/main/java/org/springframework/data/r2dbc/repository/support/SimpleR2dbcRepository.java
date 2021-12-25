@@ -51,6 +51,7 @@ import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
+import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.data.relational.core.sql.*;
@@ -706,6 +707,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var jsonNodeFields = new ArrayList<String>();
         if (!queryFields.isEmpty()) {
             for (String field : queryFields) {
+                field = field.replaceAll(COMBINATORS, "");
                 if (!joins.containsKey(field) && field.contains(DOT)) {
                     String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
                     Field entityField = ReflectionUtils.findField(entity.getJavaType(), tableField);

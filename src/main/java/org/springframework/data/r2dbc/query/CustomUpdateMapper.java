@@ -20,6 +20,7 @@ import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
+import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -40,176 +41,173 @@ import java.util.Map;
  */
 public class CustomUpdateMapper extends CustomQueryMapper {
 
-	/**
-	 * Creates a new {@link CustomQueryMapper} with the given {@link R2dbcConverter}.
-	 *
-	 * @param dialect must not be {@literal null}.
-	 * @param converter must not be {@literal null}.
-	 */
-	public CustomUpdateMapper(R2dbcDialect dialect, R2dbcConverter converter) {
-		super(dialect, converter);
-	}
+    /**
+     * Creates a new {@link CustomQueryMapper} with the given {@link R2dbcConverter}.
+     *
+     * @param dialect   must not be {@literal null}.
+     * @param converter must not be {@literal null}.
+     */
+    public CustomUpdateMapper(R2dbcDialect dialect, R2dbcConverter converter) {
+        super(dialect, converter);
+    }
 
-	/**
-	 * Map a {@link Update} object to {@link BoundAssignments} and consider value/{@code NULL} {Bindings}.
-	 *
-	 * @param markers bind markers object, must not be {@literal null}.
-	 * @param update update definition to map, must not be {@literal null}.
-	 * @param table must not be {@literal null}.
-	 * @param entity related {@link RelationalPersistentEntity}, can be {@literal null}.
-	 * @return the mapped {@link BoundAssignments}.
-	 */
-	public BoundAssignments getMappedObject(BindMarkers markers, Update update, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
-		return getMappedObject(markers, update.getAssignments(), table, entity);
-	}
+    /**
+     * Map a {@link Update} object to {@link BoundAssignments} and consider value/{@code NULL} {Bindings}.
+     *
+     * @param markers bind markers object, must not be {@literal null}.
+     * @param update  update definition to map, must not be {@literal null}.
+     * @param table   must not be {@literal null}.
+     * @param entity  related {@link RelationalPersistentEntity}, can be {@literal null}.
+     * @return the mapped {@link BoundAssignments}.
+     */
+    public BoundAssignments getMappedObject(BindMarkers markers, Update update, Table table,
+                                            @Nullable RelationalPersistentEntity<?> entity) {
+        return getMappedObject(markers, update.getAssignments(), table, entity);
+    }
 
-	/**
-	 * Map a {@code assignments} object to {@link BoundAssignments} and consider value/{@code NULL} {Bindings}.
-	 *
-	 * @param markers bind markers object, must not be {@literal null}.
-	 * @param assignments update/insert definition to map, must not be {@literal null}.
-	 * @param table must not be {@literal null}.
-	 * @param entity related {@link RelationalPersistentEntity}, can be {@literal null}.
-	 * @return the mapped {@link BoundAssignments}.
-	 */
-	public BoundAssignments getMappedObject(BindMarkers markers, Map<SqlIdentifier, ? extends Object> assignments, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
+    /**
+     * Map a {@code assignments} object to {@link BoundAssignments} and consider value/{@code NULL} {Bindings}.
+     *
+     * @param markers     bind markers object, must not be {@literal null}.
+     * @param assignments update/insert definition to map, must not be {@literal null}.
+     * @param table       must not be {@literal null}.
+     * @param entity      related {@link RelationalPersistentEntity}, can be {@literal null}.
+     * @return the mapped {@link BoundAssignments}.
+     */
+    public BoundAssignments getMappedObject(BindMarkers markers, Map<SqlIdentifier, ? extends Object> assignments, Table table,
+                                            @Nullable RelationalPersistentEntity<?> entity) {
 
-		Assert.notNull(markers, "BindMarkers must not be null!");
-		Assert.notNull(assignments, "Assignments must not be null!");
-		Assert.notNull(table, "Table must not be null!");
+        Assert.notNull(markers, "BindMarkers must not be null!");
+        Assert.notNull(assignments, "Assignments must not be null!");
+        Assert.notNull(table, "Table must not be null!");
 
-		MutableBindings bindings = new MutableBindings(markers);
-		List<Assignment> result = new ArrayList<>();
+        MutableBindings bindings = new MutableBindings(markers);
+        List<Assignment> result = new ArrayList<>();
 
-		assignments.forEach((column, value) -> {
-			Assignment assignment = getAssignment(column.getReference(), value, bindings, table, entity);
-			result.add(assignment);
-		});
+        assignments.forEach((column, value) -> {
+            Assignment assignment = getAssignment(column.getReference(), value, bindings, table, entity);
+            result.add(assignment);
+        });
 
-		return new BoundAssignments(bindings, result);
-	}
+        return new BoundAssignments(bindings, result);
+    }
 
-	/**
-	 * Map a {@link Criteria} object into {@link Condition} and consider value/{@code NULL} {Bindings}.
-	 *
-	 * @param markers bind markers object, must not be {@literal null}.
-	 * @param criteria criteria definition to map, must not be {@literal null}.
-	 * @param tables must not be {@literal null}.
-	 * @return the mapped {@link BoundCondition}.
-	 */
-	public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, Map<String, Table> tables) {
+    /**
+     * Map a {@link Criteria} object into {@link Condition} and consider value/{@code NULL} {Bindings}.
+     *
+     * @param markers  bind markers object, must not be {@literal null}.
+     * @param criteria criteria definition to map, must not be {@literal null}.
+     * @param tables   must not be {@literal null}.
+     * @return the mapped {@link BoundCondition}.
+     */
+    public BoundCondition getMappedObject(BindMarkers markers, Criteria criteria, Map<String, Table> tables) {
 
-		Assert.notNull(markers, "BindMarkers must not be null!");
-		Assert.notNull(criteria, "Criteria must not be null!");
-		Assert.notNull(tables, "Table must not be null!");
+        Assert.notNull(markers, "BindMarkers must not be null!");
+        Assert.notNull(criteria, "Criteria must not be null!");
+        Assert.notNull(tables, "Table must not be null!");
 
-		Criteria current = criteria;
-		MutableBindings bindings = new MutableBindings(markers);
+        Criteria current = criteria;
+        MutableBindings bindings = new MutableBindings(markers);
 
-		// reverse unroll criteria chain
-		Map<Criteria, Criteria> forwardChain = new HashMap<>();
+        // reverse unroll criteria chain
+        Map<Criteria, Criteria> forwardChain = new HashMap<>();
 
-		while (current.hasPrevious()) {
-			forwardChain.put(current.getPrevious(), current);
-			current = current.getPrevious();
-		}
+        while (current.hasPrevious()) {
+            forwardChain.put(current.getPrevious(), current);
+            current = current.getPrevious();
+        }
 
-		// perform the actual mapping
+        // perform the actual mapping
 
-		Condition mapped = getCondition(current, bindings, tables, null);
-		while (forwardChain.containsKey(current)) {
+        Condition mapped = getCondition(current, bindings, tables, null);
+        while (forwardChain.containsKey(current)) {
 
-			Criteria nextCriteria = forwardChain.get(current);
+            Criteria nextCriteria = forwardChain.get(current);
 
-			if (nextCriteria.getCombinator() == Criteria.Combinator.AND) {
-				mapped = mapped.and(getCondition(nextCriteria, bindings, tables, null));
-			}
+            if (nextCriteria.getCombinator() == Criteria.Combinator.AND) {
+                mapped = mapped.and(getCondition(nextCriteria, bindings, tables, null));
+            }
 
-			if (nextCriteria.getCombinator() == Criteria.Combinator.OR) {
-				mapped = mapped.or(getCondition(nextCriteria, bindings, tables, null));
-			}
+            if (nextCriteria.getCombinator() == Criteria.Combinator.OR) {
+                mapped = mapped.or(getCondition(nextCriteria, bindings, tables, null));
+            }
 
-			current = nextCriteria;
-		}
+            current = nextCriteria;
+        }
 
-		return new BoundCondition(bindings, mapped);
-	}
+        return new BoundCondition(bindings, mapped);
+    }
 
-	private Condition getCondition(Criteria criteria, MutableBindings bindings, Map<String, Table> tables,
-								   @Nullable RelationalPersistentEntity<?> entity) {
-		Table table = tables.get(StringUtil.EMPTY_STRING);
-		String columnName = criteria.getColumn().getReference();
-		if (criteria.getColumn().getReference().indexOf('.') > -1) {
-			table = tables.get(columnName.substring(0, columnName.indexOf('.')));
-			columnName = columnName.substring(columnName.indexOf('.') + 1);
-		}
+    private Condition getCondition(Criteria criteria, MutableBindings bindings, Map<String, Table> tables,
+                                   @Nullable RelationalPersistentEntity<?> entity) {
+        SqlIdentifier criteriaColumn = criteria.getColumn();
+        Table table = tables.get(StringUtil.EMPTY_STRING);
+        String columnName = criteriaColumn.getReference();
 
-		Field propertyField = createPropertyField(entity, columnName, getMappingContext());
-		TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
+        if (criteriaColumn.getReference().indexOf('.') > -1) {
+            table = tables.get(columnName.substring(0, columnName.indexOf('.')));
+            columnName = columnName.substring(columnName.indexOf('.') + 1);
+        }
 
-		Object mappedValue;
-		Class<?> typeHint;
+        Field propertyField = createPropertyField(entity, columnName, getMappingContext());
+        TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
 
-		if (criteria.getValue() instanceof SettableValue) {
+        Object mappedValue;
+        Class<?> typeHint;
 
-			SettableValue settableValue = (SettableValue) criteria.getValue();
+        if (criteria.getValue() instanceof SettableValue) {
+            SettableValue settableValue = (SettableValue) criteria.getValue();
 
-			mappedValue = convertValue(settableValue.getValue(), propertyField.getTypeHint());
-			typeHint = getTypeHint(mappedValue, actualType.getType(), settableValue);
+            mappedValue = convertValue(settableValue.getValue(), propertyField.getTypeHint());
+            typeHint = getTypeHint(mappedValue, actualType.getType(), settableValue);
+        } else {
+            mappedValue = convertValue(criteria.getValue(), propertyField.getTypeHint());
+            typeHint = actualType.getType();
+        }
+        Column column = table.column(columnName);
+        return createCondition(column, mappedValue, typeHint, bindings, criteria.getComparator());
+    }
 
-		} else {
+    private Assignment getAssignment(String columnName, Object value, MutableBindings bindings, Table table,
+                                     @Nullable RelationalPersistentEntity<?> entity) {
 
-			mappedValue = convertValue(criteria.getValue(), propertyField.getTypeHint());
-			typeHint = actualType.getType();
-		}
-		Column column = table.column(columnName);
-		return createCondition(column, mappedValue, typeHint, bindings, criteria.getComparator());
-	}
+        Field propertyField = createPropertyField(entity, columnName, getMappingContext());
+        Column column = table.column(toSql(propertyField.getMappedColumnName()));
+        TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
 
-	private Assignment getAssignment(String columnName, Object value, MutableBindings bindings, Table table,
-			@Nullable RelationalPersistentEntity<?> entity) {
+        Object mappedValue;
+        Class<?> typeHint;
 
-		Field propertyField = createPropertyField(entity, columnName, getMappingContext());
-		Column column = table.column(toSql(propertyField.getMappedColumnName()));
-		TypeInformation<?> actualType = propertyField.getTypeHint().getRequiredActualType();
+        if (value instanceof SettableValue) {
+            SettableValue settableValue = (SettableValue) value;
 
-		Object mappedValue;
-		Class<?> typeHint;
+            mappedValue = convertValue(settableValue.getValue(), propertyField.getTypeHint());
+            typeHint = getTypeHint(mappedValue, actualType.getType(), settableValue);
 
-		if (value instanceof SettableValue) {
+        } else {
+            mappedValue = convertValue(value, propertyField.getTypeHint());
 
-			SettableValue settableValue = (SettableValue) value;
+            if (mappedValue == null) {
+                return Assignments.value(column, SQL.nullLiteral());
+            }
 
-			mappedValue = convertValue(settableValue.getValue(), propertyField.getTypeHint());
-			typeHint = getTypeHint(mappedValue, actualType.getType(), settableValue);
+            typeHint = actualType.getType();
+        }
 
-		} else {
+        return createAssignment(column, mappedValue, typeHint, bindings);
+    }
 
-			mappedValue = convertValue(value, propertyField.getTypeHint());
+    private Assignment createAssignment(Column column, Object value, Class<?> type, MutableBindings bindings) {
 
-			if (mappedValue == null) {
-				return Assignments.value(column, SQL.nullLiteral());
-			}
+        BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
+        AssignValue assignValue = Assignments.value(column, SQL.bindMarker(bindMarker.getPlaceholder()));
 
-			typeHint = actualType.getType();
-		}
+        if (value == null) {
+            bindings.bindNull(bindMarker, type);
+        } else {
+            bindings.bind(bindMarker, value);
+        }
 
-		return createAssignment(column, mappedValue, typeHint, bindings);
-	}
-
-	private Assignment createAssignment(Column column, Object value, Class<?> type, MutableBindings bindings) {
-
-		BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
-		AssignValue assignValue = Assignments.value(column, SQL.bindMarker(bindMarker.getPlaceholder()));
-
-		if (value == null) {
-			bindings.bindNull(bindMarker, type);
-		} else {
-			bindings.bind(bindMarker, value);
-		}
-
-		return assignValue;
-	}
+        return assignValue;
+    }
 }
