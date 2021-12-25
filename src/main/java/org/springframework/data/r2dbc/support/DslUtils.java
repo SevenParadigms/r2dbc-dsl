@@ -35,8 +35,8 @@ public abstract class DslUtils {
     public static final String CLEAN = "[^!=>\\^<~@]";
     public static final String DOT = ".";
     public static final String OR = "(";
-    public static final String GROUP_COMBINATOR = "\"";
-    public static final String COMBINATORS = "(\\(|\")";
+    public static final String GROUP_COMBINATOR = "()";
+    public static final String COMBINATORS = "(\\(|\\)|\")";
     public static final String DOT_REGEX = "\\.";
     public static final String JSONB = "->>'";
     public static final String SPACE = " ";
