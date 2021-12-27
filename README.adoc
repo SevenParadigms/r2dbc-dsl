@@ -34,7 +34,7 @@ That library produce `R2dbcRepository` interface with Dsl extention:
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
-    fun delete(dsl: Dsl): Mono<Void>
+    fun delete(dsl: Dsl): Mono<Integer>
     fun listener(): Flux<Notification>
     fun saveBatch(models: Iterable<S>): Flux<Result>
 }
