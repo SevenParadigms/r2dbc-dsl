@@ -91,6 +91,8 @@ data class Dsl {
 
 * Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @Now annotation logic
 
+* Do not need to extend working repositories for test methods, becouse DSL as it provides the required flexibility without changing business logic
+
 ## Concepts
 
 The primary idea is to reduce development time when all kinds of criteria can be formed at the frontend:
