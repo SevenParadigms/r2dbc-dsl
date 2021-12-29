@@ -126,7 +126,7 @@ public abstract class DslUtils {
                 var value = FastMethodInvoker.getValue(target, field.getName());
                 String result = null;
                 if (value != null) {
-                    result = objectToSql(value);
+                    result = (!"*".equals(value) && !"tsv".equals(value)) ? objectToSql(value) : value.toString();
                 }
                 buildQuery = buildQuery.replaceAll(Dsl.COLON + field.getName(), result == null ? "null" : result);
             }

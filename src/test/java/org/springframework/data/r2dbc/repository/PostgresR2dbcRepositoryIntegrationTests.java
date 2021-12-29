@@ -85,7 +85,9 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 			return (entity, table) -> {
 
 				if (entity.getId() == null) {
-					return client.sql("SELECT nextval('person_seq');") //
+					return client.sql("" +
+							"SELECT nextval('person_seq');" +
+							"UPDATE lego_set SET tsv = to_tsvector(name::text)") //
 							.map(row -> row.get(0, Integer.class)) //
 							.first() //
 							.doOnNext(entity::setId) //
@@ -339,6 +341,11 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
+
+        repository.findAll(Dsl.create().fts("SCHAUFE").limit(1))
+                .as(StepVerifier::create)
+                .expectNextCount(1)
+                .verifyComplete();
 	}
 
 	@Test

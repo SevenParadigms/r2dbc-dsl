@@ -60,6 +60,7 @@ import org.springframework.data.relational.repository.query.RelationalExampleMap
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.r2dbc.core.binding.Bindings;
@@ -109,7 +110,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         this.entity = entity;
         this.entityOperations = entityOperations;
         this.idProperty = Lazy.of(() -> Objects.requireNonNull(converter.getMappingContext()
-                        .getPersistentEntity(entity.getJavaType()))
+                .getPersistentEntity(entity.getJavaType()))
                 .getPersistentProperty(getIdColumnName()));
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
         this.converter = converter;
@@ -131,7 +132,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         this.entity = entity;
         this.entityOperations = new R2dbcEntityTemplate(databaseClient, accessStrategy);
         this.idProperty = Lazy.of(() -> Objects.requireNonNull(converter.getMappingContext()
-                        .getPersistentEntity(entity.getJavaType()))
+                .getPersistentEntity(entity.getJavaType()))
                 .getPersistentProperty(getIdColumnName()));
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
         this.converter = converter;
@@ -155,7 +156,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         this.entity = entity;
         this.entityOperations = new R2dbcEntityTemplate(databaseClient, accessStrategy);
         this.idProperty = Lazy.of(() -> Objects.requireNonNull(converter.getMappingContext()
-                        .getPersistentEntity(entity.getJavaType()))
+                .getPersistentEntity(entity.getJavaType()))
                 .getPersistentProperty(getIdColumnName()));
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
         this.converter = converter;
@@ -341,6 +342,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     public Flux<T> fullTextSearch(Dsl dsl) {
         if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
+        var ftsBindingSupport = new FullTextSearchBindingSupport();
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
         if (lang.isEmpty()) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
@@ -367,11 +369,12 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             fields = String.join(",", mutableList);
         }
 
-        if (!fields.equals("*") && (!fields.contains(parts.component1()) && !parts.component1().contains("->>")))
-            fields += "," + parts.component1();
-        var sql = "SELECT * FROM (SELECT " + fields +
-                " FROM " + entity.getTableName().getReference() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
-                " WHERE (" + parts.component1() + " @@ q)) AS s";
+        if (!fields.equals("*") && parts != null) {
+            if (!fields.contains(parts.component1()) && !parts.component1().contains("->>"))
+                fields += "," + parts.component1();
+        }
+        var sqlBuilder = new StringBuilder("SELECT * FROM (SELECT :fields FROM ").append(entity.getTableName().getReference())
+                .append(", websearch_to_tsquery(:lang, :secondPart) AS q WHERE (:firstPart @@ q)) AS s");
         var operation = getMappedObject(dsl);
         var criteria = operation.get().replaceAll(entity.getTableName().getReference(), "s");
         if (criteria.indexOf("WHERE") > 0) {
@@ -379,19 +382,29 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             if (criteria.indexOf("LIMIT") > 0) lastIndex = criteria.indexOf("LIMIT") - 1;
             if (criteria.indexOf("ORDER") > 0) lastIndex = criteria.indexOf("ORDER") - 1;
             criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
-            sql += criteria;
+            sqlBuilder.append(criteria);
         }
-        sql += " ORDER BY ts_rank_cd(s." + parts.component1() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
+        sqlBuilder.append(" ORDER BY ts_rank_cd(s.:firstPart, websearch_to_tsquery(:lang, :secondPart)) DESC ");
         if (dsl.isPaged()) {
-            sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
+            ftsBindingSupport.limit = dsl.getSize();
+            ftsBindingSupport.offset = dsl.getSize() * dsl.getPage();
+            sqlBuilder.append("LIMIT :limit OFFSET :offset ");
         }
+
+        ftsBindingSupport.fields = fields;
+        ftsBindingSupport.firstPart = parts != null ? parts.component1() : null;
+        ftsBindingSupport.secondPart = parts != null ? parts.component2() : null;
+        ftsBindingSupport.lang = lang;
+
+        String sql = sqlBuilder.toString();
         if (criteria.indexOf("WHERE") > 0) {
             var index = 1;
             for (Bindings.Binding bind : operation.getBindings()) {
                 sql = sql.replaceAll("\\$" + index++, bind.getValue() == null ? "null" : DslUtils.objectToSql(bind.getValue()));
             }
         }
-        return databaseClient.execute(sql).as(entity.getJavaType()).fetch().all();
+        String bindSql = DslUtils.binding(sql, ftsBindingSupport);
+        return databaseClient.execute(bindSql).as(entity.getJavaType()).fetch().all();
     }
 
     @Override
@@ -784,5 +797,21 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         return new DslPreparedOperation<>(
                 selectBuilder.build(),
                 new RenderContextFactory(dialect).createRenderContext(), bindings);
+    }
+
+    private static class FullTextSearchBindingSupport {
+        @Nullable private String fields;
+        @Nullable private String firstPart;
+        @Nullable private String secondPart;
+        @Nullable private String lang;
+        @Nullable private Integer limit;
+        @Nullable private Integer offset;
+
+        @Nullable public String getFields() { return fields; }
+        @Nullable public String getFirstPart() { return firstPart; }
+        @Nullable public String getSecondPart() { return secondPart; }
+        @Nullable public String getLang() { return lang; }
+        @Nullable public Integer getLimit() { return limit; }
+        @Nullable public Integer getOffset() { return offset; }
     }
 }
