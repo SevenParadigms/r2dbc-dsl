@@ -80,8 +80,7 @@
 		<dist.key>DATAR2DBC</dist.key>
 		<spring.core>5.3.14</spring.core>
 		<springdata.commons>2.5.7</springdata.commons>
-		<springdata.jdbc>2.3.0</springdata.jdbc>
-		<springdata.relational>${springdata.jdbc}</springdata.relational>
+		<springdata.relational>2.2.4</springdata.relational>
 		<java-module-name>spring.data.r2dbc</java-module-name>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
 
