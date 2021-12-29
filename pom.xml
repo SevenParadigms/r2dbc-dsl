@@ -80,14 +80,15 @@
 		<dist.key>DATAR2DBC</dist.key>
 		<spring.core>5.3.14</spring.core>
 		<springdata.commons>2.5.7</springdata.commons>
-		<springdata.relational>2.2.4</springdata.relational>
+		<springdata.jdbc>2.2.4</springdata.jdbc>
+		<springdata.relational>${springdata.jdbc}</springdata.relational>
 		<java-module-name>spring.data.r2dbc</java-module-name>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
 
 		<degraph-check.version>0.1.4</degraph-check.version>
 		<postgresql.version>42.3.1</postgresql.version>
 		<mysql.version>8.0.26</mysql.version>
-		<r2dbc-spi-test.version>0.9.0.RELEASE</r2dbc-spi-test.version>
+		<r2dbc-spi-test.version>0.8.5.RELEASE</r2dbc-spi-test.version>
 		<mssql-jdbc.version>9.4.0.jre8</mssql-jdbc.version>
 		<mariadb-jdbc.version>2.7.4</mariadb-jdbc.version>
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
