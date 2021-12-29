@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.5.1</version>
+	<version>4.5.2</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -44,16 +44,6 @@
 
 	<developers>
 		<developer>
-			<id>lao.tsing</id>
-			<name>Lao Tsing</name>
-			<email>lao.tsing@outlook.com</email>
-			<organization>Eclipse Foundation</organization>
-			<roles>
-				<role>System architect</role>
-			</roles>
-			<timezone>+3</timezone>
-		</developer>
-		<developer>
 			<id>mpaluch</id>
 			<name>Mark Paluch</name>
 			<email>mpaluch(at)pivotal.io</email>
@@ -88,9 +78,9 @@
 		<kotlinx.version>1.5.2-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring.core>5.3.13</spring.core>
+		<spring.core>5.3.14</spring.core>
 		<springdata.commons>2.5.7</springdata.commons>
-		<springdata.jdbc>2.2.4</springdata.jdbc>
+		<springdata.jdbc>2.3.0</springdata.jdbc>
 		<springdata.relational>${springdata.jdbc}</springdata.relational>
 		<java-module-name>spring.data.r2dbc</java-module-name>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
@@ -98,19 +88,19 @@
 		<degraph-check.version>0.1.4</degraph-check.version>
 		<postgresql.version>42.3.1</postgresql.version>
 		<mysql.version>8.0.26</mysql.version>
-		<r2dbc-spi-test.version>0.8.5.RELEASE</r2dbc-spi-test.version>
+		<r2dbc-spi-test.version>0.9.0.RELEASE</r2dbc-spi-test.version>
 		<mssql-jdbc.version>9.4.0.jre8</mssql-jdbc.version>
 		<mariadb-jdbc.version>2.7.4</mariadb-jdbc.version>
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
 		<netty>4.1.66.Final</netty>
 		<testcontainer>1.16.2</testcontainer>
-		<mockk>1.12.0</mockk>
+		<mockk>1.12.1</mockk>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
-		<jackson.version>2.13.0</jackson.version>
+		<jackson.version>2.13.1</jackson.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -269,7 +259,7 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.20.2</version>
+			<version>3.21.0</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -305,14 +295,14 @@
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
-			<version>${mssql-jdbc.version}</version>
+			<version>9.4.1.jre11</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
 			<artifactId>ojdbc11</artifactId>
-			<version>21.1.0.0</version>
+			<version>21.4.0.0.1</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -395,11 +385,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jdk8</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.9.4</version>
@@ -466,7 +451,7 @@
 		<dependency>
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
-			<version>4.1.0</version>
+			<version>4.1.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

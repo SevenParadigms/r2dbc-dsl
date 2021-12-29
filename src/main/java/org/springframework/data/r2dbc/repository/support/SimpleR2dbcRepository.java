@@ -24,6 +24,7 @@ import io.r2dbc.postgresql.api.PostgresqlResult;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
 import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -181,13 +182,15 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         final var versionFields = getFields(objectToSave, Fields.version, Version.class, org.springframework.data.annotation.Version.class);
         final var nowStampFields = nowStamp(objectToSave, Fields.updatedAt, Now.class, LastModifiedDate.class, UpdatedAt.class);
         if (idValue == null) {
-            initVersion(objectToSave, versionFields);
+            for (Field version : versionFields) {
+                setVersion(objectToSave, version, 0);
+            }
             nowStamp(objectToSave, Fields.createdAt, CreatedDate.class, CreatedAt.class);
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
                     .map(converter.populateIdIfNecessary(objectToSave))
-                    .first().flatMap(s -> Mono.just(s))
+                    .first().flatMap(Mono::just)
                     .defaultIfEmpty(objectToSave);
         } else {
             final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedAt.class);
@@ -227,14 +230,13 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         StatementMapper mapper = accessStrategy.getStatementMapper();
         OutboundRow columns = accessStrategy.getOutboundRow(objectToSave);
         Update update = null;
-        Iterator<?> iterator = columns.keySet().iterator();
-        while (iterator.hasNext()) {
-            SqlIdentifier column = (SqlIdentifier) iterator.next();
+        for (SqlIdentifier column : columns.keySet()) {
             if (update == null) {
                 update = Update.update(accessStrategy.toSql(column), columns.get(column));
             }
             update = update.set(accessStrategy.toSql(column), columns.get(column));
         }
+        assert update != null;
         PreparedOperation<?> operation = mapper.getMappedObject(
                 mapper.createUpdate(this.entity.getTableName(), update)
                         .withCriteria(Criteria.where(idPropertyName).is(idValue)));
@@ -338,7 +340,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     public Flux<T> fullTextSearch(Dsl dsl) {
-        if (applicationContext == null) applicationContext = Beans.getApplicationContext();
+        if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
         if (lang.isEmpty()) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
@@ -660,7 +662,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     private DslPreparedOperation<Delete> getDeleteMappedObject(Dsl dsl) {
-        if (applicationContext == null) applicationContext = Beans.getApplicationContext();
+        if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));
@@ -684,7 +686,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
         var updateMapper = new CustomUpdateMapper(dialect, converter);
         var bindMarkers = dialect.getBindMarkersFactory().create();
         org.springframework.data.r2dbc.query.Criteria criteria = DslUtils.getCriteriaBy(dsl, entity.getJavaType(), jsonNodeFields);
-        if (criteria != null) {
+        if (ObjectUtils.isNotEmpty(criteria)) {
             var mappedObject = updateMapper.getMappedObject(bindMarkers, criteria, joins);
             bindings = mappedObject.getBindings();
             deleteBuilder.where(mappedObject.getCondition());
@@ -695,7 +697,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     private DslPreparedOperation<Select> getMappedObject(Dsl dsl) {
-        if (applicationContext == null) applicationContext = Beans.getApplicationContext();
+        if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));

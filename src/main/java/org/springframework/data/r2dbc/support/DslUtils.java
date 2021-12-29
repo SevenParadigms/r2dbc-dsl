@@ -143,6 +143,7 @@ public abstract class DslUtils {
         return ConvertUtils.convert(value, String.class).toString();
     }
 
+    @Nullable
     public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type, @Nullable List<String> jsonNodeFields) {
         Criteria criteriaBy = null;
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
@@ -216,6 +217,7 @@ public abstract class DslUtils {
         return list;
     }
 
+    @Nullable
     public static Pair<String, String> getFtsPair(Dsl dsl, Class<?> type) {
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(Dsl.COMMA);
@@ -254,21 +256,6 @@ public abstract class DslUtils {
                 return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), camelToSql(name));
             }).collect(Collectors.toList()));
         } else return Sort.unsorted();
-    }
-
-    public static void initVersion(Object objectToSave, Set<Field> fields) {
-        for (Field field : fields) {
-            var versionValue = FastMethodInvoker.getValue(objectToSave, field.getName());
-            if (versionValue == null) {
-                if (field.getType() == Long.class) {
-                    FastMethodInvoker.setValue(objectToSave, field.getName(), 1L);
-                }
-                if (field.getType() == Integer.class) {
-                    FastMethodInvoker.setValue(objectToSave, field.getName(), 1);
-                }
-                setNowStamp(objectToSave, field);
-            }
-        }
     }
 
     public static void setVersion(Object objectToSave, Field version, Object versionValue) {
@@ -329,8 +316,8 @@ public abstract class DslUtils {
         return Criteria.where(camelToSql(field));
     }
 
-    private static Criteria getCriteriaByGroupCombinators(@Nullable Criteria criteriaBy,
-                                                          String part) {
+    @Nullable
+    private static Criteria getCriteriaByGroupCombinators(@Nullable Criteria criteriaBy, String part) {
         boolean hasOrCombinator = part.contains(OR);
         boolean hasGroupCombinator = part.contains(GROUP_COMBINATOR);
         List<Criteria> groupCriterias = new ArrayList<>();
