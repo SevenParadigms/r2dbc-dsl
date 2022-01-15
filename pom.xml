@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.5.2</version>
+	<version>4.5.21</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -74,8 +74,8 @@
 	</scm>
 
 	<properties>
-		<kotlin.version>1.6.0</kotlin.version>
-		<kotlinx.version>1.5.2-native-mt</kotlinx.version>
+		<kotlin.version>1.6.10</kotlin.version>
+		<kotlinx.version>1.6.0-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
 		<spring.core>5.3.14</spring.core>
