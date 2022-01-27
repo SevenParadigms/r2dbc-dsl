@@ -1,7 +1,7 @@
 package org.springframework.data.r2dbc.support;
 
 import io.r2dbc.spi.ConnectionFactories;
-import org.springframework.data.r2dbc.config.beans.Beans;
+import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.core.DefaultReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactory;

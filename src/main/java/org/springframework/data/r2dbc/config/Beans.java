@@ -1,4 +1,4 @@
-package org.springframework.data.r2dbc.config.beans;
+package org.springframework.data.r2dbc.config;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -9,7 +9,7 @@ import org.springframework.util.ConcurrentReferenceHashMap;
 
 import java.util.concurrent.Callable;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class Beans implements ApplicationContextAware {
     private static ConcurrentReferenceHashMap OBJECTS_CACHE = new ConcurrentReferenceHashMap(720);
     private static ApplicationContext applicationContext = null;

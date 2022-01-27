@@ -15,8 +15,8 @@
  */
 package org.springframework.data.r2dbc.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.spi.ConnectionFactory;
-import org.springframework.data.r2dbc.config.beans.*;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -35,6 +35,7 @@ import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
+import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.relational.core.conversion.BasicRelationalConverter;
 import org.springframework.data.relational.core.mapping.NamingStrategy;
 import org.springframework.lang.Nullable;
@@ -56,7 +57,7 @@ import java.util.Optional;
  * @see org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
  */
 @Configuration(proxyBeanMethods = false)
-@Import(MapperConfig.class)
+@Import(Beans.class)
 public abstract class AbstractR2dbcConfiguration implements ApplicationContextAware {
 
 	private static final String CONNECTION_FACTORY_BEAN_NAME = "connectionFactory";
@@ -91,6 +92,11 @@ public abstract class AbstractR2dbcConfiguration implements ApplicationContextAw
 	 */
 	public R2dbcDialect getDialect(ConnectionFactory connectionFactory) {
 		return DialectResolver.getDialect(connectionFactory);
+	}
+
+	@Bean
+	ObjectMapper objectMapper() {
+		return JsonUtils.getMapper();
 	}
 
 	/**

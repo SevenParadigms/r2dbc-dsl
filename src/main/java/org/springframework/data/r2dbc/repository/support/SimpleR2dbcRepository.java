@@ -29,12 +29,10 @@ import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.*;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.r2dbc.config.beans.Beans;
+import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -44,13 +42,14 @@ import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import org.springframework.data.r2dbc.repository.query.*;
+import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.repository.query.Equality;
+import org.springframework.data.r2dbc.repository.query.ReadOnly;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
 import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
-import org.springframework.data.relational.core.mapping.RelationalPersistentProperty;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
@@ -58,7 +57,6 @@ import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.relational.repository.query.RelationalEntityInformation;
 import org.springframework.data.relational.repository.query.RelationalExampleMapper;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
-import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Streamable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.PreparedOperation;
@@ -90,7 +88,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     private final RelationalEntityInformation<T, ID> entity;
     private final R2dbcEntityOperations entityOperations;
-    private final Lazy<RelationalPersistentProperty> idProperty;
     private final RelationalExampleMapper exampleMapper;
     private final R2dbcConverter converter;
     private final org.springframework.data.r2dbc.core.DatabaseClient databaseClient;
@@ -108,9 +105,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                  R2dbcConverter converter, ApplicationContext applicationContext) {
         this.entity = entity;
         this.entityOperations = entityOperations;
-        this.idProperty = Lazy.of(() -> Objects.requireNonNull(converter.getMappingContext()
-                        .getPersistentEntity(entity.getJavaType()))
-                .getPersistentProperty(getIdColumnName()));
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
         this.converter = converter;
         this.databaseClient = org.springframework.data.r2dbc.core.DatabaseClient.create(entityOperations.getDatabaseClient().getConnectionFactory());
@@ -130,9 +124,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                  R2dbcConverter converter, ReactiveDataAccessStrategy accessStrategy, ApplicationContext applicationContext) {
         this.entity = entity;
         this.entityOperations = new R2dbcEntityTemplate(databaseClient, accessStrategy);
-        this.idProperty = Lazy.of(() -> Objects.requireNonNull(converter.getMappingContext()
-                        .getPersistentEntity(entity.getJavaType()))
-                .getPersistentProperty(getIdColumnName()));
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
         this.converter = converter;
         this.databaseClient = org.springframework.data.r2dbc.core.DatabaseClient.create(databaseClient.getConnectionFactory());
@@ -154,9 +145,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                  ReactiveDataAccessStrategy accessStrategy, ApplicationContext applicationContext) {
         this.entity = entity;
         this.entityOperations = new R2dbcEntityTemplate(databaseClient, accessStrategy);
-        this.idProperty = Lazy.of(() -> Objects.requireNonNull(converter.getMappingContext()
-                        .getPersistentEntity(entity.getJavaType()))
-                .getPersistentProperty(getIdColumnName()));
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
         this.converter = converter;
         this.databaseClient = databaseClient;
@@ -179,13 +167,13 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
-        final var versionFields = getFields(objectToSave, Fields.version, Version.class, org.springframework.data.annotation.Version.class);
-        final var nowStampFields = nowStamp(objectToSave, Fields.updatedAt, Now.class, LastModifiedDate.class, UpdatedAt.class);
+        final var versionFields = getFields(objectToSave, Fields.version, Version.class);
+        final var nowStampFields = nowStamp(objectToSave, Fields.updatedAt, LastModifiedDate.class);
         if (idValue == null) {
             for (Field version : versionFields) {
                 setVersion(objectToSave, version, 0);
             }
-            nowStamp(objectToSave, Fields.createdAt, CreatedDate.class, CreatedAt.class);
+            nowStamp(objectToSave, Fields.createdAt, CreatedDate.class);
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
@@ -193,7 +181,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                     .first().flatMap(Mono::just)
                     .defaultIfEmpty(objectToSave);
         } else {
-            final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedAt.class);
+            final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
@@ -208,7 +196,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                             }
                             for (Field field : readOnlyFields) {
                                 var previousValue = FastMethodInvoker.getValue(previous, field.getName());
-                                FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);
+                                if (previousValue != null) {
+                                    FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);
+                                }
                             }
                             for (Field field : equalityFields) {
                                 var value = FastMethodInvoker.getValue(objectToSave, field.getName());
@@ -342,12 +332,12 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Flux<T> fullTextSearch(Dsl dsl) {
         if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
-        if (lang.isEmpty()) {
+        if (ObjectUtils.isEmpty(lang.isEmpty())) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
         }
         var parts = DslUtils.getFtsPair(dsl, entity.getJavaType());
         var fields = "";
-
+        
         if (dsl.getFields().length == 0)
             fields = "*";
         else {

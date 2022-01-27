@@ -13,7 +13,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.5.21</version>
+  <version>4.5.22</version>
 </dependency>
 ----
 
@@ -24,7 +24,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.5.21</version>
+  <version>4.5.22</version>
 </dependency>
 ----
 
@@ -75,23 +75,19 @@ data class Dsl {
 
 * Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access.
 
-* Utility class `Beans` is a powerful Spring beans usage conversation with cache: get beans, dynamic register and get application properties
-
 * Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
+
+* Field with new @Equality annotation on each update the value is comparing with previous value from database and throw exception is not equals
+
+* Field with new @ReadOnly annotation on each update the value getting from previous record if not null and setting to current record without comparing
+
+* Field with name `createdAt` on update using @ReadOnly annotation logic
+
+* Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @LastModifiedDate annotation logic
 
 * Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking
 
-* Field with @ReadOnly annotation on each update the value getting from previous record of table
-
-* Field with @Equality annotation on each update the value is comparing with previous value from table
-
-* Field with @Now annotation and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on each update is setting to current timestamp with system timezone
-
-* Field with name `createdAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @ReadOnly annotation logic
-
-* Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @Now annotation logic
-
-* Do not need to extend working repositories for test methods, becouse DSL as it provides the required flexibility without changing business logic
+* Do not need to extend repositories for test methods, because DSL as it provides the required flexibility without changing business logic
 
 ## Concepts
 
@@ -190,7 +186,7 @@ Default language may be setting in: `spring.r2dbc.dsl.fts-lang`
 
 or get if nothing from: `Locale.getCurrent()`
 
-also can dynamically setting in Dsl class: `Dsl.create().lang('English')`
+or can dynamically set in Dsl class: `Dsl.create().lang('English')`
 
 In table look field by default name `tsv`: `Dsl.create().fts("web query text")`, but field name can be setting in parameter  `Dsl.create().fts("ts_vector", "web query text")`.
 [source,postgresql]
@@ -223,4 +219,3 @@ Any type of object can be inserted from List because the operation is massive at
 ----
 dslRepository.saveBatch(listOf(cool1, cool2, pencil1, pencil2))
 ----
-

@@ -22,13 +22,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.connectionfactory.R2dbcTransactionManager;
 import org.springframework.data.r2dbc.repository.query.Equality;
-import org.springframework.data.r2dbc.repository.query.Now;
 import org.springframework.data.r2dbc.repository.query.ReadOnly;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
 import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
@@ -427,7 +427,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		Integer manual;
 		@Version
 		Integer version;
-		@Now
+		@CreatedDate
 		LocalDateTime now;
 
 		@PersistenceConstructor
