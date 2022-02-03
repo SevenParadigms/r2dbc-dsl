@@ -22,7 +22,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.CustomConversions.StoreConversions;
@@ -57,7 +56,6 @@ import java.util.Optional;
  * @see org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
  */
 @Configuration(proxyBeanMethods = false)
-@Import(Beans.class)
 public abstract class AbstractR2dbcConfiguration implements ApplicationContextAware {
 
 	private static final String CONNECTION_FACTORY_BEAN_NAME = "connectionFactory";

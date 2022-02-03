@@ -188,6 +188,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                         .flatMap(previous -> {
                             for (Field version : versionFields) {
                                 var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
+                                assert versionValue != null;
                                 var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
                                 if (!Objects.equals(versionValue, previousVersionValue)) {
                                     return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
@@ -330,7 +331,6 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     public Flux<T> fullTextSearch(Dsl dsl) {
-        if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
         if (ObjectUtils.isEmpty(lang.isEmpty())) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
@@ -652,7 +652,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     private DslPreparedOperation<Delete> getDeleteMappedObject(Dsl dsl) {
-        if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
+        if (ObjectUtils.isEmpty(applicationContext)) {
+            assert Beans.getApplicationContext() != null;
+            applicationContext = Beans.getApplicationContext();
+        }
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));
@@ -687,7 +690,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     }
 
     private DslPreparedOperation<Select> getMappedObject(Dsl dsl) {
-        if (ObjectUtils.isEmpty(applicationContext)) applicationContext = Beans.getApplicationContext();
+        if (ObjectUtils.isEmpty(applicationContext)) {
+            assert Beans.getApplicationContext() != null;
+            applicationContext = Beans.getApplicationContext();
+        }
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));

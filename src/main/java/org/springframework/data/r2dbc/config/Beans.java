@@ -4,46 +4,43 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
+import java.util.AbstractMap;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 @Configuration(proxyBeanMethods = false)
 public class Beans implements ApplicationContextAware {
-    private static ConcurrentReferenceHashMap OBJECTS_CACHE = new ConcurrentReferenceHashMap(720);
-    private static ApplicationContext applicationContext = null;
+    private static final AbstractMap<Object, Object> OBJECTS_CACHE = new ConcurrentReferenceHashMap<>(720);
+    @Nullable private static ApplicationContext applicationContext = null;
 
     public static <T> T of(Class<T> beanType) {
-        return cache(beanType, () -> getApplicationContext().getBean(beanType));
+        return cache(beanType, () -> getApplicationContext() != null ? getApplicationContext().getBean(beanType) : null);
     }
 
-    public static <T> T register(T bean, Object... args) {
-        GenericApplicationContext context = of(GenericApplicationContext.class);
-        context.registerBean(bean.getClass(), args);
+    public static <T> T of(Class<T> beanType, T defaultValue) {
+        try {
+            return of(beanType);
+        } catch (Exception ex) {
+            return defaultValue;
+        }
+    }
+
+    public static <T> T add(T bean) {
+        OBJECTS_CACHE.put(bean.getClass(), bean);
         return bean;
     }
 
     public static String getProperty(String name, String defaultValue) {
-        try {
-            String result = getApplicationContext().getEnvironment().getProperty(name);
-            if (result != null) {
-                return result;
-            }
-        } catch (Exception e) {
-        }
-        return defaultValue;
+        return getApplicationContext() != null ?
+                Objects.requireNonNull(getApplicationContext().getEnvironment().getProperty(name)) : defaultValue;
     }
 
     public static <T> T getProperty(String name, Class<T> target, T defaultValue) {
-        try {
-            T result = getApplicationContext().getEnvironment().getProperty(name, target);
-            if (result != null) {
-                return result;
-            }
-        } catch (Exception e) {
-        }
-        return defaultValue;
+        return getApplicationContext() != null ?
+                Objects.requireNonNull(getApplicationContext().getEnvironment().getProperty(name, target)) : defaultValue;
     }
 
     private static <T> T cache(Class<T> requiredType, Callable<T> callable) {
@@ -61,12 +58,15 @@ public class Beans implements ApplicationContextAware {
         return (T) OBJECTS_CACHE.get(requiredType);
     }
 
+    @Nullable
     public static ApplicationContext getApplicationContext() {
         return applicationContext;
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        Beans.applicationContext = applicationContext;
+    public void setApplicationContext(@Nullable ApplicationContext applicationContext) throws BeansException {
+        if (applicationContext != null) {
+            Beans.applicationContext = applicationContext;
+        }
     }
 }
