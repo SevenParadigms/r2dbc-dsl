@@ -2,8 +2,6 @@
 
 This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL. 
 
-R2DBC-DSL contains the last commits of the Spring Data R2DBC, each commit to the master of Spring Data R2DBC repository is published there under the new subversion into Maven Central.
-
 The internal extension of the base repository `R2dbcRepository` in Spring Data R2DBC is due to the use of features by all methods, and not just those related to DSL. Also modified a lot of integration tests with DSL features.
 
 The Maven Central dependency instead of the library `spring-data-r2dbc`:
