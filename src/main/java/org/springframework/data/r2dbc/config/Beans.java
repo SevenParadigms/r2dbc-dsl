@@ -1,6 +1,5 @@
 package org.springframework.data.r2dbc.config;
 
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Configuration;
@@ -64,9 +63,15 @@ public class Beans implements ApplicationContextAware {
     }
 
     @Override
-    public void setApplicationContext(@Nullable ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(@Nullable ApplicationContext applicationContext) {
+        setContext(applicationContext);
+    }
+
+    public static ApplicationContext setContext(@Nullable ApplicationContext applicationContext) {
         if (applicationContext != null) {
             Beans.applicationContext = applicationContext;
         }
+        assert Beans.applicationContext != null;
+        return Beans.applicationContext;
     }
 }

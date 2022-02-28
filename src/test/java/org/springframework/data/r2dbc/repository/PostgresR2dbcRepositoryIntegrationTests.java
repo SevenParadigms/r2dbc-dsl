@@ -29,6 +29,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
+import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.JsonUtils;
@@ -44,14 +45,12 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration tests for {@link LegoSetRepository} using {@linkRepositoryFactorySupport} against Postgres.
+ * Integration tests for {@link LegoSetRepository} using {linkRepositoryFactorySupport} against Postgres.
  *
  * @author Mark Paluch
  * @author Jose Luis Leon
@@ -356,5 +355,76 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	void shouldBeans() {
 		Assert.notNull(Beans.getApplicationContext(), "Application context must not be null!");
 		Assert.notNull(Beans.of(DatabaseClient.class), "DatabaseClient must not be null!");
+	}
+
+	static class CacheTest extends AbstractRepositoryCache<String, UUID> {
+		public CacheTest() {
+			super(null, Beans.getApplicationContext());
+			var id = UUID.fromString("00000000-0000-0000-0000-000000000000");
+			put(String.class, Dsl.create().id(id), "test1");
+			var hash = getHash(String.class, Dsl.create().id(id));
+			var contains = contains(String.class, Dsl.create().id(id));
+			var value = Objects.requireNonNull(get(String.class, Dsl.create().id(id)));
+			Assert.isTrue(hash.equals("PostgresR2dbcRepositoryIntegrationTestsnullString-569643752"), "hash is equals");
+			Assert.isTrue(contains, "should be contain");
+			Assert.isTrue(value.equals("test1"), "value is equal");
+		}
+	}
+
+	@Test
+	void shouldMonoCacheWorking() {
+		var cacheLayer = new CacheTest();
+		var id = UUID.randomUUID();
+		cacheLayer.putMono(Dsl.create().id(id), "one");
+		Assert.isTrue(cacheLayer.containsMono(Dsl.create().id(id)), "hash is contains");
+
+		cacheLayer.getMono(Dsl.create().id(id), Mono.just("two"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.equals("one"), "must equals"))
+				.verifyComplete();
+
+		cacheLayer.getMono(Dsl.create().id(UUID.randomUUID()), Mono.just("two"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.equals("two"), "must equals"))
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldFluxCacheWorking() {
+		var cacheLayer = new CacheTest();
+		var id = UUID.randomUUID();
+		cacheLayer.putFlux(Dsl.create().id(id), List.of("many"));
+		Assert.isTrue(cacheLayer.containsFlux(Dsl.create().id(id)), "hash is contains");
+
+		cacheLayer.getFlux(Dsl.create().id(id), Flux.fromIterable(List.of("many", "money"))).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(list -> Assert.isTrue(list.get(0).equals("many"), "must equals"))
+				.verifyComplete();
+
+		cacheLayer.getFlux(Dsl.create().id(UUID.randomUUID()), Flux.fromIterable(List.of("many", "money"))).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(list -> Assert.isTrue(list.get(1).equals("money"), "must equals"))
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldCountByDsl() {
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+
+		repository.saveBatch(List.of(legoSet1, legoSet2))
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
+				.verifyComplete();
+
+		repository.count(Dsl.create())
+				.as(StepVerifier::create)
+				.consumeNextWith(count -> Assert.isTrue(count == 2, "must equals"))
+				.verifyComplete();
+
+		repository.count(Dsl.create().equals("manual", 12))
+				.as(StepVerifier::create)
+				.consumeNextWith(count -> Assert.isTrue(count == 1, "must equals"))
+				.verifyComplete();
 	}
 }

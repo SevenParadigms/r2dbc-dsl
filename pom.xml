@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.5.23</version>
+	<version>4.5.3</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -78,12 +78,13 @@
 		<kotlinx.version>1.6.0-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring.core>5.3.15</spring.core>
+		<spring.core>5.3.16</spring.core>
 		<springdata.commons>2.5.8</springdata.commons>
 		<springdata.autoconfig>2.5.9</springdata.autoconfig>
 		<springdata.relational>2.2.8</springdata.relational>
 		<java-module-name>spring.data.r2dbc</java-module-name>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+		<caffeine.version>3.0.5</caffeine.version>
 
 		<degraph-check.version>0.1.4</degraph-check.version>
 		<postgresql.version>42.3.3</postgresql.version>
@@ -102,8 +103,6 @@
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<jackson.version>2.13.1</jackson.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-		<caffeine.version>3.0.5</caffeine.version>
 	</properties>
 
 	<dependencyManagement>
@@ -404,6 +403,11 @@
 			<version>${caffeine.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>5.3.16</version>
+		</dependency>
 
 		<!-- Testcontainers -->
 

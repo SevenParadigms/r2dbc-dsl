@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import kotlin.Pair;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.MurmurHash2;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -300,6 +301,10 @@ public abstract class DslUtils {
             result.addAll(fields);
         }
         return result;
+    }
+
+    public static int generateHash(Dsl dsl) {
+        return MurmurHash2.hash32(dsl.getQuery() + " " + dsl.getPage() + " " + dsl.getSize() + " " + dsl.getSort() + " " + Arrays.toString(dsl.getFields()));
     }
 
     private static Criteria.CriteriaStep getCriteriaByCombinators(@Nullable Criteria criteriaBy,

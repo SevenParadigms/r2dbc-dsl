@@ -42,6 +42,7 @@ import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.query.Equality;
 import org.springframework.data.r2dbc.repository.query.ReadOnly;
@@ -84,7 +85,7 @@ import static org.springframework.data.r2dbc.support.DslUtils.*;
  * @author Lao Tsing
  */
 @Transactional(readOnly = true)
-public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
+public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID> implements R2dbcRepository<T, ID> {
 
     private final RelationalEntityInformation<T, ID> entity;
     private final R2dbcEntityOperations entityOperations;
@@ -103,6 +104,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
      */
     public SimpleR2dbcRepository(RelationalEntityInformation<T, ID> entity, R2dbcEntityOperations entityOperations,
                                  R2dbcConverter converter, ApplicationContext applicationContext) {
+        super(entity, applicationContext);
         this.entity = entity;
         this.entityOperations = entityOperations;
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
@@ -122,6 +124,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
      */
     public SimpleR2dbcRepository(RelationalEntityInformation<T, ID> entity, DatabaseClient databaseClient,
                                  R2dbcConverter converter, ReactiveDataAccessStrategy accessStrategy, ApplicationContext applicationContext) {
+        super(entity, applicationContext);
         this.entity = entity;
         this.entityOperations = new R2dbcEntityTemplate(databaseClient, accessStrategy);
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
@@ -143,6 +146,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public SimpleR2dbcRepository(RelationalEntityInformation<T, ID> entity,
                                  org.springframework.data.r2dbc.core.DatabaseClient databaseClient, R2dbcConverter converter,
                                  ReactiveDataAccessStrategy accessStrategy, ApplicationContext applicationContext) {
+        super(entity, applicationContext);
         this.entity = entity;
         this.entityOperations = new R2dbcEntityTemplate(databaseClient, accessStrategy);
         this.exampleMapper = new RelationalExampleMapper(converter.getMappingContext());
@@ -208,10 +212,13 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
+                            putMono(Dsl.create().id(idValue), objectToSave);
                             return simpleSave(idPropertyName, idValue, objectToSave);
                         })
                         .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
             }
+            evictAll();
+            putMono(Dsl.create().id(idValue), objectToSave);
             return simpleSave(idPropertyName, idValue, objectToSave);
         }
     }
@@ -248,7 +255,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public <S extends T> Flux<S> saveAll(Iterable<S> objectsToSave) {
 
         Assert.notNull(objectsToSave, "Objects to save must not be null!");
-
+        evictAll();
         return Flux.fromIterable(objectsToSave).concatMap(this::save);
     }
 
@@ -261,7 +268,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public <S extends T> Flux<S> saveAll(Publisher<S> objectsToSave) {
 
         Assert.notNull(objectsToSave, "Object publisher must not be null!");
-
+        evictAll();
         return Flux.from(objectsToSave).concatMap(this::save);
     }
 
@@ -274,7 +281,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
         Assert.notNull(id, "Id must not be null!");
 
-        return this.entityOperations.selectOne(getIdQuery(id), this.entity.getJavaType());
+        return getMono(Dsl.create().id(id), this.entityOperations.selectOne(getIdQuery(id), this.entity.getJavaType()));
     }
 
     /*
@@ -294,7 +301,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Mono<Boolean> existsById(ID id) {
 
         Assert.notNull(id, "Id must not be null!");
-
+        if (containsMono(Dsl.create().id(id))) return Mono.just(true);
         return this.entityOperations.exists(getIdQuery(id), this.entity.getJavaType());
     }
 
@@ -309,12 +316,32 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     @Override
     public Mono<T> findOne(Dsl dsl) {
-        return databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().one();
+        return getMono(dsl, databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().one());
     }
 
     @Override
     public Mono<Integer> delete(Dsl dsl) {
+        evictAll();
         return databaseClient.execute(getDeleteMappedObject(dsl)).as(entity.getJavaType()).fetch().rowsUpdated();
+    }
+
+    @Override
+    public Mono<Long> count(Dsl dsl) {
+        var sql = "SELECT count(*) FROM " + entity.getTableName().getReference() + " AS s ";
+        var operation = getMappedObject(dsl);
+        var criteria = operation.get().replaceAll(entity.getTableName().getReference(), "s");
+        if (criteria.indexOf("WHERE") > 0) {
+            int lastIndex = criteria.indexOf("FOR UPDATE") - 1;
+            if (criteria.indexOf("LIMIT") > 0) lastIndex = criteria.indexOf("LIMIT") - 1;
+            if (criteria.indexOf("ORDER") > 0) lastIndex = criteria.indexOf("ORDER") - 1;
+            criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
+            sql += criteria;
+            var index = 1;
+            for (Bindings.Binding bind : operation.getBindings()) {
+                sql = sql.replaceAll("\\$" + index++, bind.getValue() == null ? "null" : DslUtils.objectToSql(bind.getValue()));
+            }
+        }
+        return databaseClient.execute(sql).as(Long.class).fetch().one();
     }
 
     @Override
@@ -332,8 +359,9 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
 
     public Flux<T> fullTextSearch(Dsl dsl) {
         var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
-        if (ObjectUtils.isEmpty(lang.isEmpty())) {
+        if (ObjectUtils.isEmpty(lang)) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
+            if (ObjectUtils.isEmpty(lang)) lang = "English";
         }
         var parts = DslUtils.getFtsPair(dsl, entity.getJavaType());
         var fields = "";
@@ -357,8 +385,10 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             fields = String.join(",", mutableList);
         }
 
-        if (!fields.equals("*") && (!fields.contains(parts.component1()) && !parts.component1().contains("->>")))
-            fields += "," + parts.component1();
+        if (!fields.equals("*")) {
+            assert parts != null;
+            if (!fields.contains(parts.component1()) && !parts.component1().contains("->>")) fields += "," + parts.component1();
+        }
         var sql = "SELECT * FROM (SELECT " + fields +
                 " FROM " + entity.getTableName().getReference() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
                 " WHERE (" + parts.component1() + " @@ q)) AS s";
@@ -402,6 +432,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
             for (S target : models) {
                 query.append(DslUtils.binding(template, target));
             }
+            evictAll();
             return connectionFactory.create().flatMap(c -> c.createBatch().add(query.toString()).execute().collectList()).flatMapMany(Flux::fromIterable);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -411,7 +442,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     @Override
     public Flux<T> findAll(Dsl dsl) {
         if (dsl.getQuery().contains("@@")) return fullTextSearch(dsl);
-        return databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all();
+        return getFlux(dsl, databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all());
     }
 
     /*
@@ -420,7 +451,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
      */
     @Override
     public Flux<T> findAll() {
-        return this.entityOperations.select(Query.empty(), this.entity.getJavaType());
+        return getFlux(Dsl.create(), this.entityOperations.select(Query.empty(), this.entity.getJavaType()));
     }
 
     /*
@@ -474,7 +505,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Mono<Void> deleteById(ID id) {
 
         Assert.notNull(id, "Id must not be null!");
-
+        evictAll();
         return this.entityOperations.delete(getIdQuery(id), this.entity.getJavaType()).then();
     }
 
@@ -487,7 +518,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Mono<Void> deleteById(Publisher<ID> idPublisher) {
 
         Assert.notNull(idPublisher, "The Id Publisher must not be null!");
-
+        evictAll();
         return Flux.from(idPublisher).buffer().filter(ids -> !ids.isEmpty()).concatMap(ids -> {
 
             if (ids.isEmpty()) {
@@ -508,7 +539,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     @Transactional
     public Mono<Void> delete(T objectToDelete) {
         Assert.notNull(objectToDelete, "Object to delete must not be null!");
-
+        evictAll();
         return deleteById((ID) FastMethodInvoker.getValue(objectToDelete, getIdColumnName()));
     }
 
@@ -520,7 +551,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Mono<Void> deleteAllById(Iterable<? extends ID> ids) {
 
         Assert.notNull(ids, "The iterable of Id's must not be null!");
-
+        evictAll();
         List<? extends ID> idsList = Streamable.of(ids).toList();
         String idProperty = getIdColumnName();
         return this.entityOperations.delete(Query.query(Criteria.where(idProperty).in(idsList)), this.entity.getJavaType())
@@ -536,7 +567,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Mono<Void> deleteAll(Iterable<? extends T> iterable) {
 
         Assert.notNull(iterable, "The iterable of Id's must not be null!");
-
+        evictAll();
         return deleteAll(Flux.fromIterable(iterable));
     }
 
@@ -549,7 +580,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Mono<Void> deleteAll(Publisher<? extends T> objectPublisher) {
 
         Assert.notNull(objectPublisher, "The Object Publisher must not be null!");
-
+        evictAll();
         Flux<ID> idPublisher = Flux.from(objectPublisher).map(p -> (ID) FastMethodInvoker.getValue(p, getIdColumnName()));
 
         return deleteById(idPublisher);
@@ -562,6 +593,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     @Override
     @Transactional
     public Mono<Void> deleteAll() {
+        evictAll();
         return this.entityOperations.delete(Query.empty(), this.entity.getJavaType()).then();
     }
 
@@ -577,7 +609,7 @@ public class SimpleR2dbcRepository<T, ID> implements R2dbcRepository<T, ID> {
     public Flux<T> findAll(Sort sort) {
 
         Assert.notNull(sort, "Sort must not be null!");
-
+        evictAll();
         return this.entityOperations.select(Query.empty().sort(sort), this.entity.getJavaType());
     }
 

@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.5.23</version>
+  <version>4.5.3</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.5.23</version>
+  <version>4.5.3</version>
 </dependency>
 ----
 
@@ -53,7 +53,7 @@ data class Dsl {
 
 ## Features
 
-* Paging and Sorting full support with ordering in several columns at once
+* First Level Cache based on Caffeine with guided expire access and size for each cache from application.yml properties, can be usage as bean for @Cacheable
 
 * Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
 
@@ -71,6 +71,8 @@ data class Dsl {
 
 * Ranked full text search by field `tsv` as default with RUM index operator in `Dsl.fts` method
 
+* Paging and Sorting full support with ordering in several columns at once
+
 * Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access.
 
 * Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
@@ -79,7 +81,7 @@ data class Dsl {
 
 * Field with new @ReadOnly annotation on each update the value getting from previous record if not null and setting to current record without comparing
 
-* Field with name `createdAt` on update using @ReadOnly annotation logic
+* Field with name `createdAt` type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @ReadOnly annotation logic
 
 * Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @LastModifiedDate annotation logic
 
