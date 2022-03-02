@@ -365,9 +365,12 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 			var hash = getHash(String.class, Dsl.create().id(id));
 			var contains = contains(String.class, Dsl.create().id(id));
 			var value = Objects.requireNonNull(get(String.class, Dsl.create().id(id)));
-			Assert.isTrue(hash.equals("PostgresR2dbcRepositoryIntegrationTestsnullString-569643752"), "hash is equals");
+			Assert.isTrue(hash.equals("null.String.CacheTest.-569643752"), "must equals");
 			Assert.isTrue(contains, "should be contain");
 			Assert.isTrue(value.equals("test1"), "value is equal");
+			evict(String.class, Dsl.create().id(id));
+			contains = contains(String.class, Dsl.create().id(id));
+			Assert.isTrue(!contains, "should not contain");
 		}
 	}
 
@@ -396,14 +399,14 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		cacheLayer.putFlux(Dsl.create().id(id), List.of("many"));
 		Assert.isTrue(cacheLayer.containsFlux(Dsl.create().id(id)), "hash is contains");
 
-		cacheLayer.getFlux(Dsl.create().id(id), Flux.fromIterable(List.of("many", "money"))).collectList()
+		cacheLayer.getFlux(Dsl.create().id(id), Flux.fromIterable(List.of("many", "mickey"))).collectList()
 				.as(StepVerifier::create)
 				.consumeNextWith(list -> Assert.isTrue(list.get(0).equals("many"), "must equals"))
 				.verifyComplete();
 
-		cacheLayer.getFlux(Dsl.create().id(UUID.randomUUID()), Flux.fromIterable(List.of("many", "money"))).collectList()
+		cacheLayer.getFlux(Dsl.create().id(UUID.randomUUID()), Flux.fromIterable(List.of("many", "mickey"))).collectList()
 				.as(StepVerifier::create)
-				.consumeNextWith(list -> Assert.isTrue(list.get(1).equals("money"), "must equals"))
+				.consumeNextWith(list -> Assert.isTrue(list.get(1).equals("mickey"), "must equals"))
 				.verifyComplete();
 	}
 

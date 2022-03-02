@@ -111,6 +111,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         this.converter = converter;
         this.databaseClient = org.springframework.data.r2dbc.core.DatabaseClient.create(entityOperations.getDatabaseClient().getConnectionFactory());
         this.applicationContext = applicationContext;
+        subscribeIfNecessary();
     }
 
     /**
@@ -131,6 +132,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         this.converter = converter;
         this.databaseClient = org.springframework.data.r2dbc.core.DatabaseClient.create(databaseClient.getConnectionFactory());
         this.applicationContext = applicationContext;
+        subscribeIfNecessary();
     }
 
     /**
@@ -153,6 +155,15 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         this.converter = converter;
         this.databaseClient = databaseClient;
         this.applicationContext = applicationContext;
+        subscribeIfNecessary();
+    }
+
+    public void subscribeIfNecessary() {
+        var enableSecondCache = applicationContext.getEnvironment()
+                .getProperty("spring.r2dbc.dsl.second-cache", Boolean.FALSE.toString());
+        if (enableSecondCache.equalsIgnoreCase(Boolean.TRUE.toString())) {
+            listener().doOnNext(notification -> evictAll()).subscribe();
+        }
     }
 
     // -------------------------------------------------------------------------

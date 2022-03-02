@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.5.3</version>
+  <version>4.5.4</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.5.3</version>
+  <version>4.5.4</version>
 </dependency>
 ----
 
@@ -54,6 +54,10 @@ data class Dsl {
 ## Features
 
 * First Level Cache based on Caffeine with guided expire access and size for each cache from application.yml properties, can be usage as bean for @Cacheable
+
+* Convert First Level Cache to Second Level Cache by property in application.yml: `spring.r2dbc.dsl.second-cache = true` then subscribe to changes from database
+
+* Support Second Level Cache from any Spring Cache implementation and starting with @EnableCaching annotation in Application entry point class
 
 * Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
 
@@ -87,7 +91,9 @@ data class Dsl {
 
 * Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking
 
-* Do not need to extend repositories for test methods, because DSL as it provides the required flexibility without changing business logic
+* Do not need custom repositories for test, because DSL provides the required flexibility without changing business logic
+
+* ApplicationContext implementation as `Beans` utility class with caching resolved and registering new beans
 
 ## Concepts
 

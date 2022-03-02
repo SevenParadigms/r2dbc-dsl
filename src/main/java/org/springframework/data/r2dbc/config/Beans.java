@@ -3,12 +3,14 @@ package org.springframework.data.r2dbc.config;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import java.util.AbstractMap;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 @Configuration(proxyBeanMethods = false)
 public class Beans implements ApplicationContextAware {
@@ -40,6 +42,23 @@ public class Beans implements ApplicationContextAware {
     public static <T> T getProperty(String name, Class<T> target, T defaultValue) {
         return getApplicationContext() != null ?
                 Objects.requireNonNull(getApplicationContext().getEnvironment().getProperty(name, target)) : defaultValue;
+    }
+
+    public static <T> T register(T bean) {
+        if (getApplicationContext() instanceof GenericApplicationContext) {
+            var context = (GenericApplicationContext) getApplicationContext();
+            context.registerBean(bean.getClass().getName(), bean.getClass(), (Supplier<T>) () -> bean);
+            return bean;
+        } else
+            throw new RuntimeException("Context is not GenericApplicationContext");
+    }
+
+    public static void register(Class<?> bean, Object... args) {
+        if (getApplicationContext() instanceof GenericApplicationContext) {
+            var context = (GenericApplicationContext) getApplicationContext();
+            context.registerBean(bean, args);
+        } else
+            throw new RuntimeException("Context is not GenericApplicationContext");
     }
 
     private static <T> T cache(Class<T> requiredType, Callable<T> callable) {
