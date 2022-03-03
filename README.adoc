@@ -56,9 +56,9 @@ data class Dsl {
 
 * First Level Cache based on Caffeine with guided expire access and size for each cache from application.yml properties, can be usage as bean for @Cacheable
 
-* Convert First Level Cache to Second Level Cache by property in application.yml: `spring.r2dbc.dsl.second-cache = true` then subscribe to changes from database
+* Convert First Level Cache to Second Level Cache by property in application.yml: `spring.r2dbc.dsl.secondCache = true` then subscribe to changes from database
 
-* Support Second Level Cache from any Spring Cache implementation and starting with @EnableCaching annotation in Application entry point class
+* Support Second Level Cache from any Spring CacheManager implementation and may be both working with subscribe to changes from database
 
 * Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
 
