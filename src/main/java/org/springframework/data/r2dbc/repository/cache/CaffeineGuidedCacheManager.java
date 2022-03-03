@@ -8,6 +8,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.ApplicationContext;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -29,8 +30,6 @@ public class CaffeineGuidedCacheManager implements CacheManager {
 
     private boolean allowNullValues = true;
 
-    private boolean dynamic = true;
-
     private final Map<String, Cache> cacheMap = new ConcurrentHashMap<>(16);
 
     private final Collection<String> customCacheNames = new CopyOnWriteArrayList<>();
@@ -50,10 +49,6 @@ public class CaffeineGuidedCacheManager implements CacheManager {
             for (String name : cacheNames) {
                 this.cacheMap.put(name, createCaffeineCache(name));
             }
-            this.dynamic = false;
-        }
-        else {
-            this.dynamic = true;
         }
     }
 
@@ -95,16 +90,16 @@ public class CaffeineGuidedCacheManager implements CacheManager {
         return this.allowNullValues;
     }
 
+    @NonNull
     @Override
     public Collection<String> getCacheNames() {
         return Collections.unmodifiableSet(this.cacheMap.keySet());
     }
 
+    @NonNull
     @Override
-    @Nullable
-    public Cache getCache(String name) {
-        return this.cacheMap.computeIfAbsent(name, cacheName ->
-                this.dynamic ? createCaffeineCache(cacheName) : null);
+    public Cache getCache(@NonNull String name) {
+        return this.cacheMap.computeIfAbsent(name, this::createCaffeineCache);
     }
 
     public void registerCustomCache(String name, com.github.benmanes.caffeine.cache.Cache<Object, Object> cache) {
@@ -121,9 +116,9 @@ public class CaffeineGuidedCacheManager implements CacheManager {
     }
 
     protected com.github.benmanes.caffeine.cache.Cache<Object, Object> createNativeCaffeineCache(String name) {
-        var expireAfterAccess = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.cache." + name + ".expire-after-access", "500");
-        var expireAfterWrite = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.cache." + name + ".expire-after-write", StringUtils.EMPTY);
-        var maximumSize = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.cache." + name + ".maximumSize", "65534");
+        var expireAfterAccess = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.cache." + name + ".expireAfterAccess", "500");
+        var expireAfterWrite = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.cache." + name + ".expireAfterWrite", StringUtils.EMPTY);
+        var maximumSize = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.cache." + name + ".maximumSize", "10000");
         cacheBuilder.expireAfterAccess(Long.parseLong(expireAfterAccess), TimeUnit.MILLISECONDS);
         if (!expireAfterWrite.isEmpty()) {
             cacheBuilder.expireAfterWrite(Long.parseLong(expireAfterWrite), TimeUnit.MILLISECONDS);

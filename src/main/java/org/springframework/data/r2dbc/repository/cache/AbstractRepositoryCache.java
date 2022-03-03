@@ -28,11 +28,17 @@ abstract public class AbstractRepositoryCache<T, ID> {
 
     public AbstractRepositoryCache(RelationalEntityInformation<T, ID> entity, @Nullable ApplicationContext applicationContext) {
         applicationContext = Beans.setContext(applicationContext);
-        this.cacheManager = Beans.of(CacheManager.class, new CaffeineGuidedCacheManager(applicationContext));
+        var enableCacheManager = applicationContext.getEnvironment()
+                .getProperty("spring.r2dbc.dsl.cacheManager", Boolean.FALSE.toString());
+        if (enableCacheManager.equalsIgnoreCase(Boolean.TRUE.toString())) {
+            this.cacheManager = Beans.of(CacheManager.class, new CaffeineGuidedCacheManager(applicationContext));
+        } else {
+            this.cacheManager = new CaffeineGuidedCacheManager(applicationContext);
+        }
         this.entity = entity;
         this.genericClass = AopUtils.getTargetClass(this).getSimpleName();
         if (!(cacheManager instanceof CaffeineGuidedCacheManager)) {
-            log.debug(genericClass + " initialize [" + cacheManager.getClass().getSimpleName() + "] cache");
+            log.debug("Repository [" + genericClass + "] initialize [" + cacheManager.getClass().getSimpleName() + "] cache");
         }
     }
 
@@ -42,7 +48,7 @@ abstract public class AbstractRepositoryCache<T, ID> {
     }
 
     protected Cache getCache() {
-        return cacheManager.getCache(AbstractRepositoryCache.class.getSimpleName());
+        return cacheManager.getCache(genericClass);
     }
 
     @Nullable

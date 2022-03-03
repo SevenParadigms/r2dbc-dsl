@@ -160,7 +160,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     public void subscribeIfNecessary() {
         var enableSecondCache = applicationContext.getEnvironment()
-                .getProperty("spring.r2dbc.dsl.second-cache", Boolean.FALSE.toString());
+                .getProperty("spring.r2dbc.dsl.secondCache", Boolean.FALSE.toString());
         if (enableSecondCache.equalsIgnoreCase(Boolean.TRUE.toString())) {
             listener().doOnNext(notification -> evictAll()).subscribe();
         }

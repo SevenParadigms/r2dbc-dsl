@@ -24,13 +24,16 @@ public class Beans implements ApplicationContextAware {
     public static <T> T of(Class<T> beanType, T defaultValue) {
         try {
             return of(beanType);
-        } catch (Exception ex) {
+        } catch (Exception ignore) {
             return defaultValue;
         }
     }
 
-    public static <T> T add(T bean) {
-        OBJECTS_CACHE.put(bean.getClass(), bean);
+    @Nullable
+    public static <T> T add(@Nullable T bean) {
+        if (!Objects.isNull(bean)) {
+            OBJECTS_CACHE.put(bean.getClass(), bean);
+        }
         return bean;
     }
 
