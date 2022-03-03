@@ -1,7 +1,8 @@
 package org.springframework.data.r2dbc.repository.cache;
 
-import io.r2dbc.spi.R2dbcType;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -19,23 +20,29 @@ import java.util.Objects;
 import static org.springframework.data.r2dbc.support.DslUtils.DOT;
 
 abstract public class AbstractRepositoryCache<T, ID> {
+    private static final Logger log = LoggerFactory.getLogger(AbstractRepositoryCache.class);
+
     private final CacheManager cacheManager;
     private final RelationalEntityInformation<T, ID> entity;
+    private final String genericClass;
 
     public AbstractRepositoryCache(RelationalEntityInformation<T, ID> entity, @Nullable ApplicationContext applicationContext) {
         applicationContext = Beans.setContext(applicationContext);
         this.cacheManager = Beans.of(CacheManager.class, new CaffeineGuidedCacheManager(applicationContext));
         this.entity = entity;
+        this.genericClass = AopUtils.getTargetClass(this).getSimpleName();
+        if (!(cacheManager instanceof CaffeineGuidedCacheManager)) {
+            log.debug(genericClass + " initialize [" + cacheManager.getClass().getSimpleName() + "] cache");
+        }
     }
 
     protected String getHash(Class<?> type, Dsl dsl) {
-        var genericClass = AopUtils.getTargetClass(this).getSimpleName();
         var entityType = entity == null ? null : entity.getJavaType().getSimpleName();
         return entityType + DOT + type.getSimpleName() + DOT + genericClass + DOT + DslUtils.generateHash(dsl);
     }
 
     protected Cache getCache() {
-        return cacheManager.getCache(R2dbcType.class.getSimpleName());
+        return cacheManager.getCache(AbstractRepositoryCache.class.getSimpleName());
     }
 
     @Nullable

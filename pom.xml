@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.6.0</version>
+	<version>4.6.1</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -312,7 +312,7 @@
 		<dependency>
 			<groupId>io.r2dbc</groupId>
 			<artifactId>r2dbc-postgresql</artifactId>
-			<version>0.8.10.RELEASE</version>
+			<version>0.8.11.RELEASE</version>
 		</dependency>
 
 		<dependency>

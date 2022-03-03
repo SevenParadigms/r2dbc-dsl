@@ -1,6 +1,6 @@
-# R2DBC-DSL
+= R2DBC-DSL
 
-This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL. 
+This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL.
 
 The internal extension of the base repository `R2dbcRepository` in Spring Data R2DBC is due to the use of features by all methods, and not just those related to DSL. Also modified a lot of integration tests with DSL features.
 
@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.0</version>
+  <version>4.6.1</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.0</version>
+  <version>4.6.1</version>
 </dependency>
 ----
 
@@ -35,6 +35,7 @@ interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun delete(dsl: Dsl): Mono<Integer>
     fun listener(): Flux<Notification>
     fun saveBatch(models: Iterable<S>): Flux<Result>
+    fun count(dsl: Dsl): Mono<Long>
 }
 ----
 
@@ -51,7 +52,7 @@ data class Dsl {
 }
 ----
 
-## Features
+== Features
 
 * First Level Cache based on Caffeine with guided expire access and size for each cache from application.yml properties, can be usage as bean for @Cacheable
 
@@ -99,7 +100,7 @@ data class Dsl {
 
 * Utility class SqlField include constants with a most used sql-names in table fields for no handwriting names
 
-## Concepts
+== Concepts
 
 The primary idea is to reduce development time when all kinds of criteria can be formed at the frontend:
 
@@ -109,7 +110,7 @@ then generated SQL:
 
 `select id, name from items join shops on items.shop_id = shops.id where shops.type='mega' and name like '%biggest%' and price >= 100 order by item_type asc, created_at desc limit 20 offset 0`
 
-#### Web query predicates (-> sql):
+==== Web query predicates (-> sql):
 
 * "con1,(con2),con3" -> con1 or con2 and con3
 * "column^^1 2 3" -> column in (1, 2, 3)
@@ -127,7 +128,7 @@ then generated SQL:
 * "column~~value" -> column like '%value%'
 * "column@@value" -> column @@ '%value%'
 
-#### Web query columns:
+==== Web query columns:
 
 * column -> used as is
 * column.type -> join table if column is not JsonNode type (model must contain columnId variable)
@@ -146,7 +147,7 @@ Dsl.create()
 ----
 where after executing the next fields in the model will be set: age, name, description. The secondary idea is using dsl in tests as more readable than jdbcTemplate.
 
-## Subscribe to async database UPDATE/INSERT events:
+== Subscribe to async database UPDATE/INSERT events:
 
 Before create universal notifier function:
 [source,postgresql]
@@ -190,7 +191,7 @@ dslRepository.listener()
           }          
 ----
 
-## Ranked full text search:
+== Ranked full text search:
 
 Default language may be setting in: `spring.r2dbc.dsl.fts-lang`
 
@@ -221,7 +222,7 @@ and in source code:
 dslRepository.findAll(Dsl.create().fts("cool | pencil").equals("jfolderId", folderId).pageable(0, 20))
 ----
 
-## Batch insert:
+== Batch insert:
 
 Any type of object can be inserted from List because the operation is massive at high speed:
 
