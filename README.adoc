@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.5.4</version>
+  <version>4.6.0</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.5.4</version>
+  <version>4.6.0</version>
 </dependency>
 ----
 
@@ -79,6 +79,8 @@ data class Dsl {
 
 * Utility class `FastMethodInvoker` is a modern reflection access to object properties, in performance comparable to direct access.
 
+* Utility class `JsonUtils` is a powerful utils to flexibility manage any json operations around JsonNode type.
+
 * Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
 
 * Field with new @Equality annotation on each update the value is comparing with previous value from database and throw exception is not equals
@@ -93,7 +95,9 @@ data class Dsl {
 
 * Do not need custom repositories for test, because DSL provides the required flexibility without changing business logic
 
-* ApplicationContext implementation as `Beans` utility class with caching resolved and registering new beans
+* ApplicationContext implementation as `Beans` utility class with caching resolved beans and registering new beans as ect or recreate by classname
+
+* Utility class SqlField include constants with a most used sql-names in table fields for no handwriting names
 
 ## Concepts
 
