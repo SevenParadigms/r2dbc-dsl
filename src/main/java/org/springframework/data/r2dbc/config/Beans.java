@@ -1,9 +1,12 @@
 package org.springframework.data.r2dbc.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
@@ -16,6 +19,11 @@ import java.util.function.Supplier;
 public class Beans implements ApplicationContextAware {
     private static final AbstractMap<Object, Object> OBJECTS_CACHE = new ConcurrentReferenceHashMap<>(720);
     @Nullable private static ApplicationContext applicationContext = null;
+
+    @Bean({ "objectMapper" })
+    ObjectMapper objectMapper() {
+        return JsonUtils.getMapper();
+    }
 
     public static <T> T of(Class<T> beanType) {
         return cache(beanType, () -> getApplicationContext().getBean(beanType));

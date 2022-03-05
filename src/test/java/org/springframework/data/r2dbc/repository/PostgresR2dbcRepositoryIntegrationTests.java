@@ -15,7 +15,9 @@
  */
 package org.springframework.data.r2dbc.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
@@ -353,9 +355,11 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	}
 
 	@Test
-	void shouldBeans() {
+	void shouldBeans() throws JsonProcessingException {
 		Assert.notNull(Beans.getApplicationContext(), "Application context must not be null!");
 		Assert.notNull(Beans.of(DatabaseClient.class), "DatabaseClient must not be null!");
+		Assert.isTrue(Beans.of(ObjectMapper.class).readTree("{'name':'value'}").toString().equals("{\"name\":\"value\"}"));
+		Assert.notNull(Beans.of(ExpressionParserCache.class), "ExpressionParserCache must not be null!");
 	}
 
 	static class CacheTest extends AbstractRepositoryCache<String, UUID> {

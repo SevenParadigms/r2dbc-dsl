@@ -15,7 +15,6 @@
  */
 package org.springframework.data.r2dbc.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.r2dbc.spi.ConnectionFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -34,7 +33,6 @@ import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
-import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.relational.core.conversion.BasicRelationalConverter;
 import org.springframework.data.relational.core.mapping.NamingStrategy;
 import org.springframework.lang.Nullable;
@@ -92,16 +90,6 @@ public abstract class AbstractR2dbcConfiguration implements ApplicationContextAw
 		return DialectResolver.getDialect(connectionFactory);
 	}
 
-	@Bean
-	ObjectMapper objectMapper() {
-		return JsonUtils.getMapper();
-	}
-
-	@Bean
-	ExpressionParserCache expressionParserCache() {
-		return new ExpressionParserCache();
-	}
-
 	/**
 	 * Register a {@link DatabaseClient} using {@link #connectionFactory()} and {@link ReactiveDataAccessStrategy}.
 	 *
@@ -124,7 +112,7 @@ public abstract class AbstractR2dbcConfiguration implements ApplicationContextAw
 	 *
 	 * @param databaseClient must not be {@literal null}.
 	 * @param dataAccessStrategy must not be {@literal null}.
-	 * @return
+	 * @return R2dbcEntityTemplate
 	 * @since 1.2
 	 */
 	@Bean

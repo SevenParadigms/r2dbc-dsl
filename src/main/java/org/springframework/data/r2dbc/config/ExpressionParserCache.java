@@ -6,13 +6,15 @@ import org.springframework.expression.ParseException;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Component
 public class ExpressionParserCache implements ExpressionParser {
     private final Map<String, Expression> cache = new ConcurrentHashMap(512);
-    private ExpressionParser parser = new SpelExpressionParser();
+    private final ExpressionParser parser = new SpelExpressionParser();
 
     @Override
     @Nullable

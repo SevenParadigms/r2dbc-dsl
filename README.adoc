@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.4</version>
+  <version>4.6.5</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.4</version>
+  <version>4.6.5</version>
 </dependency>
 ----
 
@@ -159,7 +159,7 @@ Each R2dbcRepository by default activate Caffeine cache as First Level Cache, an
 spring.r2dbc.dsl.secondCache: true
 ----
 
-after turn on it the all repositories is subscribed to listen database table for any changes and after receive event is evicted repository cache.
+after turn on it is of the all repositories subscribed to listen database table for any changes and after receive event is evicted repository cache.
 
 If you need registered any CacheManager to using in R2dbcRepository as Second Level Cache, then set this property:
 
@@ -170,7 +170,7 @@ spring.r2dbc.dsl.cacheManager: true
 
 Previous property `secondCache` can be worked both with CacheManager of in-memory database [Hazelcast, Redis].
 
-We can manage for each R2dbcRepository cache custom timeouts and max size:
+We can manage for each R2dbcRepository Caffeine First Level Cache (also Caffeine as Second Level Cache) with custom timeouts and max size:
 
 [source,yaml]
 ----
