@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.2</version>
+  <version>4.6.3</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.2</version>
+  <version>4.6.3</version>
 </dependency>
 ----
 
@@ -173,9 +173,9 @@ We can manage for each R2dbcRepository cache custom timeouts and max size:
 [source,yaml]
 ----
 spring.r2dbc.dsl.cache:
-  <r2dbc repository class simple name>.expireAfterAccess: 500
-  <r2dbc repository class simple name>.expireAfterWrite: 1000
-  <r2dbc repository class simple name>.maximumSize: 10000
+  <model class simple name>.expireAfterAccess: 500
+  <model class simple name>.expireAfterWrite: 1000
+  <model class simple name>.maximumSize: 10000
 ----
 
 == Subscribe to async database UPDATE/INSERT events:

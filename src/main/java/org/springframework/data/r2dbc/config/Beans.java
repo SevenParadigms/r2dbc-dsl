@@ -86,10 +86,10 @@ public class Beans implements ApplicationContextAware {
 
     @Override
     public void setApplicationContext(@Nullable ApplicationContext applicationContext) {
-        setContext(applicationContext);
+        setAndGetContext(applicationContext);
     }
 
-    public static ApplicationContext setContext(@Nullable ApplicationContext applicationContext) {
+    public static ApplicationContext setAndGetContext(@Nullable ApplicationContext applicationContext) {
         if (applicationContext != null) {
             Beans.applicationContext = applicationContext;
         }
