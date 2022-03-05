@@ -26,6 +26,7 @@ public class PostgresTestSupport {
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
 			+ "    now         timestamp NULL\n," //
+			+ "    exp         text NULL\n," //
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 

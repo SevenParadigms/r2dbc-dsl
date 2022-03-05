@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.config.Beans;
+import org.springframework.data.r2dbc.config.ExpressionParserCache;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
@@ -428,6 +429,24 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.count(Dsl.create().equals("manual", 12))
 				.as(StepVerifier::create)
 				.consumeNextWith(count -> Assert.isTrue(count == 1, "must equals"))
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldExpressionWork() {
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+		legoSet1.exp = Objects.requireNonNull(new ExpressionParserCache().parseExpression("a==5"));
+
+		repository.save(legoSet1)
+				.as(StepVerifier::create)
+				.consumeNextWith(l -> Assert.isTrue(l.id == 1, "must equals"))
+				.verifyComplete();
+
+		repository.findById(1)
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					Assert.isTrue(actual.getExp().getExpressionString().equals("a==5"));
+				})
 				.verifyComplete();
 	}
 }

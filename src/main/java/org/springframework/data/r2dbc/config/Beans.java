@@ -18,7 +18,7 @@ public class Beans implements ApplicationContextAware {
     @Nullable private static ApplicationContext applicationContext = null;
 
     public static <T> T of(Class<T> beanType) {
-        return cache(beanType, () -> getApplicationContext() != null ? getApplicationContext().getBean(beanType) : null);
+        return cache(beanType, () -> getApplicationContext().getBean(beanType));
     }
 
     public static <T> T of(Class<T> beanType, T defaultValue) {

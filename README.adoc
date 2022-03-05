@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.3</version>
+  <version>4.6.4</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.3</version>
+  <version>4.6.4</version>
 </dependency>
 ----
 
@@ -71,6 +71,8 @@ data class Dsl {
 * Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
 
 * JsonNode type in model automatically converted to JSONB type of PostgreSQL and back
+
+* Expression type in model automatically converted to TEXT type of PostgreSQL and back
 
 * Repository `listener` method is subscribe to listen of all changes of table from database in realtime over `Flux<Notification>`
 

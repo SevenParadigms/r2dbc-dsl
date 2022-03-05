@@ -4,22 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.r2dbc.postgresql.codec.Json;
-
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
@@ -28,12 +12,22 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.r2dbc.config.Beans;
+import org.springframework.data.r2dbc.config.ExpressionParserCache;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.relational.core.dialect.ArrayColumns;
 import org.springframework.data.util.Lazy;
+import org.springframework.expression.Expression;
 import org.springframework.lang.NonNull;
 import org.springframework.r2dbc.core.binding.BindMarkersFactory;
 import org.springframework.util.ClassUtils;
+
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URL;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * An SQL dialect for Postgres.
@@ -45,6 +39,9 @@ public class PostgresDialect extends org.springframework.data.relational.core.di
 		implements R2dbcDialect {
 
 	private static final Set<Class<?>> SIMPLE_TYPES;
+
+	private static final boolean EXPRESSION_PRESENT = ClassUtils.isPresent("org.springframework.expression.Expression",
+			PostgresDialect.class.getClassLoader());
 
 	private static final boolean JSON_PRESENT = ClassUtils.isPresent("io.r2dbc.postgresql.codec.Json",
 			PostgresDialect.class.getClassLoader());
@@ -137,6 +134,10 @@ public class PostgresDialect extends org.springframework.data.relational.core.di
 		if (JSON_PRESENT) {
 			converters.addAll(Arrays.asList(JsonToByteArrayConverter.INSTANCE, JsonToStringConverter.INSTANCE));
 			converters.addAll(Arrays.asList(JsonToNodeConverter.INSTANCE, NodeToJsonConverter.INSTANCE));
+		}
+
+		if (EXPRESSION_PRESENT) {
+			converters.addAll(Arrays.asList(StringToExpressionConverter.INSTANCE, ExpressionToStringConverter.INSTANCE));
 		}
 
 		return converters;
@@ -312,7 +313,7 @@ public class PostgresDialect extends org.springframework.data.relational.core.di
 
 		public JsonNode convert(Json json) {
 			try {
-				return JsonUtils.getMapper().readValue(json.asString(), new TypeReference<JsonNode>() {
+				return JsonUtils.getMapper().readValue(json.asString(), new TypeReference<>() {
 				});
 			} catch (JsonProcessingException ex) {
 				ex.printStackTrace();
@@ -342,6 +343,27 @@ public class PostgresDialect extends org.springframework.data.relational.core.di
 		@NonNull
 		public byte[] convert(Json source) {
 			return source.asArray();
+		}
+	}
+
+	@WritingConverter
+	private enum ExpressionToStringConverter implements Converter<Expression, String> {
+
+		INSTANCE;
+
+		public String convert(Expression source) {
+			return source.getExpressionString();
+		}
+	}
+
+	@ReadingConverter
+	private enum StringToExpressionConverter implements Converter<String, Expression> {
+
+		INSTANCE;
+
+		public Expression convert(String value) {
+			var parserCache = Beans.of(ExpressionParserCache.class, new ExpressionParserCache());
+			return parserCache.parseExpression(value);
 		}
 	}
 }

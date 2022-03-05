@@ -34,6 +34,7 @@ import org.springframework.data.r2dbc.testing.PostgresTestSupport;
 import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.expression.Expression;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
@@ -429,6 +430,8 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		Integer version;
 		@CreatedDate
 		LocalDateTime now;
+
+		Expression exp;
 
 		@PersistenceConstructor
 		LegoSet(Integer id, String name, Integer manual) {

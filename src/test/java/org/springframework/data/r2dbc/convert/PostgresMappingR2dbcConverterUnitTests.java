@@ -29,11 +29,13 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.r2dbc.config.ExpressionParserCache;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
+import org.springframework.expression.Expression;
 import org.springframework.r2dbc.core.Parameter;
 
 import java.util.*;
@@ -198,6 +200,39 @@ class PostgresMappingR2dbcConverterUnitTests {
 
 		private final Json json;
 
+	}
+
+	@AllArgsConstructor
+	static class ExpressionEntity {
+
+		@Id Long id;
+
+		Expression value;
+	}
+
+	@Test // gh-318
+	void shouldPassThruExpression() {
+
+		ExpressionEntity person = new ExpressionEntity(null, new ExpressionParserCache().parseExpression("a==5"));
+
+		OutboundRow row = new OutboundRow();
+		converter.write(person, row);
+
+		Parameter parameter = row.get(SqlIdentifier.unquoted("value"));
+		assertThat(parameter).isNotNull();
+		assertThat(parameter.getValue()).isInstanceOf(String.class);
+	}
+
+	@Test // gh-453
+	void shouldConvertExpressionToString() {
+
+		MockRow row = MockRow.builder().identified("value", Object.class, "a==5").build();
+
+		MockRowMetadata metadata = MockRowMetadata.builder()
+				.columnMetadata(MockColumnMetadata.builder().name("value").build()).build();
+
+		ExpressionEntity result = converter.read(ExpressionEntity.class, row, metadata);
+		assertThat(result.value.getExpressionString()).isEqualTo("a==5");
 	}
 
 }

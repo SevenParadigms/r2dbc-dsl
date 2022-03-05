@@ -97,6 +97,11 @@ public abstract class AbstractR2dbcConfiguration implements ApplicationContextAw
 		return JsonUtils.getMapper();
 	}
 
+	@Bean
+	ExpressionParserCache expressionParserCache() {
+		return new ExpressionParserCache();
+	}
+
 	/**
 	 * Register a {@link DatabaseClient} using {@link #connectionFactory()} and {@link ReactiveDataAccessStrategy}.
 	 *
