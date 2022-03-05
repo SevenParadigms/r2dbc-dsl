@@ -59,6 +59,7 @@ import org.springframework.data.relational.repository.query.RelationalEntityInfo
 import org.springframework.data.relational.repository.query.RelationalExampleMapper;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.PreparedOperation;
 import org.springframework.r2dbc.core.binding.Bindings;
@@ -322,7 +323,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
      */
     @Override
     public Mono<Boolean> existsById(Publisher<ID> publisher) {
-        return Mono.from(publisher).flatMap(this::findById).hasElement();
+        return Mono.from(publisher).flatMap(this::existsById);
     }
 
     @Override
@@ -353,6 +354,61 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             }
         }
         return databaseClient.execute(sql).as(Long.class).fetch().one();
+    }
+
+    @Override
+    public R2dbcRepository<T, ID> evict(Dsl dsl) {
+        evictMono(dsl);
+        evictFlux(dsl);
+        return this;
+    }
+
+    @Override
+    public R2dbcRepository<T, ID> evict(ID id) {
+        evictMono(Dsl.create().id(id));
+        return this;
+    }
+
+    @Override
+    public R2dbcRepository<T, ID> evictAll() {
+        getCache().clear();
+        return this;
+    }
+
+    @Override
+    public R2dbcRepository<T, ID> put(Dsl dsl, T value) {
+        putMono(dsl, value);
+        return this;
+    }
+
+    @Override
+    public R2dbcRepository<T, ID> put(Dsl dsl, List<T> value) {
+        putFlux(dsl, value);
+        return this;
+    }
+
+    @Override
+    public R2dbcRepository<T, ID> put(ID id, T value) {
+        putMono(Dsl.create().id(id), value);
+        return this;
+    }
+
+    @Override
+    @Nullable
+    public T get(Dsl dsl) {
+        return get(Mono.class, dsl);
+    }
+
+    @Override
+    @Nullable
+    public T get(ID id) {
+        return get(Mono.class, Dsl.create().id(id));
+    }
+
+    @Override
+    @Nullable
+    public List<T> getList(Dsl dsl) {
+        return getList(Flux.class, dsl);
     }
 
     @Override

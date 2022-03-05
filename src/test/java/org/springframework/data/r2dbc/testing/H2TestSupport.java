@@ -46,6 +46,7 @@ public class H2TestSupport {
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    extra       varchar(255) NULL,\n" //
 			+ "    now         timestamp NULL\n," //
+			+ "    exp         varchar(512) NULL\n," //
 			+ "    manual      integer NULL\n" //
 			+ ");";
 

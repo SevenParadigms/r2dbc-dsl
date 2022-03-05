@@ -1,6 +1,5 @@
 package org.springframework.data.r2dbc.repository.cache;
 
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -10,6 +9,7 @@ import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.relational.repository.query.RelationalEntityInformation;
+import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -104,6 +104,10 @@ abstract public class AbstractRepositoryCache<T, ID> {
         return get(Mono.class, dsl) != null;
     }
 
+    public void evictMono(Dsl dsl) {
+        getCache().evict(getHash(Mono.class, dsl));
+    }
+
     public Flux<T> getFlux(Dsl dsl, Flux<T> reload) {
         if (containsFlux(dsl)) {
             return Flux.fromIterable(Objects.requireNonNull(getList(Flux.class, dsl)));
@@ -125,7 +129,7 @@ abstract public class AbstractRepositoryCache<T, ID> {
         return list != null && !list.isEmpty();
     }
 
-    public void evictAll() {
-        getCache().clear();
+    public void evictFlux(Dsl dsl) {
+        getCache().evict(getHash(Flux.class, dsl));
     }
 }
