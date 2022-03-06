@@ -224,7 +224,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
-                            putMono(Dsl.create().id(idValue), objectToSave);
+                            evictAll();
                             return simpleSave(idPropertyName, idValue, objectToSave);
                         })
                         .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
@@ -364,7 +364,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     @Override
-    public R2dbcRepository<T, ID> evict(ID id) {
+    public R2dbcRepository<T, ID> evict(@Nullable ID id) {
         evictMono(Dsl.create().id(id));
         return this;
     }
@@ -376,19 +376,14 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     @Override
-    public R2dbcRepository<T, ID> put(Dsl dsl, T value) {
-        putMono(dsl, value);
-        return this;
-    }
-
-    @Override
     public R2dbcRepository<T, ID> put(Dsl dsl, List<T> value) {
         putFlux(dsl, value);
         return this;
     }
 
     @Override
-    public R2dbcRepository<T, ID> put(ID id, T value) {
+    public R2dbcRepository<T, ID> put(T value) {
+        var id = FastMethodInvoker.getValue(value, SqlField.id);
         putMono(Dsl.create().id(id), value);
         return this;
     }
