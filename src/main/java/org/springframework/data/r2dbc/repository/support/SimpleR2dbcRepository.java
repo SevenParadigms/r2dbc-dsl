@@ -389,24 +389,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     @Override
-    @Nullable
-    public T get(Dsl dsl) {
-        return get(Mono.class, dsl);
-    }
-
-    @Override
-    @Nullable
-    public T get(ID id) {
-        return get(Mono.class, Dsl.create().id(id));
-    }
-
-    @Override
-    @Nullable
-    public List<T> getList(Dsl dsl) {
-        return getList(Flux.class, dsl);
-    }
-
-    @Override
     public Flux<Notification> listener() {
         ConnectionFactory connectionFactory = entityOperations.getDatabaseClient().getConnectionFactory();
         return Mono.from(connectionFactory.create()).flatMapMany(connection -> {

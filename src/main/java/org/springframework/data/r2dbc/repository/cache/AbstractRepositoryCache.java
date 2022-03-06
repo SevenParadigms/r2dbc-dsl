@@ -132,4 +132,19 @@ abstract public class AbstractRepositoryCache<T, ID> {
     public void evictFlux(Dsl dsl) {
         getCache().evict(getHash(Flux.class, dsl));
     }
+
+    @Nullable
+    public T get(Dsl dsl) {
+        return get(Mono.class, dsl);
+    }
+
+    @Nullable
+    public T get(ID id) {
+        return get(Mono.class, Dsl.create().id(id));
+    }
+
+    @Nullable
+    public List<T> getList(Dsl dsl) {
+        return getList(Flux.class, dsl);
+    }
 }
