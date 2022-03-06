@@ -8,6 +8,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.DslUtils;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.relational.repository.query.RelationalEntityInformation;
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
@@ -146,5 +148,10 @@ abstract public class AbstractRepositoryCache<T, ID> {
     @Nullable
     public List<T> getList(Dsl dsl) {
         return getList(Flux.class, dsl);
+    }
+
+    public Mono<T> putAndGet(T value) {
+        var id = FastMethodInvoker.getValue(value, SqlField.id);
+        return putAndGetMono(Dsl.create().id(id), value);
     }
 }
