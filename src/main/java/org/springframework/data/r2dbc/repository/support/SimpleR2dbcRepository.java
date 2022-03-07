@@ -225,12 +225,13 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                 }
                             }
                             evictAll();
+                            put(objectToSave);
                             return simpleSave(idPropertyName, idValue, objectToSave);
                         })
                         .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
             }
             evictAll();
-            putMono(Dsl.create().id(idValue), objectToSave);
+            put(objectToSave);
             return simpleSave(idPropertyName, idValue, objectToSave);
         }
     }
@@ -377,13 +378,15 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     @Override
     public R2dbcRepository<T, ID> put(Dsl dsl, List<T> value) {
+        evict(dsl);
         putFlux(dsl, value);
         return this;
     }
 
     @Override
-    public R2dbcRepository<T, ID> put(T value) {
-        var id = FastMethodInvoker.getValue(value, SqlField.id);
+    public R2dbcRepository<T, ID> put(@Nullable T value) {
+        var id = (ID) FastMethodInvoker.getValue(value, getIdColumnName());
+        evict(id);
         putMono(Dsl.create().id(id), value);
         return this;
     }
@@ -765,7 +768,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                 new RenderContextFactory(dialect).createRenderContext(), bindings);
     }
 
-    private DslPreparedOperation<Select> getMappedObject(Dsl dsl) {
+    private DslPreparedOperation<Select> getMappedObject(final Dsl dsl) {
         if (ObjectUtils.isEmpty(applicationContext)) {
             assert Beans.getApplicationContext() != null;
             applicationContext = Beans.getApplicationContext();
@@ -793,10 +796,11 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             }
         }
         var columns = new ArrayList<Column>();
-        if (dsl.getResultFields().isEmpty()) {
-            dsl.setResultFields(entityColumns);
+        var resultFields = dsl.getResultFields();
+        if (resultFields.isEmpty()) {
+            resultFields = entityColumns;
         }
-        for (var fieldName : dsl.getResultFields()) {
+        for (var fieldName : resultFields) {
             var sqlFieldName = WordUtils.camelToSql(fieldName.trim());
             if (entityColumns.contains(sqlFieldName)) {
                 columns.add(Column.create(sqlFieldName, table));

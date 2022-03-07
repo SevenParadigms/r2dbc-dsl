@@ -453,4 +453,34 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				})
 				.verifyComplete();
 	}
+
+	@Test
+	void shouldCacheManage() {
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+
+		repository.save(legoSet1)
+				.as(StepVerifier::create)
+				.expectNextCount(1)
+				.verifyComplete();
+
+		repository.findOne(Dsl.create().id(1))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"));
+					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"));
+				})
+				.verifyComplete();
+
+		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"));
+
+		repository.evict(1);
+		Assert.isTrue(repository.get(1) == null);
+
+		legoSet1.setId(1);
+		repository.put(legoSet1);
+		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"));
+
+		repository.evictAll();
+		Assert.isTrue(repository.get(1) == null);
+	}
 }

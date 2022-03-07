@@ -24,9 +24,10 @@ abstract public class AbstractRepositoryCache<T, ID> {
     private static final Logger log = LoggerFactory.getLogger(AbstractRepositoryCache.class);
 
     private final CacheManager cacheManager;
+    @Nullable
     private final RelationalEntityInformation<T, ID> entity;
 
-    public AbstractRepositoryCache(RelationalEntityInformation<T, ID> entity, @Nullable ApplicationContext applicationContext) {
+    public AbstractRepositoryCache(@Nullable RelationalEntityInformation<T, ID> entity, @Nullable ApplicationContext applicationContext) {
         applicationContext = Beans.setAndGetContext(applicationContext);
         var enableCacheManager = applicationContext.getEnvironment()
                 .getProperty("spring.r2dbc.dsl.cacheManager", Boolean.FALSE.toString());

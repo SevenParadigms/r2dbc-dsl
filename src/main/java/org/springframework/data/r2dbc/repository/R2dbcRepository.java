@@ -46,7 +46,7 @@ public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>
     R2dbcRepository<T, ID> evict(Dsl dsl);
     R2dbcRepository<T, ID> evict(ID id);
     R2dbcRepository<T, ID> evictAll();
-    R2dbcRepository<T, ID> put(T value);
+    R2dbcRepository<T, ID> put(@Nullable T value);
     R2dbcRepository<T, ID> put(Dsl dsl, List<T> value);
     @Nullable T get(Dsl dsl);
     @Nullable T get(ID id);
