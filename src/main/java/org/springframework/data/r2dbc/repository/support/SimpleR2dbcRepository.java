@@ -731,10 +731,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     private DslPreparedOperation<Delete> getDeleteMappedObject(Dsl dsl) {
-        if (ObjectUtils.isEmpty(applicationContext)) {
-            assert Beans.getApplicationContext() != null;
-            applicationContext = Beans.getApplicationContext();
-        }
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));
@@ -769,10 +765,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     private DslPreparedOperation<Select> getMappedObject(final Dsl dsl) {
-        if (ObjectUtils.isEmpty(applicationContext)) {
-            assert Beans.getApplicationContext() != null;
-            applicationContext = Beans.getApplicationContext();
-        }
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
         var table = Table.create(accessStrategy.toSql(this.entity.getTableName()));

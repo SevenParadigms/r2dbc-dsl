@@ -12,12 +12,12 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.r2dbc.config.Beans;
-import org.springframework.data.r2dbc.config.ExpressionParserCache;
+import org.springframework.data.r2dbc.expression.ExpressionParserCache;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.relational.core.dialect.ArrayColumns;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.lang.NonNull;
 import org.springframework.r2dbc.core.binding.BindMarkersFactory;
 import org.springframework.util.ClassUtils;
@@ -138,6 +138,7 @@ public class PostgresDialect extends org.springframework.data.relational.core.di
 
 		if (EXPRESSION_PRESENT) {
 			converters.addAll(Arrays.asList(StringToExpressionConverter.INSTANCE, ExpressionToStringConverter.INSTANCE));
+			converters.addAll(Arrays.asList(StringToSpelExpressionConverter.INSTANCE, SpelExpressionToStringConverter.INSTANCE));
 		}
 
 		return converters;
@@ -362,8 +363,27 @@ public class PostgresDialect extends org.springframework.data.relational.core.di
 		INSTANCE;
 
 		public Expression convert(String value) {
-			var parserCache = Beans.of(ExpressionParserCache.class, new ExpressionParserCache());
-			return parserCache.parseExpression(value);
+			return ExpressionParserCache.INSTANCE.parseExpression(value);
+		}
+	}
+
+	@WritingConverter
+	private enum SpelExpressionToStringConverter implements Converter<SpelExpression, String> {
+
+		INSTANCE;
+
+		public String convert(SpelExpression source) {
+			return source.getExpressionString();
+		}
+	}
+
+	@ReadingConverter
+	private enum StringToSpelExpressionConverter implements Converter<String, SpelExpression> {
+
+		INSTANCE;
+
+		public SpelExpression convert(String value) {
+			return (SpelExpression) ExpressionParserCache.INSTANCE.parseExpression(value);
 		}
 	}
 }

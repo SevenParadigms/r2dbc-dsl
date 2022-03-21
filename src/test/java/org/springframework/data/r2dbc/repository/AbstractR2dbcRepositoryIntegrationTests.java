@@ -15,6 +15,9 @@
  */
 package org.springframework.data.r2dbc.repository;
 
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
+import com.hazelcast.nio.serialization.DataSerializable;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.*;
 import org.assertj.core.api.Condition;
@@ -30,6 +33,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.connectionfactory.R2dbcTransactionManager;
 import org.springframework.data.r2dbc.repository.query.Equality;
 import org.springframework.data.r2dbc.repository.query.ReadOnly;
+import org.springframework.data.r2dbc.support.FastMethodInvoker;
+import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
 import org.springframework.data.r2dbc.testing.R2dbcIntegrationTestSupport;
 import org.springframework.data.repository.NoRepositoryBean;
@@ -42,6 +47,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -421,7 +428,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 	@Setter
 //	@Table("lego_set")
 	@NoArgsConstructor
-	public static class LegoSet extends Lego implements Buildable {
+	public static class LegoSet extends Lego implements Buildable, DataSerializable {
 		@Equality
 		String name;
 		@ReadOnly
@@ -439,6 +446,16 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 			this.name = name;
 			this.manual = manual;
 		}
+
+		@Override
+		public void writeData(ObjectDataOutput out) throws IOException {
+			out.writeString(JsonUtils.objectToJson(this).toString());
+		}
+
+		@Override
+		public void readData(ObjectDataInput in) throws IOException {
+			FastMethodInvoker.copy(JsonUtils.stringToObject(in.readString(), this.getClass()), this);
+		}
 	}
 
 	@AllArgsConstructor
@@ -450,7 +467,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 	}
 
 	@Value
-	static class LegoDto {
+	static class LegoDto implements Serializable {
 		String name;
 		String unknown;
 

@@ -29,8 +29,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.data.r2dbc.config.ExpressionParserCache;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
+import org.springframework.data.r2dbc.expression.ExpressionParserCache;
 import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
 import org.springframework.data.relational.core.mapping.RelationalMappingContext;
@@ -213,7 +213,7 @@ class PostgresMappingR2dbcConverterUnitTests {
 	@Test // gh-318
 	void shouldPassThruExpression() {
 
-		ExpressionEntity person = new ExpressionEntity(null, new ExpressionParserCache().parseExpression("a==5"));
+		ExpressionEntity person = new ExpressionEntity(null, ExpressionParserCache.INSTANCE.parseExpression("a==5"));
 
 		OutboundRow row = new OutboundRow();
 		converter.write(person, row);

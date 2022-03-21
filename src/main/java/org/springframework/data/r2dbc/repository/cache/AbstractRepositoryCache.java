@@ -45,7 +45,7 @@ abstract public class AbstractRepositoryCache<T, ID> {
                     ((CaffeineGuidedCacheManager) cacheManager).setDefaultExpireAfterAccess("900000");
                 }
             } else {
-                log.info("R2dbcRepository<" + entity.getJavaType().getSimpleName() + "> initialize cache: " + cacheManager.getClass().getSimpleName());
+                log.info("R2dbcRepository<" + entity.getJavaType().getSimpleName() + "> initialize with cache: " + cacheManager.getClass().getSimpleName());
             }
         }
     }

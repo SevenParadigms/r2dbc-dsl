@@ -23,6 +23,7 @@ import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.sevenparadigms.cache.hazelcast.HazelcastCacheConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -30,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.config.Beans;
-import org.springframework.data.r2dbc.config.ExpressionParserCache;
+import org.springframework.data.r2dbc.expression.ExpressionParserCache;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
@@ -41,6 +42,7 @@ import org.springframework.data.r2dbc.testing.PostgresTestSupport;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
@@ -48,6 +50,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
+import java.io.Serializable;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,7 +62,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Jose Luis Leon
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration
+@ContextConfiguration(classes = { HazelcastCacheConfiguration.class, PostgresR2dbcRepositoryIntegrationTests.IntegrationTestConfiguration.class })
+@TestPropertySource(properties = { "spring.r2dbc.dsl.cacheManager=true" })
 public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIntegrationTests {
 
 	@RegisterExtension public static final ExternalDatabase database = PostgresTestSupport.database();
@@ -176,7 +180,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	}
 
 	@AllArgsConstructor
-	static class WithJson {
+	static class WithJson implements Serializable {
 
 		/*@Id */Long id;
 
@@ -197,7 +201,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	@AllArgsConstructor
 //	@Table("with_hstore")
-	static class WithHstore {
+	static class WithHstore implements Serializable {
 
 		/*@Id */Long id;
 
@@ -358,7 +362,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	void shouldBeans() throws JsonProcessingException {
 		Assert.notNull(Beans.getApplicationContext(), "Application context must not be null!");
 		Assert.notNull(Beans.of(DatabaseClient.class), "DatabaseClient must not be null!");
-		Assert.isTrue(Beans.of(ObjectMapper.class).readTree("{'name':'value'}").toString().equals("{\"name\":\"value\"}"));
+		Assert.isTrue(Beans.of(ObjectMapper.class).readTree("{'name':'value'}").toString().equals("{\"name\":\"value\"}"), "is not true");
 		Assert.notNull(Beans.of(ExpressionParserCache.class), "ExpressionParserCache must not be null!");
 	}
 
@@ -439,7 +443,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	@Test
 	void shouldExpressionWork() {
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
-		legoSet1.exp = Objects.requireNonNull(new ExpressionParserCache().parseExpression("a==5"));
+		legoSet1.exp = Objects.requireNonNull(ExpressionParserCache.INSTANCE.parseExpression("a==5"));
 
 		repository.save(legoSet1)
 				.as(StepVerifier::create)
@@ -449,7 +453,9 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.findById(1)
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
-					Assert.isTrue(actual.getExp().getExpressionString().equals("a==5"));
+					Assert.isTrue(actual.getExp().getExpressionString().equals("a==5"), "must equals");
+					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must equals");
+					Assert.isTrue(actual.getManual() == 12, "must equals");
 				})
 				.verifyComplete();
 	}
@@ -466,21 +472,21 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.findOne(Dsl.create().id(1))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
-					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"));
-					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"));
+					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must true");
+					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 				})
 				.verifyComplete();
 
-		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"));
+		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 
 		repository.evict(1);
-		Assert.isTrue(repository.get(1) == null);
+		Assert.isTrue(repository.get(1) == null, "must equals");
 
 		legoSet1.setId(1);
 		repository.put(legoSet1);
-		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"));
+		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 
 		repository.evictAll();
-		Assert.isTrue(repository.get(1) == null);
+		Assert.isTrue(repository.get(1) == null, "must equals");
 	}
 }
