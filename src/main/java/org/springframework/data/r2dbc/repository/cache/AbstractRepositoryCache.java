@@ -15,6 +15,7 @@ import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -70,11 +71,13 @@ abstract public class AbstractRepositoryCache<T, ID> {
     }
 
     protected Object put(Class<?> keyType, Dsl dsl, Object value) {
+        evict(keyType, dsl);
         getCache().put(getHash(keyType, dsl), value);
         return value;
     }
 
     protected List<T> putList(Class<?> keyType, Dsl dsl, List<T> value) {
+        evict(keyType, dsl);
         getCache().put(getHash(keyType, dsl), value);
         return value;
     }
@@ -95,12 +98,15 @@ abstract public class AbstractRepositoryCache<T, ID> {
     }
 
     public Mono<T> putAndGetMono(Dsl dsl, T value) {
-        put(Mono.class, dsl, value);
+        putMono(dsl, value);
         return Mono.just(value);
     }
 
     public void putMono(Dsl dsl, T value) {
         put(Mono.class, dsl, value);
+        if (dsl.containId()) {
+            putFlux(dsl, new ArrayList<>(List.of(value)));
+        }
     }
 
     public boolean containsMono(Dsl dsl) {
@@ -119,12 +125,22 @@ abstract public class AbstractRepositoryCache<T, ID> {
     }
 
     public Flux<T> putAndGetFlux(Dsl dsl, List<T> value) {
-        putList(Flux.class, dsl, value);
+        putFlux(dsl, value);
         return Flux.fromIterable(value);
     }
 
     public void putFlux(Dsl dsl, List<T> value) {
         putList(Flux.class, dsl, value);
+        if (value.size() == 1) {
+            if (dsl.containId()) {
+                put(Mono.class, dsl, value.get(0));
+            } else {
+                var id = (ID) FastMethodInvoker.getValue(value.get(0), SqlField.id);
+                if (id != null) {
+                    put(Mono.class, Dsl.create().id(id), value.get(0));
+                }
+            }
+        }
     }
 
     public boolean containsFlux(Dsl dsl) {

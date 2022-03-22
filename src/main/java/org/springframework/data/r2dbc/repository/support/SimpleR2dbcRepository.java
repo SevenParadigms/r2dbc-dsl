@@ -194,7 +194,10 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
                     .map(converter.populateIdIfNecessary(objectToSave))
-                    .first().flatMap(Mono::just)
+                    .first().flatMap(updated -> {
+                        evictAll().put(objectToSave);
+                        return Mono.just(updated);
+                    })
                     .defaultIfEmpty(objectToSave);
         } else {
             final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
@@ -224,14 +227,12 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
-                            evictAll();
-                            put(objectToSave);
+                            evictAll().put(objectToSave);
                             return simpleSave(idPropertyName, idValue, objectToSave);
                         })
                         .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
             }
-            evictAll();
-            put(objectToSave);
+            evictAll().put(objectToSave);
             return simpleSave(idPropertyName, idValue, objectToSave);
         }
     }
@@ -268,7 +269,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     public <S extends T> Flux<S> saveAll(Iterable<S> objectsToSave) {
 
         Assert.notNull(objectsToSave, "Objects to save must not be null!");
-        evictAll();
+
         return Flux.fromIterable(objectsToSave).concatMap(this::save);
     }
 
@@ -281,7 +282,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     public <S extends T> Flux<S> saveAll(Publisher<S> objectsToSave) {
 
         Assert.notNull(objectsToSave, "Object publisher must not be null!");
-        evictAll();
+
         return Flux.from(objectsToSave).concatMap(this::save);
     }
 
@@ -367,6 +368,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     @Override
     public R2dbcRepository<T, ID> evict(@Nullable ID id) {
         evictMono(Dsl.create().id(id));
+        evictFlux(Dsl.create().id(id));
         return this;
     }
 
@@ -378,7 +380,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     @Override
     public R2dbcRepository<T, ID> put(Dsl dsl, List<T> value) {
-        evict(dsl);
         putFlux(dsl, value);
         return this;
     }
@@ -386,7 +387,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     @Override
     public R2dbcRepository<T, ID> put(@Nullable T value) {
         var id = (ID) FastMethodInvoker.getValue(value, getIdColumnName());
-        evict(id);
         putMono(Dsl.create().id(id), value);
         return this;
     }

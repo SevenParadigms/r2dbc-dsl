@@ -18,9 +18,12 @@ package org.springframework.data.r2dbc.repository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hazelcast.core.Hazelcast;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.sevenparadigms.cache.hazelcast.HazelcastCacheConfiguration;
@@ -36,6 +39,7 @@ import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
@@ -64,6 +68,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { HazelcastCacheConfiguration.class, PostgresR2dbcRepositoryIntegrationTests.IntegrationTestConfiguration.class })
 @TestPropertySource(properties = { "spring.r2dbc.dsl.cacheManager=true" })
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIntegrationTests {
 
 	@RegisterExtension public static final ExternalDatabase database = PostgresTestSupport.database();
@@ -369,6 +374,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	static class CacheTest extends AbstractRepositoryCache<String, UUID> {
 		public CacheTest() {
 			super(null, Beans.getApplicationContext());
+			Assert.isTrue(DslUtils.generateHash(Dsl.create().id(1)) == DslUtils.generateHash(Dsl.create().id(1)), "must equals");
 			var id = UUID.fromString("00000000-0000-0000-0000-000000000000");
 			put(String.class, Dsl.create().id(id), "test1");
 			var hash = getHash(String.class, Dsl.create().id(id));
@@ -479,14 +485,54 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 
-		repository.evict(1);
-		Assert.isTrue(repository.get(1) == null, "must equals");
+		Assert.isTrue(repository.evict(1).get(1) == null, "must equals");
 
 		legoSet1.setId(1);
-		repository.put(legoSet1);
-		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+		Assert.isTrue(Objects.requireNonNull(repository.put(legoSet1).get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 
 		repository.evictAll();
 		Assert.isTrue(repository.get(1) == null, "must equals");
+	}
+
+	@Test
+	void shouldCacheMonoToFlux() {
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+
+		repository.evictAll().save(legoSet1)
+				.as(StepVerifier::create)
+				.expectNextCount(1)
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().id(1))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must true");
+					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+				})
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldCacheSaveAndFlux() {
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+		repository.deleteAll().block();
+
+		repository.save(legoSet1)
+				.as(StepVerifier::create)
+				.expectNextCount(1)
+				.verifyComplete();
+
+		repository.evictAll().findAll(Dsl.create()).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					Assert.isTrue(actual.get(0).getName().equals("SCHAUFELRADBAGGER"), "must true");
+					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+				})
+				.verifyComplete();
+	}
+
+	@AfterAll
+	void shutdown() {
+		Hazelcast.shutdownAll();
 	}
 }
