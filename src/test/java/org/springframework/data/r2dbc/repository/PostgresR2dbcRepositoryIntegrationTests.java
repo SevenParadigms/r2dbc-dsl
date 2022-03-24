@@ -67,7 +67,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { HazelcastCacheConfiguration.class, PostgresR2dbcRepositoryIntegrationTests.IntegrationTestConfiguration.class })
-@TestPropertySource(properties = { "spring.r2dbc.dsl.cacheManager=true" })
+@TestPropertySource(properties = {
+		"spring.r2dbc.dsl.cacheManager=true",
+		"spring.r2dbc.dsl.equality=nameEquality",
+		"spring.r2dbc.dsl.readOnly=manualReadOnly",
+		"spring.r2dbc.dsl.version=counterVersion",})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIntegrationTests {
 
@@ -240,7 +244,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.verifyComplete();
 
 		// try to change equality attr name and get exception
-		var legoSet = legoSets.get(legoSets.size() - 1);
+		var legoSet = legoSets.get(1);
 		legoSet.setName("123");
 
 		repository.save(legoSet) //
@@ -249,7 +253,26 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 		// try to change readonly attr manual and get old value
 		legoSet.setName("FORSCHUNGSSCHIFF");
-		legoSet.setManual(123);
+		legoSet.setManualReadOnly(123);
+
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.getManualReadOnly()).isEqualTo(22);
+				})
+				.verifyComplete();
+
+		// try to change equality attr from properties name and get exception
+		legoSet = legoSets.get(1);
+		legoSet.setNameEquality("123");
+
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.expectError(IllegalStateException.class);
+
+		// try to change readonly attr from properties manual and get old value
+		legoSet.setNameEquality("equality");
+		legoSet.setManualReadOnly(123);
 
 		repository.save(legoSet) //
 				.as(StepVerifier::create) //
@@ -258,6 +281,14 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				})
 				.verifyComplete();
 
+		// check versions
+		repository.findById(2)
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					assertThat(actual.getVersion()).isEqualTo(3);
+					assertThat(actual.getCounterVersion()).isEqualTo(3);
+				})
+				.verifyComplete();
 	}
 
 	@Test

@@ -104,9 +104,7 @@ abstract public class AbstractRepositoryCache<T, ID> {
 
     public void putMono(Dsl dsl, T value) {
         put(Mono.class, dsl, value);
-        if (dsl.getQuery().contains(SqlField.id + Dsl.equal)) {
-            putFlux(dsl, new ArrayList<>(List.of(value)));
-        }
+        putList(Flux.class, dsl, new ArrayList<>(List.of(value)));
     }
 
     public boolean containsMono(Dsl dsl) {
@@ -131,14 +129,10 @@ abstract public class AbstractRepositoryCache<T, ID> {
 
     public void putFlux(Dsl dsl, List<T> value) {
         putList(Flux.class, dsl, value);
-        if (value.size() == 1) {
-            if (dsl.getQuery().contains(SqlField.id + Dsl.equal)) {
-                put(Mono.class, dsl, value.get(0));
-            } else {
-                var id = (ID) FastMethodInvoker.getValue(value.get(0), SqlField.id);
-                if (id != null) {
-                    put(Mono.class, Dsl.create().id(id), value.get(0));
-                }
+        for (T it : value) {
+            var id = (ID) FastMethodInvoker.getValue(it, SqlField.id);
+            if (id != null) {
+                put(Mono.class, Dsl.create().id(id), it);
             }
         }
     }

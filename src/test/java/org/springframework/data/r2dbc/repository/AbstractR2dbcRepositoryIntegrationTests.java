@@ -113,6 +113,8 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		legoSet2.setManualReadOnly(22);
+		legoSet2.setNameEquality("equality");
 
 		repository.saveAll(Arrays.asList(legoSet1, legoSet2)) //
 				.as(StepVerifier::create) //
@@ -439,6 +441,10 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		LocalDateTime now;
 
 		Expression exp;
+
+		String nameEquality;
+		Integer manualReadOnly;
+		Long counterVersion;
 
 		@PersistenceConstructor
 		LegoSet(Integer id, String name, Integer manual) {

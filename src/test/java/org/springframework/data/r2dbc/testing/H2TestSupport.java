@@ -47,6 +47,9 @@ public class H2TestSupport {
 			+ "    extra       varchar(255) NULL,\n" //
 			+ "    now         timestamp NULL\n," //
 			+ "    exp         varchar(512) NULL\n," //
+			+ "    name_equality         varchar(255) NULL\n," //
+			+ "    manual_read_only         integer NULL\n," //
+			+ "    counter_version         integer NULL\n," //
 			+ "    manual      integer NULL\n" //
 			+ ");";
 

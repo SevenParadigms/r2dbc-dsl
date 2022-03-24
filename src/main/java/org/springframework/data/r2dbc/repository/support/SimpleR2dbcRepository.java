@@ -25,6 +25,7 @@ import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -32,7 +33,6 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.*;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -184,10 +184,17 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
         final var versionFields = getFields(objectToSave, Fields.version, Version.class);
+        var versionProperty = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.version", StringUtils.EMPTY);
+        if (!versionProperty.isEmpty()) {
+            versionFields.addAll(Arrays.stream(versionProperty.split(","))
+                    .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).collect(Collectors.toSet()));
+        }
         final var nowStampFields = nowStamp(objectToSave, Fields.updatedAt, LastModifiedDate.class);
         if (idValue == null) {
             for (Field version : versionFields) {
-                setVersion(objectToSave, version, 0);
+                if (version != null) {
+                    setVersion(objectToSave, version, 0);
+                }
             }
             nowStamp(objectToSave, Fields.createdAt, CreatedDate.class);
             return databaseClient.insert()
@@ -201,30 +208,46 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     .defaultIfEmpty(objectToSave);
         } else {
             final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
+            var readOnlyProperty = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.readOnly", StringUtils.EMPTY);
+            if (!readOnlyProperty.isEmpty()) {
+                readOnlyFields.addAll(Arrays.stream(readOnlyProperty.split(","))
+                        .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).collect(Collectors.toSet()));
+            }
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
+            var equalityProperty = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.equality", StringUtils.EMPTY);
+            if (!equalityProperty.isEmpty()) {
+                equalityFields.addAll(Arrays.stream(equalityProperty.split(","))
+                        .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).collect(Collectors.toSet()));
+            }
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
                         .flatMap(previous -> {
                             for (Field version : versionFields) {
-                                var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
-                                assert versionValue != null;
-                                var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
-                                if (!Objects.equals(versionValue, previousVersionValue)) {
-                                    return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
+                                if (version != null) {
+                                    var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
+                                    assert versionValue != null;
+                                    var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
+                                    if (!Objects.equals(versionValue, previousVersionValue)) {
+                                        return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
+                                    }
+                                    setVersion(objectToSave, version, versionValue);
                                 }
-                                setVersion(objectToSave, version, versionValue);
                             }
                             for (Field field : readOnlyFields) {
-                                var previousValue = FastMethodInvoker.getValue(previous, field.getName());
-                                if (previousValue != null) {
-                                    FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);
+                                if (field != null) {
+                                    var previousValue = FastMethodInvoker.getValue(previous, field.getName());
+                                    if (previousValue != null) {
+                                        FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);
+                                    }
                                 }
                             }
                             for (Field field : equalityFields) {
-                                var value = FastMethodInvoker.getValue(objectToSave, field.getName());
-                                var previousValue = FastMethodInvoker.getValue(previous, field.getName());
-                                if (!Objects.equals(value, previousValue)) {
-                                    return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
+                                if (field != null) {
+                                    var value = FastMethodInvoker.getValue(objectToSave, field.getName());
+                                    var previousValue = FastMethodInvoker.getValue(previous, field.getName());
+                                    if (!Objects.equals(value, previousValue)) {
+                                        return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
+                                    }
                                 }
                             }
                             evictAll().put(objectToSave);
@@ -367,8 +390,10 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     @Override
     public R2dbcRepository<T, ID> evict(@Nullable ID id) {
-        evictMono(Dsl.create().id(id));
-        evictFlux(Dsl.create().id(id));
+        if (!ObjectUtils.isEmpty(id)) {
+            evictMono(Dsl.create().id(id));
+            evictFlux(Dsl.create().id(id));
+        }
         return this;
     }
 
@@ -386,8 +411,10 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     @Override
     public R2dbcRepository<T, ID> put(@Nullable T value) {
-        var id = (ID) FastMethodInvoker.getValue(value, getIdColumnName());
-        putMono(Dsl.create().id(id), value);
+        if (!ObjectUtils.isEmpty(value)) {
+            var id = (ID) FastMethodInvoker.getValue(value, getIdColumnName());
+            putMono(Dsl.create().id(id), value);
+        }
         return this;
     }
 
@@ -469,7 +496,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             var reflectionStorage = FastMethodInvoker.reflectionStorage(entity.getJavaType());
             for (var field : reflectionStorage) {
                 if (!field.isAnnotationPresent(Id.class) && !field.getName().equals(SqlField.id)) {
-                    fields.add(":".concat(field.getName()));
+                    fields.add(Dsl.COLON.concat(field.getName()).concat(Dsl.COLON));
                 }
             }
             var buildFields = String.join(",", fields);

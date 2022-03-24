@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.13</version>
+  <version>4.6.14</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.13</version>
+  <version>4.6.14</version>
 </dependency>
 ----
 
@@ -63,11 +63,11 @@ data class Dsl {
 
 == Features
 
-* First Level Cache based on Caffeine with guided expire access and size for each cache from application.yml properties, can be usage as bean for @Cacheable
+* First Level Cache based on Caffeine with guided expire access and size for each cache from application.properties, can be usage as bean for @Cacheable
 
-* Convert First Level Cache to Second Level Cache by property in application.yml: `spring.r2dbc.dsl.secondCache = true` then subscribe to changes from database
+* Convert First Level Cache to Second Level Cache by property in application.properties: `spring.r2dbc.dsl.secondCache = true` then subscribe to changes from database
 
-* Support Second Level Cache from any Spring CacheManager implementation and may be both working with subscribe to changes from database
+* Support Second Level Cache from any Spring CacheManager implementation and may be both working with subscribe to change from database. Enabled by: `spring.r2dbc.dsl.cacheManager = true`
 
 * Full First Level Cache manage from repository methods: evict(Dsl dsl), put(Dsl dsl, T value) and get(Dsl dsl): T
 
@@ -97,15 +97,15 @@ data class Dsl {
 
 * Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
 
-* Field with new @Equality annotation on each update the value is comparing with previous value from database and throw exception is not equals
+* Field with @Equality annotation on each update the value is comparing with previous value from database and throw exception is not equals, also can set in application.properties: `spring.r2dbc.dsl.equality = tenantId,userId`
 
-* Field with new @ReadOnly annotation on each update the value getting from previous record if not null and setting to current record without comparing
+* Field with @ReadOnly annotation on each update the value getting from previous record if not null and setting to current record without comparing, also can set in application.properties: `spring.r2dbc.dsl.readOnly = tenantId,userId`
 
 * Field with name `createdAt` type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @ReadOnly annotation logic
 
 * Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @LastModifiedDate annotation logic
 
-* Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking
+* Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking, also can set in application.properties: `spring.r2dbc.dsl.version = counter,innerIndex`
 
 * Do not need custom repositories for test, because DSL provides the required flexibility without changing business logic
 

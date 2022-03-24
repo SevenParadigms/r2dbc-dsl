@@ -123,13 +123,13 @@ public abstract class DslUtils {
     public static String binding(String builder, Object target) {
         var buildQuery = trimInline(builder);
         for (var field : FastMethodInvoker.reflectionStorage(target.getClass())) {
-            if (buildQuery.contains(Dsl.COLON + field.getName()) && !field.getName().equals(SqlField.id)) {
+            if (buildQuery.contains(Dsl.COLON + field.getName() + Dsl.COLON) && !field.getName().equals(SqlField.id)) {
                 var value = FastMethodInvoker.getValue(target, field.getName());
                 String result = null;
                 if (value != null) {
                     result = objectToSql(value);
                 }
-                buildQuery = buildQuery.replaceAll(Dsl.COLON + field.getName(), result == null ? "null" : result);
+                buildQuery = buildQuery.replaceAll(Dsl.COLON + field.getName() + Dsl.COLON, result == null ? "null" : result);
             }
         }
         return buildQuery;
@@ -260,13 +260,15 @@ public abstract class DslUtils {
     }
 
     public static void setVersion(Object objectToSave, Field version, Object versionValue) {
-        if (version.getType() == Long.class) {
-            var value = (Long) versionValue + 1;
-            FastMethodInvoker.setValue(objectToSave, version.getName(), value);
-        }
-        if (version.getType() == Integer.class) {
-            var value = (Integer) versionValue + 1;
-            FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+        if (versionValue instanceof Number) {
+            var longValue = (Long) ConvertUtils.convert(versionValue, Long.class);
+            if (version.getType() == Long.class) {
+                FastMethodInvoker.setValue(objectToSave, version.getName(), longValue + 1);
+            }
+            if (version.getType() == Integer.class) {
+                var value = (Integer) ConvertUtils.convert(longValue + 1, Integer.class);
+                FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+            }
         }
         setNowStamp(objectToSave, version);
     }

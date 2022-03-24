@@ -27,6 +27,9 @@ public class PostgresTestSupport {
 			+ "    manual      integer NULL\n," //
 			+ "    now         timestamp NULL\n," //
 			+ "    exp         text NULL\n," //
+			+ "    name_equality         text NULL\n," //
+			+ "    manual_read_only         integer NULL\n," //
+			+ "    counter_version         integer NULL\n," //
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 
