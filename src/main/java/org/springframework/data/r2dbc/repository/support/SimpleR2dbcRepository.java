@@ -74,6 +74,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.r2dbc.support.DslUtils.*;
+import static org.springframework.data.r2dbc.support.DslUtils.getFields;
 
 /**
  * Simple {@link ReactiveSortingRepository} implementation using R2DBC through {@link DatabaseClient}.
@@ -181,22 +182,23 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
         Assert.notNull(objectToSave, "Object to save must not be null!");
 
+        final var versionFields = getFields(objectToSave, Fields.version, Version.class);
+        versionFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.version"));
+
+        final var nowStampFields = getFields(objectToSave, Fields.updatedAt, LastModifiedDate.class);
+        nowStampFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.updatedAt"));
+
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
-        final var versionFields = getFields(objectToSave, Fields.version, Version.class);
-        var versionProperty = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.version", StringUtils.EMPTY);
-        if (!versionProperty.isEmpty()) {
-            versionFields.addAll(Arrays.stream(versionProperty.split(","))
-                    .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).collect(Collectors.toSet()));
-        }
-        final var nowStampFields = nowStamp(objectToSave, Fields.updatedAt, LastModifiedDate.class);
         if (idValue == null) {
             for (Field version : versionFields) {
-                if (version != null) {
-                    setVersion(objectToSave, version, 0);
-                }
+                setVersion(objectToSave, version, 0);
             }
-            nowStamp(objectToSave, Fields.createdAt, CreatedDate.class);
+            nowStampFields.addAll(getFields(objectToSave, Fields.createdAt, CreatedDate.class));
+            nowStampFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.createdAt"));
+            for (Field field : nowStampFields) {
+                setNowStamp(objectToSave, field);
+            }
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
@@ -208,46 +210,38 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     .defaultIfEmpty(objectToSave);
         } else {
             final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
-            var readOnlyProperty = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.readOnly", StringUtils.EMPTY);
-            if (!readOnlyProperty.isEmpty()) {
-                readOnlyFields.addAll(Arrays.stream(readOnlyProperty.split(","))
-                        .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).collect(Collectors.toSet()));
-            }
+            readOnlyFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.readOnly"));
+            readOnlyFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.createdAt"));
+
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
-            var equalityProperty = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.equality", StringUtils.EMPTY);
-            if (!equalityProperty.isEmpty()) {
-                equalityFields.addAll(Arrays.stream(equalityProperty.split(","))
-                        .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).collect(Collectors.toSet()));
-            }
+            equalityFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.equality"));
+
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
                         .flatMap(previous -> {
                             for (Field version : versionFields) {
-                                if (version != null) {
-                                    var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
-                                    assert versionValue != null;
-                                    var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
-                                    if (!Objects.equals(versionValue, previousVersionValue)) {
-                                        return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
-                                    }
-                                    setVersion(objectToSave, version, versionValue);
+                                var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
+                                assert versionValue != null;
+                                var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
+                                if (!Objects.equals(versionValue, previousVersionValue)) {
+                                    return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
                                 }
+                                setVersion(objectToSave, version, versionValue);
+                            }
+                            for (Field field : nowStampFields) {
+                                setNowStamp(objectToSave, field);
                             }
                             for (Field field : readOnlyFields) {
-                                if (field != null) {
-                                    var previousValue = FastMethodInvoker.getValue(previous, field.getName());
-                                    if (previousValue != null) {
-                                        FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);
-                                    }
+                                var previousValue = FastMethodInvoker.getValue(previous, field.getName());
+                                if (previousValue != null) {
+                                    FastMethodInvoker.setValue(objectToSave, field.getName(), previousValue);
                                 }
                             }
                             for (Field field : equalityFields) {
-                                if (field != null) {
-                                    var value = FastMethodInvoker.getValue(objectToSave, field.getName());
-                                    var previousValue = FastMethodInvoker.getValue(previous, field.getName());
-                                    if (!Objects.equals(value, previousValue)) {
-                                        return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
-                                    }
+                                var value = FastMethodInvoker.getValue(objectToSave, field.getName());
+                                var previousValue = FastMethodInvoker.getValue(previous, field.getName());
+                                if (!Objects.equals(value, previousValue)) {
+                                    return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
                             evictAll().put(objectToSave);
@@ -456,12 +450,12 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                 }
                 mutableList.add(WordUtils.camelToSql(field));
             }
-            fields = String.join(",", mutableList);
+            fields = String.join(Dsl.COMMA, mutableList);
         }
 
         if (!fields.equals("*")) {
             assert parts != null;
-            if (!fields.contains(parts.component1()) && !parts.component1().contains("->>")) fields += "," + parts.component1();
+            if (!fields.contains(parts.component1()) && !parts.component1().contains("->>")) fields += Dsl.COMMA + parts.component1();
         }
         var sql = "SELECT * FROM (SELECT " + fields +
                 " FROM " + entity.getTableName().getReference() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
@@ -499,7 +493,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     fields.add(Dsl.COLON.concat(field.getName()).concat(Dsl.COLON));
                 }
             }
-            var buildFields = String.join(",", fields);
+            var buildFields = String.join(Dsl.COMMA, fields);
             var template = "INSERT INTO " + entity.getTableName() + "(" + WordUtils.camelToSql(buildFields.replaceAll(":", "")) + ") " +
                     "VALUES(" + buildFields + ");";
             var query = new StringBuilder();

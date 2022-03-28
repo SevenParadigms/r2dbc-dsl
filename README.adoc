@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.14</version>
+  <version>4.6.15</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.14</version>
+  <version>4.6.15</version>
 </dependency>
 ----
 
@@ -99,15 +99,13 @@ data class Dsl {
 
 * Field with @Equality annotation on each update the value is comparing with previous value from database and throw exception is not equals, also can set in application.properties: `spring.r2dbc.dsl.equality = tenantId,userId`
 
-* Field with @ReadOnly annotation on each update the value getting from previous record if not null and setting to current record without comparing, also can set in application.properties: `spring.r2dbc.dsl.readOnly = tenantId,userId`
+* Field with @ReadOnly or @CreatedBy annotation on each update the value getting from previous record if not null and setting to current record without comparing, also can set in application.properties: `spring.r2dbc.dsl.readOnly = tenantId,userId`
 
-* Field with name `createdAt` type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @ReadOnly annotation logic
+* Field with name `createdAt` with type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @CreatedDate annotation and @ReadOnly annotation logic, also can be set in application.properties: `spring.r2dbc.dsl.createdAt = createdAt`
 
-* Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @LastModifiedDate annotation logic
+* Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @LastModifiedDate annotation logic, also can be set in application.properties: `spring.r2dbc.dsl.updatedAt = updatedAt`
 
-* Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking, also can set in application.properties: `spring.r2dbc.dsl.version = counter,innerIndex`
-
-* Do not need custom repositories for test, because DSL provides the required flexibility without changing business logic
+* Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking, also can be set in application.properties: `spring.r2dbc.dsl.version = counter,innerIndex`
 
 * ApplicationContext implementation as `Beans` utility class with caching resolved beans and registering new beans as ect or recreate by classname
 

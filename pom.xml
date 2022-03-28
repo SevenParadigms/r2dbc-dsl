@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.6.14</version>
+	<version>4.6.15</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -78,7 +78,7 @@
 		<kotlinx.version>1.6.0-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring.core>5.3.16</spring.core>
+		<spring.core>5.3.17</spring.core>
 		<springdata.commons>2.5.8</springdata.commons>
 		<springdata.autoconfig>2.5.9</springdata.autoconfig>
 		<springdata.relational>2.2.8</springdata.relational>
@@ -102,6 +102,7 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<jackson.version>2.13.2</jackson.version>
+		<jackson-databind.version>2.13.2.1</jackson-databind.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -364,7 +365,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>${jackson.version}</version>
+			<version>${jackson-databind.version}</version>
 		</dependency>
 
 		<dependency>

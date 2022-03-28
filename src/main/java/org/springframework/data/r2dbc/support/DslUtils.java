@@ -5,6 +5,8 @@ import kotlin.Pair;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.MurmurHash2;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -285,14 +287,6 @@ public abstract class DslUtils {
         }
     }
 
-    public static Set<Field> nowStamp(Object objectToSave, Enum<?> name, Class<?>... cls) {
-        var fields = getFields(objectToSave, name, cls);
-        for (Field field : fields) {
-            setNowStamp(objectToSave, field);
-        }
-        return fields;
-    }
-
     public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>... cls) {
         var result = new HashSet<Field>();
         if (FastMethodInvoker.has(objectToSave.getClass(), name.name())) {
@@ -301,6 +295,17 @@ public abstract class DslUtils {
         for (Class<?> c : cls) {
             var fields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), c);
             result.addAll(fields);
+        }
+        return result;
+    }
+
+    public static Set<Field> getFields(Object objectToSave, ApplicationContext applicationContext, String property) {
+        var result = new HashSet<Field>();
+        var propertyString = applicationContext.getEnvironment().getProperty(property, StringUtils.EMPTY);
+        if (!propertyString.isEmpty()) {
+            result.addAll(Arrays.stream(propertyString.split(Dsl.COMMA))
+                    .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
         }
         return result;
     }
