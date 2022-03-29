@@ -2,7 +2,7 @@
 
 This module provides `R2dbcRepository` for Web Querying throw REST API and Criteria building via `Dsl` class. Working with PostgreSQL, MySQL, Oracle, MS SQL.
 
-The internal extension of the base repository `R2dbcRepository` in Spring Data R2DBC is due to the use of features by all methods, and not just those related to DSL. Also modified a lot of integration tests with DSL features.
+The extension of the `R2dbcRepository` from Spring Data R2DBC is due to the use of DSL features by all methods. Also modified integration tests to DSL features.
 
 The Maven Central dependency instead of the library `spring-data-r2dbc`:
 
@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.15</version>
+  <version>4.6.16</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with Dsl model (it is convenient when using Reactive F
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.15</version>
+  <version>4.6.16</version>
 </dependency>
 ----
 

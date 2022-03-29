@@ -279,7 +279,7 @@ public class CustomQueryMapper {
 		return entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
 	}
 
-	Class<?> getTypeHint(Object mappedValue, Class<?> propertyType, SettableValue settableValue) {
+	Class<?> getTypeHint(@Nullable Object mappedValue, Class<?> propertyType, SettableValue settableValue) {
 
 		if (mappedValue == null || propertyType.equals(Object.class)) {
 			return settableValue.getType();

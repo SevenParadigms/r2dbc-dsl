@@ -46,12 +46,12 @@ public class Beans implements ApplicationContextAware {
     }
 
     public static String getProperty(String name, String defaultValue) {
-        return getApplicationContext() != null ?
+        return getApplicationContext() != null && getApplicationContext().getEnvironment().getProperty(name) != null ?
                 Objects.requireNonNull(getApplicationContext().getEnvironment().getProperty(name)) : defaultValue;
     }
 
     public static <T> T getProperty(String name, Class<T> target, T defaultValue) {
-        return getApplicationContext() != null ?
+        return getApplicationContext() != null && getApplicationContext().getEnvironment().getProperty(name) != null ?
                 Objects.requireNonNull(getApplicationContext().getEnvironment().getProperty(name, target)) : defaultValue;
     }
 
@@ -85,6 +85,11 @@ public class Beans implements ApplicationContextAware {
             }
         }
         return (T) OBJECTS_CACHE.get(requiredType);
+    }
+
+    public static <T> T putCache(T object) {
+        OBJECTS_CACHE.put(object.getClass(), object);
+        return object;
     }
 
     @Nullable

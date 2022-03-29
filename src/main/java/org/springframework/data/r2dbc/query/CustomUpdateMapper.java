@@ -15,12 +15,11 @@
  */
 package org.springframework.data.r2dbc.query;
 
-import io.netty.util.internal.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.relational.core.mapping.RelationalPersistentEntity;
-import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.sql.*;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -141,7 +140,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
     private Condition getCondition(Criteria criteria, MutableBindings bindings, Map<String, Table> tables,
                                    @Nullable RelationalPersistentEntity<?> entity) {
         SqlIdentifier criteriaColumn = criteria.getColumn();
-        Table table = tables.get(StringUtil.EMPTY_STRING);
+        Table table = tables.get(StringUtils.EMPTY);
         String columnName = criteriaColumn.getReference();
 
         if (criteriaColumn.getReference().indexOf('.') > -1) {
@@ -197,7 +196,7 @@ public class CustomUpdateMapper extends CustomQueryMapper {
         return createAssignment(column, mappedValue, typeHint, bindings);
     }
 
-    private Assignment createAssignment(Column column, Object value, Class<?> type, MutableBindings bindings) {
+    private Assignment createAssignment(Column column, @Nullable Object value, Class<?> type, MutableBindings bindings) {
 
         BindMarker bindMarker = bindings.nextMarker(column.getName().getReference());
         AssignValue assignValue = Assignments.value(column, SQL.bindMarker(bindMarker.getPlaceholder()));

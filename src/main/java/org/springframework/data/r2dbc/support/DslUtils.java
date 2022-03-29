@@ -6,10 +6,10 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.MurmurHash2;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.query.Criteria;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.util.ReflectionUtils;
@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.springframework.data.r2dbc.support.WordUtils.*;
 
 /**
@@ -42,7 +43,6 @@ public abstract class DslUtils {
     public static final String COMBINATORS = "(\\(|\\)|\")";
     public static final String DOT_REGEX = "\\.";
     public static final String JSONB = "->>'";
-    public static final String SPACE = " ";
 
     public enum Fields {createdAt, updatedAt, version}
 
@@ -288,20 +288,12 @@ public abstract class DslUtils {
     }
 
     public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>... cls) {
-        var result = new HashSet<Field>();
-        if (FastMethodInvoker.has(objectToSave.getClass(), name.name())) {
-            result.add(FastMethodInvoker.getField(objectToSave.getClass(), name.name()));
-        }
-        for (Class<?> c : cls) {
-            var fields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), c);
-            result.addAll(fields);
-        }
-        return result;
+        return FastMethodInvoker.getFields(objectToSave.getClass(), name.name(), cls);
     }
 
-    public static Set<Field> getFields(Object objectToSave, ApplicationContext applicationContext, String property) {
+    public static Set<Field> getPropertyFields(Object objectToSave, String property) {
         var result = new HashSet<Field>();
-        var propertyString = applicationContext.getEnvironment().getProperty(property, StringUtils.EMPTY);
+        var propertyString = Beans.getProperty(property, StringUtils.EMPTY);
         if (!propertyString.isEmpty()) {
             result.addAll(Arrays.stream(propertyString.split(Dsl.COMMA))
                     .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).filter(Objects::nonNull)

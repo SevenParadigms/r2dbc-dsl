@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.6.15</version>
+	<version>4.6.16</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -78,7 +78,7 @@
 		<kotlinx.version>1.6.0-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring.core>5.3.17</spring.core>
+		<spring-framework.version>5.3.17</spring-framework.version>
 		<springdata.commons>2.5.8</springdata.commons>
 		<springdata.autoconfig>2.5.9</springdata.autoconfig>
 		<springdata.relational>2.2.8</springdata.relational>
@@ -94,7 +94,6 @@
 		<mariadb-jdbc.version>2.7.5</mariadb-jdbc.version>
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
-		<netty>4.1.75.Final</netty>
 		<testcontainer>1.16.3</testcontainer>
 		<mockk>1.12.2</mockk>
 
@@ -111,7 +110,7 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-framework-bom</artifactId>
-				<version>${spring.core}</version>
+				<version>${spring-framework.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.r2dbc</groupId>
@@ -124,13 +123,6 @@
 				<groupId>org.testcontainers</groupId>
 				<artifactId>testcontainers-bom</artifactId>
 				<version>${testcontainer}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>io.netty</groupId>
-				<artifactId>netty-bom</artifactId>
-				<version>${netty}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -192,7 +184,6 @@
 	</dependencyManagement>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>io.github.sevenparadigms</groupId>
 			<artifactId>spring-data-r2dbc-dsl-common</artifactId>
@@ -490,7 +481,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
+				<version>3.10.1</version>
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>

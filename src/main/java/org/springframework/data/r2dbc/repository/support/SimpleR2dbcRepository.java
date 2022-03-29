@@ -16,7 +16,6 @@
 package org.springframework.data.r2dbc.repository.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.netty.util.internal.StringUtil;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.Notification;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
@@ -74,7 +73,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.r2dbc.support.DslUtils.*;
-import static org.springframework.data.r2dbc.support.DslUtils.getFields;
 
 /**
  * Simple {@link ReactiveSortingRepository} implementation using R2DBC through {@link DatabaseClient}.
@@ -183,10 +181,10 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         Assert.notNull(objectToSave, "Object to save must not be null!");
 
         final var versionFields = getFields(objectToSave, Fields.version, Version.class);
-        versionFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.version"));
+        versionFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.version"));
 
         final var nowStampFields = getFields(objectToSave, Fields.updatedAt, LastModifiedDate.class);
-        nowStampFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.updatedAt"));
+        nowStampFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.updatedAt"));
 
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
@@ -195,7 +193,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                 setVersion(objectToSave, version, 0);
             }
             nowStampFields.addAll(getFields(objectToSave, Fields.createdAt, CreatedDate.class));
-            nowStampFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.createdAt"));
+            nowStampFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.createdAt"));
             for (Field field : nowStampFields) {
                 setNowStamp(objectToSave, field);
             }
@@ -210,11 +208,11 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     .defaultIfEmpty(objectToSave);
         } else {
             final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
-            readOnlyFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.readOnly"));
-            readOnlyFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.createdAt"));
+            readOnlyFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.readOnly"));
+            readOnlyFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.createdAt"));
 
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
-            equalityFields.addAll(getFields(objectToSave, applicationContext, "spring.r2dbc.dsl.equality"));
+            equalityFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.equality"));
 
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
@@ -770,7 +768,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                 }
             }
         }
-        joins.put(StringUtil.EMPTY_STRING, table);
+        joins.put(StringUtils.EMPTY, table);
         var bindings = Bindings.empty();
         var updateMapper = new CustomUpdateMapper(dialect, converter);
         var bindMarkers = dialect.getBindMarkersFactory().create();
@@ -845,7 +843,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                             .finishJoin()
             );
         }
-        joins.put(StringUtil.EMPTY_STRING, table);
+        joins.put(StringUtils.EMPTY, table);
         var updateMapper = new CustomUpdateMapper(dialect, converter);
         var bindMarkers = dialect.getBindMarkersFactory().create();
         var bindings = Bindings.empty();
