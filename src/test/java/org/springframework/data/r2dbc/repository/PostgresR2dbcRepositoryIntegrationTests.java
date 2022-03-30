@@ -388,32 +388,32 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	@Test
 	void shouldCompareDates() {
+		var now = LocalDate.now();
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
-		legoSet1.setData(LocalDate.now().minus(1, ChronoUnit.DAYS));
+		legoSet1.setData(now.minus(1, ChronoUnit.DAYS));
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
-		legoSet2.setData(LocalDate.now());
+		legoSet2.setData(now);
 		LegoSet legoSet3 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
-		legoSet3.setData(LocalDate.now().plus(1, ChronoUnit.DAYS));
+		legoSet3.setData(now.plus(1, ChronoUnit.DAYS));
 
 		repository.saveBatch(List.of(legoSet1, legoSet2, legoSet3)).flatMap(Result::getRowsUpdated)
 				.as(StepVerifier::create)
 				.expectNextCount(3) //
 				.verifyComplete();
 
-		var now= LocalDate.now().toString();
-		repository.findAll(Dsl.create("data>>" + now)).collectList()
+		repository.findAll(Dsl.create().greaterThan("data", now)).collectList()
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 3, "must equals"))
 				.verifyComplete();
-		repository.findAll(Dsl.create("data<<" + now)).collectList()
+		repository.findAll(Dsl.create().lessThan("data", now)).collectList()
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 1, "must equals"))
 				.verifyComplete();
-		repository.findAll(Dsl.create("data<=" + now))
+		repository.findAll(Dsl.create().lessThanOrEquals("data", now))
 				.as(StepVerifier::create)
 				.expectNextCount(2) //
 				.verifyComplete();
-		repository.findAll(Dsl.create("data==" + now)).collectList()
+		repository.findAll(Dsl.create().equals("data", now)).collectList()
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 2, "must equals"))
 				.verifyComplete();
