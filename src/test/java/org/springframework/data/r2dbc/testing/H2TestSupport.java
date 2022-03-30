@@ -49,6 +49,7 @@ public class H2TestSupport {
 			+ "    data        date NULL\n," //
 			+ "    data_time   TIMESTAMP NULL\n," //
 			+ "    zoned_time  TIMESTAMP NULL\n," //
+			+ "    offset_time  TIMESTAMP NULL\n," //
 			+ "    exp         varchar(512) NULL\n," //
 			+ "    name_equality         varchar(255) NULL\n," //
 			+ "    manual_read_only         integer NULL\n," //

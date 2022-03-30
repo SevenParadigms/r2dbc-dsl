@@ -33,6 +33,7 @@ public class PostgresTestSupport {
 			+ "    data        date NULL\n," //
 			+ "    data_time   timestamp NULL\n," //
 			+ "    zoned_time  timestamp with time zone NULL\n," //
+			+ "    offset_time timestamp with time zone NULL\n," //
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 

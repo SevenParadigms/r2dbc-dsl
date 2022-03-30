@@ -96,10 +96,14 @@ public abstract class DslUtils {
                 switch (field.getType().getSimpleName()) {
                     case "UUID":
                         return UUID.fromString(it);
+                    case "OffsetDateTime":
+                        var offset = it.replaceAll(" ", "+");
+                        return OffsetDateTime.parse(offset.endsWith("Z") || offset.contains("+") ? offset : offset + "Z");
                     case "LocalDateTime":
                         return LocalDateTime.parse(it);
                     case "ZonedDateTime":
-                        return ZonedDateTime.parse(it.endsWith("Z") ? it : it + "Z");
+                        var zoned = it.replaceAll(" ", "+");
+                        return ZonedDateTime.parse(zoned.endsWith("Z") || zoned.contains("+") ? zoned : zoned + "Z");
                     case "LocalDate":
                         return LocalDate.parse(it);
                     case "Short":
@@ -141,8 +145,9 @@ public abstract class DslUtils {
 
     public static String objectToSql(@Nullable Object value) {
         if (value == null) return "null";
-        if (value instanceof LocalDateTime || value instanceof ZonedDateTime)  return "'" +
-                (value.toString().indexOf("+") > 0 ? value.toString().substring(0, value.toString().indexOf("+")) : value.toString()) + "'::timestamp";
+        if (value instanceof LocalDateTime)  return "'" + value + "'::timestamp";
+        if (value instanceof ZonedDateTime || value instanceof OffsetDateTime)  return "'" +
+                (value.toString().indexOf("[") > 0 ? value.toString().substring(0, value.toString().indexOf("[")) : value.toString()) + "'::timestamp with time zone";
         if (value instanceof LocalDate)  return "'" + value + "'::date";
         if (value instanceof String) return "'" + value + "'";
         if (value instanceof UUID) return "'" + value + "'::uuid";

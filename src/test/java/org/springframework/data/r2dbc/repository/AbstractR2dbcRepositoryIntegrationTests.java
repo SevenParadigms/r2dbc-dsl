@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -451,6 +452,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		LocalDate data;
 		LocalDateTime dataTime;
 		ZonedDateTime zonedTime;
+		OffsetDateTime offsetTime;
 
 		@PersistenceConstructor
 		LegoSet(Integer id, String name, Integer manual) {
