@@ -7,6 +7,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -31,6 +32,10 @@ public class CaffeineGuidedCacheManager implements CacheManager {
     private String defaultExpireAfterAccess = "500";
     private String defaultExpireAfterWrite = "";
     private String defaultMaximumSize = "10000";
+
+    public CaffeineGuidedCacheManager() {
+        this.applicationContext = Beans.getApplicationContext();
+    }
 
     public CaffeineGuidedCacheManager(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
@@ -125,11 +130,12 @@ public class CaffeineGuidedCacheManager implements CacheManager {
     }
 
     protected com.github.benmanes.caffeine.cache.Cache<Object, Object> createNativeCaffeineCache(String name) {
-        var expireAfterAccess = applicationContext.getEnvironment()
+        var context = Beans.setAndGetContext(applicationContext);
+        var expireAfterAccess = context.getEnvironment()
                 .getProperty("spring.r2dbc.dsl.cache." + name + ".expireAfterAccess", defaultExpireAfterAccess);
-        var expireAfterWrite = applicationContext.getEnvironment()
+        var expireAfterWrite = context.getEnvironment()
                 .getProperty("spring.r2dbc.dsl.cache." + name + ".expireAfterWrite", defaultExpireAfterWrite);
-        var maximumSize = applicationContext.getEnvironment()
+        var maximumSize = context.getEnvironment()
                 .getProperty("spring.r2dbc.dsl.cache." + name + ".maximumSize", defaultMaximumSize);
         cacheBuilder.expireAfterAccess(Long.parseLong(expireAfterAccess), TimeUnit.MILLISECONDS);
         if (!expireAfterWrite.isEmpty()) {

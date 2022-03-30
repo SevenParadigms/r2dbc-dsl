@@ -12,12 +12,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.query.Criteria;
 import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
-import reactor.util.annotation.Nullable;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
@@ -96,10 +97,11 @@ public abstract class DslUtils {
                     case "UUID":
                         return UUID.fromString(it);
                     case "LocalDateTime":
+                        return LocalDateTime.parse(it);
                     case "ZonedDateTime":
-                        return "'" + it + "'::timestamp";
+                        return ZonedDateTime.parse(it);
                     case "LocalDate":
-                        return "'" + it + "'::date";
+                        return LocalDate.parse(it);
                     case "Short":
                         return Short.valueOf(it);
                     case "Integer":
@@ -137,7 +139,11 @@ public abstract class DslUtils {
         return buildQuery;
     }
 
-    public static String objectToSql(Object value) {
+    public static String objectToSql(@Nullable Object value) {
+        if (value == null) return "null";
+        if (value instanceof LocalDateTime || value instanceof ZonedDateTime)  return "'" +
+                (value.toString().indexOf("+") > 0 ? value.toString().substring(0, value.toString().indexOf("+")) : value.toString()) + "'::timestamp";
+        if (value instanceof LocalDate)  return "'" + value + "'::date";
         if (value instanceof String) return "'" + value + "'";
         if (value instanceof UUID) return "'" + value + "'::uuid";
         if (value instanceof byte[]) return "decode('" + String.valueOf(Hex.encodeHex((byte[]) value)) + "', 'hex')";
@@ -185,16 +191,16 @@ public abstract class DslUtils {
                         criteriaBy = step.isNotNull();
                         break;
                     case Dsl.greater:
-                        if (value != null) criteriaBy = step.greaterThan(Long.valueOf(value));
+                        if (value != null) criteriaBy = step.greaterThan(stringToObject(value, field, type));
                         break;
                     case Dsl.greaterEqual:
-                        if (value != null) criteriaBy = step.greaterThanOrEquals(Long.valueOf(value));
+                        if (value != null) criteriaBy = step.greaterThanOrEquals(stringToObject(value, field, type));
                         break;
                     case Dsl.less:
-                        if (value != null) criteriaBy = step.lessThan(Long.valueOf(value));
+                        if (value != null) criteriaBy = step.lessThan(stringToObject(value, field, type));
                         break;
                     case Dsl.lessEqual:
-                        if (value != null) criteriaBy = step.lessThanOrEquals(Long.valueOf(value));
+                        if (value != null) criteriaBy = step.lessThanOrEquals(stringToObject(value, field, type));
                         break;
                     case Dsl.like:
                         if (value != null) criteriaBy = step.like("%" + value + "%");

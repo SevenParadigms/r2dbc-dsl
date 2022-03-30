@@ -49,6 +49,7 @@ import reactor.test.StepVerifier;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -445,6 +446,8 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		String nameEquality;
 		Integer manualReadOnly;
 		Long counterVersion;
+
+		LocalDate data;
 
 		@PersistenceConstructor
 		LegoSet(Integer id, String name, Integer manual) {

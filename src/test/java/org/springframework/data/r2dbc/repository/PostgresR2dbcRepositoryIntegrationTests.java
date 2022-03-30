@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.core.Hazelcast;
 import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.Result;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,8 @@ import reactor.test.StepVerifier;
 
 import javax.sql.DataSource;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -380,6 +383,39 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.findAll(Dsl.create().in("id", 2L).fields(" id", "name").limit(1))
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldCompareDates() {
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+		legoSet1.setData(LocalDate.now().minus(1, ChronoUnit.DAYS));
+		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		legoSet2.setData(LocalDate.now());
+		LegoSet legoSet3 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		legoSet3.setData(LocalDate.now().plus(1, ChronoUnit.DAYS));
+
+		repository.saveBatch(List.of(legoSet1, legoSet2, legoSet3)).flatMap(Result::getRowsUpdated)
+				.as(StepVerifier::create)
+				.expectNextCount(3) //
+				.verifyComplete();
+
+		var now= LocalDate.now().toString();
+		repository.findAll(Dsl.create("data>>" + now)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 3, "must equals"))
+				.verifyComplete();
+		repository.findAll(Dsl.create("data<<" + now)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 1, "must equals"))
+				.verifyComplete();
+		repository.findAll(Dsl.create("data<=" + now))
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
+				.verifyComplete();
+		repository.findAll(Dsl.create("data==" + now)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 2, "must equals"))
 				.verifyComplete();
 	}
 

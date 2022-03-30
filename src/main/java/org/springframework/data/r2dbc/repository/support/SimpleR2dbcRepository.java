@@ -367,7 +367,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             sql += criteria;
             var index = 1;
             for (Bindings.Binding bind : operation.getBindings()) {
-                sql = sql.replaceAll("\\$" + index++, bind.getValue() == null ? "null" : DslUtils.objectToSql(bind.getValue()));
+                sql = sql.replaceAll("\\$" + index++, DslUtils.objectToSql(bind.getValue()));
             }
         }
         return databaseClient.execute(sql).as(Long.class).fetch().one();

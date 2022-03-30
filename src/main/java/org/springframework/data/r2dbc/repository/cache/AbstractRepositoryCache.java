@@ -42,8 +42,8 @@ abstract public class AbstractRepositoryCache<T, ID> {
             if (cacheManager instanceof CaffeineGuidedCacheManager) {
                 var enableSecondCache = applicationContext.getEnvironment()
                         .getProperty("spring.r2dbc.dsl.secondCache", Boolean.FALSE.toString());
-                if (enableSecondCache.equalsIgnoreCase(Boolean.TRUE.toString())) {
-                    ((CaffeineGuidedCacheManager) cacheManager).setDefaultExpireAfterAccess("900000");
+                if (enableSecondCache.equalsIgnoreCase(Boolean.TRUE.toString()) ) {
+                    ((CaffeineGuidedCacheManager) cacheManager).setDefaultExpireAfterAccess("300000");
                 }
             } else {
                 log.info("R2dbcRepository<" + entity.getJavaType().getSimpleName() + "> initialize with cache: " + cacheManager.getClass().getSimpleName());
