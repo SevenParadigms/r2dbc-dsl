@@ -30,7 +30,9 @@ public class PostgresTestSupport {
 			+ "    name_equality         text NULL\n," //
 			+ "    manual_read_only         integer NULL\n," //
 			+ "    counter_version         integer NULL\n," //
-			+ "    data         date NULL\n," //
+			+ "    data        date NULL\n," //
+			+ "    data_time   timestamp NULL\n," //
+			+ "    zoned_time  timestamp with time zone NULL\n," //
 			+ "    cert        bytea NULL\n" //
 			+ ");";
 

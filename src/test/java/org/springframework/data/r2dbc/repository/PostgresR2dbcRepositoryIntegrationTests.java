@@ -57,6 +57,8 @@ import reactor.test.StepVerifier;
 import javax.sql.DataSource;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -389,12 +391,23 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	@Test
 	void shouldCompareDates() {
 		var now = LocalDate.now();
+		var nowTime = LocalDateTime.now();
+		var zonedTime = ZonedDateTime.now();
+
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
 		legoSet1.setData(now.minus(1, ChronoUnit.DAYS));
+		legoSet1.setDataTime(nowTime.minus(1, ChronoUnit.DAYS));
+		legoSet1.setZonedTime(zonedTime.minus(1, ChronoUnit.DAYS));
+
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
 		legoSet2.setData(now);
+		legoSet2.setDataTime(nowTime);
+		legoSet2.setZonedTime(zonedTime);
+
 		LegoSet legoSet3 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
 		legoSet3.setData(now.plus(1, ChronoUnit.DAYS));
+		legoSet3.setDataTime(nowTime.plus(1, ChronoUnit.DAYS));
+		legoSet3.setZonedTime(zonedTime.plus(1, ChronoUnit.DAYS));
 
 		repository.saveBatch(List.of(legoSet1, legoSet2, legoSet3)).flatMap(Result::getRowsUpdated)
 				.as(StepVerifier::create)
@@ -414,6 +427,41 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.expectNextCount(2) //
 				.verifyComplete();
 		repository.findAll(Dsl.create().equals("data", now)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 2, "must equals"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().greaterThan("dataTime", nowTime)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 3, "must equals"))
+				.verifyComplete();
+		repository.findAll(Dsl.create().lessThan("dataTime", nowTime)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 1, "must equals"))
+				.verifyComplete();
+		repository.findAll(Dsl.create().greaterThanOrEquals("dataTime", nowTime))
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
+				.verifyComplete();
+		repository.findAll(Dsl.create().equals("dataTime", nowTime)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 2, "must equals"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().greaterThan("zonedTime", zonedTime)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 3, "must equals"))
+				.verifyComplete();
+		repository.findAll(Dsl.create().lessThan("zonedTime", zonedTime)).collectList()
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 1, "must equals"))
+				.verifyComplete();
+		repository.findAll(Dsl.create().lessThanOrEquals("zonedTime", zonedTime))
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
+				.verifyComplete();
+		repository.findAll(Dsl.create().greaterThanOrEquals("zonedTime", zonedTime.minus(12, ChronoUnit.HOURS))
+						.lessThanOrEquals("zonedTime", zonedTime)).collectList()
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 2, "must equals"))
 				.verifyComplete();

@@ -99,7 +99,7 @@ public abstract class DslUtils {
                     case "LocalDateTime":
                         return LocalDateTime.parse(it);
                     case "ZonedDateTime":
-                        return ZonedDateTime.parse(it);
+                        return ZonedDateTime.parse(it.endsWith("Z") ? it : it + "Z");
                     case "LocalDate":
                         return LocalDate.parse(it);
                     case "Short":
