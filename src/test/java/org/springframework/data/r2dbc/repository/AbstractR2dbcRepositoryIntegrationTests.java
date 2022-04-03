@@ -41,6 +41,7 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.expression.Expression;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -455,7 +456,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		OffsetDateTime offsetTime;
 
 		@PersistenceConstructor
-		LegoSet(Integer id, String name, Integer manual) {
+		LegoSet(@Nullable Integer id, String name, Integer manual) {
 			super(id);
 			this.name = name;
 			this.manual = manual;
