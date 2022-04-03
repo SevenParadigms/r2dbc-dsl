@@ -51,6 +51,14 @@ public class MySqlTestSupport {
 			+ "    version     integer NULL,\n" //
 			+ "    now         TIMESTAMP NULL\n," //
 			+ "    name        varchar(255) NOT NULL,\n" //
+			+ "    data        date NULL\n," //
+			+ "    data_time   TIMESTAMP NULL\n," //
+			+ "    zoned_time  TIMESTAMP NULL\n," //
+			+ "    offset_time  TIMESTAMP NULL\n," //
+			+ "    exp         varchar(512) NULL\n," //
+			+ "    name_equality         varchar(255) NULL\n," //
+			+ "    manual_read_only         integer NULL\n," //
+			+ "    counter_version         integer NULL\n," //
 			+ "    manual      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 

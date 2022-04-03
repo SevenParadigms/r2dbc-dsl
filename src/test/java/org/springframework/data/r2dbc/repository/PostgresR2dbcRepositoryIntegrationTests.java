@@ -383,7 +383,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().in("id", 2L).fields(" id", "name").limit(1))
+		repository.findAll(Dsl.create().in("id", 1L).in("name", "SCHAUFELRADBAGGER").fields(" id", "name").limit(1))
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
