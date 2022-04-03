@@ -71,9 +71,9 @@ data class Dsl {
 
 * Full manage of cache from repository methods: evict(Dsl dsl), put(Dsl dsl, T value) and get(Dsl dsl): T
 
-* Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
+* Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`, also can operate with LocalDate, LocalDateTime, OffsetDateTime, ZonedDateTime types as `createdAt>=2000-10-31T01:30.000-05:00` or `createdAt==2000-10-31T01:30.000001`
 
-* Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
+* Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods in `dsl.fields("id", "name")`
 
 * Joins to any tables 'tableName.type' and model must have `tableNameId` field and build criteria on joined columns `tableName.type==space`, also can select joined columns in result `fields=id,name,type`
 
