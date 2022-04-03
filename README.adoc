@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.6.18</version>
+  <version>4.7.0</version>
 </dependency>
 ----
 
@@ -38,13 +38,13 @@ interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun listener(): Flux<Notification>
     fun saveBatch(models: Iterable<S>): Flux<Result>
 
-    fun evict(Dsl dsl): R2dbcRepository<T, ID>
-    fun evict(ID id): R2dbcRepository<T, ID>
+    fun evict(dsl: Dsl): R2dbcRepository<T, ID>
+    fun evict(id: ID): R2dbcRepository<T, ID>
     fun evictAll(): R2dbcRepository<T, ID>
-    fun put(T value): R2dbcRepository<T, ID>
-    fun putAndGet(T value): Mono<T>
-    fun get(Dsl dsl): T
-    fun get(ID id): T
+    fun put(value: T): R2dbcRepository<T, ID>
+    fun putAndGet(value: T): Mono<T>
+    fun get(dsl: Dsl): T
+    fun get(id: ID): T
 }
 ----
 
