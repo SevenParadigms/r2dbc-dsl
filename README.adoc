@@ -63,19 +63,19 @@ data class Dsl {
 
 == Features
 
-* First Level Cache based on Caffeine with guided expire access and size for each cache from application.properties, can be usage as bean for @Cacheable
+* First level cache based on Caffeine with guided expire access and size for each cache from application.properties, can be usage as bean for @Cacheable
 
-* Convert First Level Cache to Second Level Cache by property in application.properties: `spring.r2dbc.dsl.secondCache = true` then subscribe to changes from database
+* Convert first level cache to second level cache by property in application.properties: `spring.r2dbc.dsl.secondCache = true` then subscribe to changes from database
 
-* Support Second Level Cache from any Spring CacheManager implementation and may be both working with subscribe to change from database. Enabled by: `spring.r2dbc.dsl.cacheManager = true`
+* Support second level cache from any CacheManager implementation and may be both working with subscribe to change from database. Enabled by: `spring.r2dbc.dsl.cacheManager = true`
 
-* Full First Level Cache manage from repository methods: evict(Dsl dsl), put(Dsl dsl, T value) and get(Dsl dsl): T
+* Full manage of cache from repository methods: evict(Dsl dsl), put(Dsl dsl, T value) and get(Dsl dsl): T
 
-* Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`
+* Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`, also can operate with LocalDate, LocalDateTime, OffsetDateTime, ZonedDateTime types as `createdAt>=2000-10-31T01:30.000-05:00` or `createdAt==2000-10-31T01:30.000001`
 
-* Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods
+* Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods in `dsl.fields("id", "name")`
 
-* Joins to any tables and build criteria on joined columns, also can select joined columns in result
+* Joins to any tables 'tableName.type' and model must have `tableNameId` field and build criteria on joined columns `tableName.type==space`, also can select joined columns in result `fields=id,name,type`
 
 * Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
 
@@ -83,7 +83,7 @@ data class Dsl {
 
 * JsonNode type in model automatically converted to JSONB type of PostgreSQL and back
 
-* Expression type in model automatically converted to TEXT type of PostgreSQL and back
+* SpEL Expression type in model automatically converted to TEXT type of PostgreSQL and back
 
 * Repository `listener` method is subscribe to listen of all changes of table from database in realtime over `Flux<Notification>`
 
@@ -109,7 +109,7 @@ data class Dsl {
 
 * ApplicationContext implementation as `Beans` utility class with caching resolved beans and registering new beans as ect or recreate by classname
 
-* Utility class SqlField include constants with a most used sql-names in table fields for no handwriting names
+* Utility class SqlField constants a most used sql-names in tables for no handwriting names
 
 == Concepts
 
@@ -272,3 +272,5 @@ Any type of object can be inserted from List because the operation is massive at
 ----
 dslRepository.saveBatch(listOf(cool1, cool2, pencil1, pencil2))
 ----
+
+The most quickly `copy` is arrived at some time later.
