@@ -188,10 +188,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		WithHstore person = new WithHstore(null, Collections.singletonMap("hello", "world"));
 		hstoreRepositoryWith.save(person).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		hstoreRepositoryWith.findAll().as(StepVerifier::create).consumeNextWith(actual -> {
-
-			assertThat(actual.hstoreValue).isNotNull().containsEntry("hello", "world");
-		}).verifyComplete();
+		hstoreRepositoryWith.findAll().as(StepVerifier::create).consumeNextWith(actual -> assertThat(actual.hstoreValue).isNotNull().containsEntry("hello", "world")).verifyComplete();
 	}
 
 	@AllArgsConstructor
@@ -263,9 +260,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 		repository.save(legoSet) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(actual -> {
-					assertThat(actual.getManualReadOnly()).isEqualTo(22);
-				})
+				.consumeNextWith(actual -> assertThat(actual.getManualReadOnly()).isEqualTo(22))
 				.verifyComplete();
 
 		// try to change equality attr from properties name and get exception
@@ -282,9 +277,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 		repository.save(legoSet) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(actual -> {
-					assertThat(actual.getManual()).isEqualTo(13);
-				})
+				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();
 
 		// check versions
@@ -304,44 +297,37 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 		repository.findOne(Dsl.create().equals("manual", 13))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getName()).isEqualTo("FORSCHUNGSSCHIFF");
-				})
+				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("FORSCHUNGSSCHIFF"))
 				.verifyComplete();
 
 		repository.findOne(Dsl.create().notEquals("manual", 13))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");
-				})
+				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER"))
+				.verifyComplete();
+
+		repository.findOne(Dsl.create().notEquals("name", "SCHAUFELRADBAGGER"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("FORSCHUNGSSCHIFF"))
 				.verifyComplete();
 
 		repository.findOne(Dsl.create().equals("name", "FORSCHUNGSSCHIFF"))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getManual()).isEqualTo(13);
-				})
+				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();
 
 		repository.findOne(Dsl.create().like("name", "UNGSS"))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getManual()).isEqualTo(13);
-				})
+				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();
 
 		repository.findOne(Dsl.create().id(1L))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");
-				})
+				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER"))
 				.verifyComplete();
 
 		repository.findOne(Dsl.create().in("id", 1L))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER");
-				})
+				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER"))
 				.verifyComplete();
 
 		repository.findAll(Dsl.create())
@@ -351,16 +337,12 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 		repository.findOne(Dsl.create().sorting("id", "desc"))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getId().longValue() == 2);
-				})
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
 				.verifyComplete();
 
 		repository.findOne(Dsl.create().sorting("id", "desc").pageable(1, 1))
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getId().longValue() == 1);
-				})
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 1, "must 1"))
 				.verifyComplete();
 
 		repository.findAll(Dsl.create().greaterThanOrEquals("id", 1L).limit(2))
