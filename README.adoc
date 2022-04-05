@@ -11,18 +11,18 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.7.0</version>
+  <version>4.7.1</version>
 </dependency>
 ----
 
-there included common jar with Dsl model (it is convenient when using Reactive Feign Client):
+there included common jar with `Dsl` and `MementoPage` models (it is convenient when using Reactive Feign Client):
 
 [source,xml]
 ----
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.6.18</version>
+  <version>4.7.1</version>
 </dependency>
 ----
 
@@ -32,6 +32,7 @@ That library produce `R2dbcRepository` interface with Dsl extention:
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
+    fun findAllPaged(Dsl dsl): Mono<MementoPage<T>>
     fun delete(dsl: Dsl): Mono<Integer>
     fun count(dsl: Dsl): Mono<Long>
 
@@ -71,9 +72,9 @@ data class Dsl {
 
 * Full manage of cache from repository methods: evict(Dsl dsl), put(Dsl dsl, T value) and get(Dsl dsl): T
 
-* Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`, also can operate with LocalDate, LocalDateTime, OffsetDateTime, ZonedDateTime types as `createdAt>=2000-10-31T01:30.000-05:00` or `createdAt==2000-10-31T01:30.000001`
+* Dsl support all SQL predicates: `=, >, <, >=, <=, like, in, not in, is true, is false, is null, is not null`, also can operate with LocalDate, LocalDateTime, OffsetDateTime, ZonedDateTime types as `createdAt>=2000-10-31T01:30.000-05:00` or `createdAt==2000-10-31T01:30.001` or `createdAt<<2000-10-31T01:30`
 
-* Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` methods in `dsl.fields("id", "name")`
+* Ability to choose resulted columns in `findAll(dsl: Dsl)` and `findOne(dsl: Dsl)` from `dsl.fields("id", "name")` or in url `fields=id,name`
 
 * Joins to any tables 'tableName.type' and model must have `tableNameId` field and build criteria on joined columns `tableName.type==space`, also can select joined columns in result `fields=id,name,type`
 
@@ -85,9 +86,9 @@ data class Dsl {
 
 * SpEL Expression type in model automatically converted to TEXT type of PostgreSQL and back
 
-* Repository `listener` method is subscribe to listen of all changes of table from database in realtime over `Flux<Notification>`
+* Repository `listener` method subscribe to listen of all changes of table from database in realtime over `Flux<Notification>` (Postgres only)
 
-* Ranked full text search by field `tsv` as default with RUM index operator in `Dsl.fts` method
+* Ranked full text search by field `tsv` as default with RUM index operator in `Dsl.fts` method (Postgres only)
 
 * Paging and Sorting full support with ordering in several columns at once
 
@@ -179,13 +180,13 @@ spring.r2dbc.dsl.cacheManager: true
 
 Previous property `secondCache` can be worked both with CacheManager of in-memory database [Hazelcast, Redis].
 
-We can manage for each R2dbcRepository Caffeine First Level Cache (also Caffeine as Second Level Cache) with custom timeouts and max size:
+We can manage for each R2dbcRepository internal Caffeine first level cache (also Caffeine as Second Level Cache) with custom timeouts and max size:
 
 [source,yaml]
 ----
-spring.r2dbc.dsl.cache:
-  <model class simple name>.expireAfterAccess: 500
-  <model class simple name>.expireAfterWrite: 1000
+spring.cache:
+  <model class simple name>.expireAfterAccess: 500 # seconds
+  <model class simple name>.expireAfterWrite: 1000 # seconds
   <model class simple name>.maximumSize: 10000
 ----
 

@@ -40,7 +40,6 @@ import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.repository.query.Dsl;
-import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
@@ -77,7 +76,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		"spring.r2dbc.dsl.cacheManager=true",
 		"spring.r2dbc.dsl.equality=nameEquality",
 		"spring.r2dbc.dsl.readOnly=manualReadOnly",
-		"spring.r2dbc.dsl.version=counterVersion",})
+		"spring.r2dbc.dsl.version=counterVersion"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIntegrationTests {
 
@@ -372,7 +371,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	}
 
 	@Test
-	void shouldCompareDates() {
+	void shouldCompareDatesAndPagedResult() {
 		var now = LocalDate.now();
 		var nowTime = LocalDateTime.now();
 		var zonedTime = ZonedDateTime.now();
@@ -384,13 +383,13 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		legoSet1.setZonedTime(zonedTime.minus(1, ChronoUnit.DAYS));
 		legoSet1.setOffsetTime(offsetTime.minus(1, ChronoUnit.DAYS));
 
-		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF_2", 13);
 		legoSet2.setData(now);
 		legoSet2.setDataTime(nowTime);
 		legoSet2.setZonedTime(zonedTime);
 		legoSet2.setOffsetTime(offsetTime);
 
-		LegoSet legoSet3 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		LegoSet legoSet3 = new LegoSet(null, "FORSCHUNGSSCHIFF_3", 14);
 		legoSet3.setData(now.plus(1, ChronoUnit.DAYS));
 		legoSet3.setDataTime(nowTime.plus(1, ChronoUnit.DAYS));
 		legoSet3.setZonedTime(zonedTime.plus(1, ChronoUnit.DAYS));
@@ -468,16 +467,35 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 2, "must equals"))
 				.verifyComplete();
-	}
 
-	@Test
-	void shouldBatch() {
-		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
-		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		var monsterDsl = Dsl.create()
+				.notEquals("name", "FORSCHUNGSSCHIFF_2")
+				.in("name", "FORSCHUNGSSCHIFF_3")
+				.greaterThanOrEquals("dataTime", legoSet2.dataTime)
+				.greaterThanOrEquals("zonedTime", legoSet2.zonedTime)
+				.greaterThanOrEquals("offsetTime", legoSet2.offsetTime)
+				.lessThanOrEquals("dataTime", legoSet3.dataTime)
+				.lessThanOrEquals("zonedTime", legoSet3.zonedTime)
+				.lessThanOrEquals("offsetTime", legoSet3.offsetTime)
+				.in("manual", 14)
+				.sorting("dataTime", "desc");
 
-		repository.saveBatch(List.of(legoSet1, legoSet2))
+		Assert.isTrue(monsterDsl.getQuery().startsWith("name!=FORSCHUNGSSCHIFF_2,name^^FORSCHUNGSSCHIFF_3")
+				&& monsterDsl.getQuery().endsWith("manual^^14"), "Dsl criteria must is ordered");
+
+		repository.findAll(monsterDsl).collectList()
 				.as(StepVerifier::create)
-				.expectNextCount(2) //
+				.consumeNextWith(actual -> Assert.isTrue(actual.get(0).id == 3, "must equals"))
+				.verifyComplete();
+
+		repository.findAllPaged(Dsl.create().pageable(0, 3))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(
+						actual.isLastPage()
+								&& actual.getPage().getTotalPages() == 1
+								&& actual.getPage().getOffset() == 0
+								&& actual.getPage().getTotalElements() == 3,
+						"must equals"))
 				.verifyComplete();
 	}
 
@@ -492,13 +510,12 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	static class CacheTest extends AbstractRepositoryCache<String, UUID> {
 		public CacheTest() {
 			super(null, Beans.getApplicationContext());
-			Assert.isTrue(DslUtils.generateHash(Dsl.create().id(1)) == DslUtils.generateHash(Dsl.create().id(1)), "must equals");
 			var id = UUID.fromString("00000000-0000-0000-0000-000000000000");
 			put(String.class, Dsl.create().id(id), "test1");
 			var hash = getHash(String.class, Dsl.create().id(id));
 			var contains = contains(String.class, Dsl.create().id(id));
 			var value = Objects.requireNonNull(get(String.class, Dsl.create().id(id)));
-			Assert.isTrue(hash.equals("null.String.-569643752"), "must equals");
+			Assert.isTrue(hash.equals("null.String.12453737"), "must equals");
 			Assert.isTrue(contains, "should be contain");
 			Assert.isTrue(value.equals("test1"), "value is equal");
 			evict(String.class, Dsl.create().id(id));
@@ -556,6 +573,11 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.count(Dsl.create())
 				.as(StepVerifier::create)
 				.consumeNextWith(count -> Assert.isTrue(count == 2, "must equals"))
+				.verifyComplete();
+
+		repository.count(Dsl.create().equals("manual", 12).in("name", "SCHAUFELRADBAGGER", "SCHAUFELRADBAGGER"))
+				.as(StepVerifier::create)
+				.consumeNextWith(count -> Assert.isTrue(count == 1, "must equals"))
 				.verifyComplete();
 
 		repository.count(Dsl.create().equals("manual", 12))

@@ -18,6 +18,7 @@ package org.springframework.data.r2dbc.repository;
 import io.r2dbc.postgresql.api.Notification;
 import io.r2dbc.spi.Result;
 import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.repository.query.MementoPage;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
@@ -37,11 +38,13 @@ import java.util.List;
 @NoRepositoryBean
 public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>, ReactiveQueryByExampleExecutor<T> {
     Flux<T> findAll(Dsl dsl);
+    Mono<MementoPage<T>> findAllPaged(Dsl dsl);
     Mono<T> findOne(Dsl dsl);
     Mono<Integer> delete(Dsl dsl);
+    Mono<Long> count(Dsl dsl);
+
     Flux<Notification> listener();
     <S> Flux<Result> saveBatch(Iterable<S> models);
-    Mono<Long> count(Dsl dsl);
 
     R2dbcRepository<T, ID> evict(Dsl dsl);
     R2dbcRepository<T, ID> evict(ID id);

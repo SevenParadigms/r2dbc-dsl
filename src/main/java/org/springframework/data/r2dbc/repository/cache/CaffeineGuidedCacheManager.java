@@ -132,11 +132,11 @@ public class CaffeineGuidedCacheManager implements CacheManager {
     protected com.github.benmanes.caffeine.cache.Cache<Object, Object> createNativeCaffeineCache(String name) {
         var context = Beans.setAndGetContext(applicationContext);
         var expireAfterAccess = context.getEnvironment()
-                .getProperty("spring.r2dbc.dsl.cache." + name + ".expireAfterAccess", defaultExpireAfterAccess);
+                .getProperty("spring.cache." + name + ".expireAfterAccess", defaultExpireAfterAccess);
         var expireAfterWrite = context.getEnvironment()
-                .getProperty("spring.r2dbc.dsl.cache." + name + ".expireAfterWrite", defaultExpireAfterWrite);
+                .getProperty("spring.cache." + name + ".expireAfterWrite", defaultExpireAfterWrite);
         var maximumSize = context.getEnvironment()
-                .getProperty("spring.r2dbc.dsl.cache." + name + ".maximumSize", defaultMaximumSize);
+                .getProperty("spring.cache." + name + ".maximumSize", defaultMaximumSize);
         cacheBuilder.expireAfterAccess(Long.parseLong(expireAfterAccess), TimeUnit.MILLISECONDS);
         if (!expireAfterWrite.isEmpty()) {
             cacheBuilder.expireAfterWrite(Long.parseLong(expireAfterWrite), TimeUnit.MILLISECONDS);

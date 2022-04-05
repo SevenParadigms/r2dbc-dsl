@@ -44,6 +44,7 @@ import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.query.Equality;
+import org.springframework.data.r2dbc.repository.query.MementoPage;
 import org.springframework.data.r2dbc.repository.query.ReadOnly;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
@@ -367,7 +368,12 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             sql += criteria;
             var index = 1;
             for (Bindings.Binding bind : operation.getBindings()) {
-                sql = sql.replaceAll("\\$" + index++, DslUtils.objectToSql(bind.getValue()));
+                var bindValue = DslUtils.objectToSql(bind.getValue());
+                sql = sql.replaceAll("(\\$" + index + " )", bindValue + " ");
+                sql = sql.replaceAll("(\\$" + index + "$)", bindValue);
+                sql = sql.replaceAll("(\\$" + index + "\\))", bindValue + ")");
+                sql = sql.replaceAll("(\\$" + index + ",)", bindValue + ",");
+                index++;
             }
         }
         return databaseClient.execute(sql).as(Long.class).fetch().one();
@@ -509,6 +515,24 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     public Flux<T> findAll(Dsl dsl) {
         if (dsl.getQuery().contains("@@")) return fullTextSearch(dsl);
         return getFlux(dsl, databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all());
+    }
+
+    @Override
+    public Mono<MementoPage<T>> findAllPaged(Dsl dsl) {
+        if (dsl.getQuery().contains("@@")) return fullTextSearch(dsl).collectList()
+                .flatMap(content -> count(dsl).map(totalElements -> new MementoPage<>(
+                        new MementoPage.MementoPageRequest(dsl, totalElements), content)));
+        if (containsFlux(dsl)) {
+            return count(dsl).map(totalElements -> new MementoPage<>(
+                    new MementoPage.MementoPageRequest(dsl, totalElements), getList(Flux.class, dsl)
+            ));
+        } else
+            return databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all().collectList()
+                    .flatMap(content -> {
+                        putFlux(dsl.pageable(dsl.getPage() < 0 ? 0 : dsl.getPage(), dsl.getSize() < 0 ? 20 : dsl.getSize()), content);
+                        return count(dsl).map(totalElements -> new MementoPage<>(
+                                new MementoPage.MementoPageRequest(dsl, totalElements), content));
+                    });
     }
 
     /*

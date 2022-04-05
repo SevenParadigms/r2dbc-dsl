@@ -14,12 +14,14 @@ import org.springframework.data.relational.repository.query.RelationalEntityInfo
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.springframework.data.r2dbc.support.DslUtils.DOT;
+import static org.springframework.data.r2dbc.support.DslUtils.JSONB;
 
 abstract public class AbstractRepositoryCache<T, ID> {
     private static final Logger log = LoggerFactory.getLogger(AbstractRepositoryCache.class);
@@ -53,7 +55,12 @@ abstract public class AbstractRepositoryCache<T, ID> {
 
     protected String getHash(Class<?> type, Dsl dsl) {
         var entityType = entity == null ? null : entity.getJavaType().getSimpleName();
-        return entityType + DOT + type.getSimpleName() + DOT + DslUtils.generateHash(dsl);
+        return entityType + JSONB + type.getSimpleName() + JSONB + DslUtils.generateHash(dsl);
+    }
+
+    protected Tuple3<String, String, Dsl> extractHash(String hash) {
+        var arr = hash.split(JSONB);
+        return Tuples.of(arr[0], arr[1], DslUtils.generateDsl(arr[2]));
     }
 
     protected Cache getCache() {
