@@ -515,7 +515,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 			var hash = getHash(String.class, Dsl.create().id(id));
 			var contains = contains(String.class, Dsl.create().id(id));
 			var value = Objects.requireNonNull(get(String.class, Dsl.create().id(id)));
-			Assert.isTrue(hash.equals("null.String.12453737"), "must equals");
+			Assert.isTrue(hash.equals("null->>'String->>'id==00000000-0000-0000-0000-000000000000--1--1-"), "must equals");
 			Assert.isTrue(contains, "should be contain");
 			Assert.isTrue(value.equals("test1"), "value is equal");
 			evict(String.class, Dsl.create().id(id));
