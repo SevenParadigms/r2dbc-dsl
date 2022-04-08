@@ -1,5 +1,6 @@
 package org.springframework.data.r2dbc.repository.cache;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -136,10 +137,12 @@ abstract public class AbstractRepositoryCache<T, ID> {
 
     public void putFlux(Dsl dsl, List<T> value) {
         putList(Flux.class, dsl, value);
-        for (T it : value) {
-            var id = (ID) FastMethodInvoker.getValue(it, SqlField.id);
-            if (id != null) {
-                put(Mono.class, Dsl.create().id(id), it);
+        if (ObjectUtils.isEmpty(dsl.getFields().length)) {
+            for (T it : value) {
+                var id = (ID) FastMethodInvoker.getValue(it, SqlField.id);
+                if (id != null) {
+                    put(Mono.class, Dsl.create().id(id), it);
+                }
             }
         }
     }

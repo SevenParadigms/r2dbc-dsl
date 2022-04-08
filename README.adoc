@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.7.2</version>
+  <version>4.7.3</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with `Dsl` and `MementoPage` models (it is convenient 
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.7.2</version>
+  <version>4.7.3</version>
 </dependency>
 ----
 
@@ -96,7 +96,7 @@ data class Dsl {
 
 * Utility class `JsonUtils` is a powerful utils to flexibility manage any json operations around JsonNode type.
 
-* Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)`
+* Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)` and have `batchSave` massive opearaion for any type objects in collection.
 
 * Field with @Equality annotation on each update the value is comparing with previous value from database and throw exception is not equals, also can set in application.properties: `spring.r2dbc.dsl.equality = tenantId,userId`
 
@@ -267,11 +267,11 @@ dslRepository.findAll(Dsl.create().fts("cool | pencil").equals("jfolderId", fold
 
 == Batch insert:
 
-Any type of object can be inserted from List because the operation is massive at high speed:
+The objects can be inserted from iterable in massive at high speed native batch operation:
 
 [source,kotlin]
 ----
-dslRepository.saveBatch(listOf(cool1, cool2, pencil1, pencil2))
+dslRepository.saveBatch(listOf(cool1, cool2, cool10000))
 ----
 
 The most quickly `copy` is arrived at some time later.

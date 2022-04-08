@@ -203,10 +203,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     .table(this.entity.getTableName()).using(objectToSave)
                     .map(converter.populateIdIfNecessary(objectToSave))
                     .first().flatMap(updated -> {
-                        evictAll().put(objectToSave);
+                        evictAll().put(updated);
                         return Mono.just(updated);
-                    })
-                    .defaultIfEmpty(objectToSave);
+                    });
         } else {
             final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
             readOnlyFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.readOnly"));
@@ -487,7 +486,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     @Override
-    public <S> Flux<Result> saveBatch(Iterable<S> models) {
+    public Flux<Result> saveBatch(Iterable<T> models) {
         var connectionFactory = (PostgresqlConnectionFactory) databaseClient.getConnectionFactory();
         try {
             var fields = new ArrayList<String>();
@@ -501,7 +500,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             var template = "INSERT INTO " + entity.getTableName() + "(" + WordUtils.camelToSql(buildFields.replaceAll(":", "")) + ") " +
                     "VALUES(" + buildFields + ");";
             var query = new StringBuilder();
-            for (S target : models) {
+            for (T target : models) {
                 query.append(DslUtils.binding(template, target));
             }
             evictAll();

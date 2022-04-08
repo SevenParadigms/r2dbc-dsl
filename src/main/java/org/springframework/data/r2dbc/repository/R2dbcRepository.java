@@ -44,7 +44,7 @@ public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>
     Mono<Long> count(Dsl dsl);
 
     Flux<Notification> listener();
-    <S> Flux<Result> saveBatch(Iterable<S> models);
+    Flux<Result> saveBatch(Iterable<T> models);
 
     R2dbcRepository<T, ID> evict(Dsl dsl);
     R2dbcRepository<T, ID> evict(ID id);
