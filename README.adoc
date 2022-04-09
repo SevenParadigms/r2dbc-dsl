@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.7.3</version>
+  <version>4.7.4</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with `Dsl` and `MementoPage` models (it is convenient 
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.7.3</version>
+  <version>4.7.4</version>
 </dependency>
 ----
 
@@ -32,12 +32,12 @@ That library produce `R2dbcRepository` interface with Dsl extention:
 interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findOne(dsl: Dsl): Mono<T>
     fun findAll(dsl: Dsl): Flux<T>
-    fun findAllPaged(Dsl dsl): Mono<MementoPage<T>>
+    fun findAllPaged(dsl: Dsl): Mono<MementoPage<T>>
     fun delete(dsl: Dsl): Mono<Integer>
     fun count(dsl: Dsl): Mono<Long>
 
     fun listener(): Flux<Notification>
-    fun saveBatch(models: Iterable<S>): Flux<Result>
+    fun saveBatch(models: Iterable<T>): Flux<Result>
 
     fun evict(dsl: Dsl): R2dbcRepository<T, ID>
     fun evict(id: ID): R2dbcRepository<T, ID>
@@ -64,7 +64,7 @@ data class Dsl {
 
 == Features
 
-* First level cache based on Caffeine with guided expire access and size for each cache from application.properties, can be usage as bean for @Cacheable
+* First level cache based on Caffeine with guided expire access and size for each cache from application.properties, can be using as bean for @Cacheable
 
 * Convert first level cache to second level cache by property in application.properties: `spring.r2dbc.dsl.secondCache = true` then subscribe to changes from database
 

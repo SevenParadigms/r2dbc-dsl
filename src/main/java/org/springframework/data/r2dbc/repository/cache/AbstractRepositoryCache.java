@@ -137,7 +137,7 @@ abstract public class AbstractRepositoryCache<T, ID> {
 
     public void putFlux(Dsl dsl, List<T> value) {
         putList(Flux.class, dsl, value);
-        if (ObjectUtils.isEmpty(dsl.getFields().length)) {
+        if (ObjectUtils.isEmpty(dsl.getFields())) {
             for (T it : value) {
                 var id = (ID) FastMethodInvoker.getValue(it, SqlField.id);
                 if (id != null) {

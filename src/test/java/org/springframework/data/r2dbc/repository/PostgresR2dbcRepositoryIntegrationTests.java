@@ -635,37 +635,21 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	}
 
 	@Test
-	void shouldCacheMonoToFlux() {
-		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+	void shouldCacheMonoFromFlux() {
+		repository.deleteAll().block();
 
+		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
 		repository.evictAll().save(legoSet1)
 				.as(StepVerifier::create)
 				.expectNextCount(1)
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().id(1))
+		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+
+		repository.evictAll().findAll(Dsl.create().id(1))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must true");
-					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
-				})
-				.verifyComplete();
-	}
-
-	@Test
-	void shouldCacheSaveAndFlux() {
-		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
-		repository.deleteAll().block();
-
-		repository.save(legoSet1)
-				.as(StepVerifier::create)
-				.expectNextCount(1)
-				.verifyComplete();
-
-		repository.evictAll().findAll(Dsl.create()).collectList()
-				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					Assert.isTrue(actual.get(0).getName().equals("SCHAUFELRADBAGGER"), "must true");
 					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 				})
 				.verifyComplete();
