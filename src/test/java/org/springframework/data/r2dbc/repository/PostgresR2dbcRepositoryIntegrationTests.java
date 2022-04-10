@@ -238,37 +238,17 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.findById(2)
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
+					assertThat(actual.getId()).isEqualTo(2);
 					assertThat(actual.getName()).isEqualTo("FORSCHUNGSSCHIFF");
 					assertThat(actual.getManual()).isEqualTo(13);
 					assertThat(actual.getVersion()).isEqualTo(1);
 					assertThat(actual.getNow()).isNotNull();
+					assertThat(actual.getManualReadOnly()).isEqualTo(22);
+					assertThat(actual.getCounterVersion()).isEqualTo(1);
 				})
 				.verifyComplete();
 
-		// try to change equality attr name and get exception
 		var legoSet = legoSets.get(1);
-		legoSet.setName("123");
-
-		repository.save(legoSet) //
-				.as(StepVerifier::create) //
-				.expectError(IllegalStateException.class);
-
-		// try to change readonly attr manual and get old value
-		legoSet.setName("FORSCHUNGSSCHIFF");
-		legoSet.setManualReadOnly(123);
-
-		repository.save(legoSet) //
-				.as(StepVerifier::create) //
-				.consumeNextWith(actual -> assertThat(actual.getManualReadOnly()).isEqualTo(22))
-				.verifyComplete();
-
-		// try to change equality attr from properties name and get exception
-		legoSet = legoSets.get(1);
-		legoSet.setNameEquality("123");
-
-		repository.save(legoSet) //
-				.as(StepVerifier::create) //
-				.expectError(IllegalStateException.class);
 
 		// try to change readonly attr from properties manual and get old value
 		legoSet.setNameEquality("equality");
@@ -279,6 +259,15 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();
 
+		// try to change readonly attr manual and get old value
+		legoSet.setName("FORSCHUNGSSCHIFF");
+		legoSet.setManualReadOnly(123);
+
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> assertThat(actual.getManualReadOnly()).isEqualTo(22))
+				.verifyComplete();
+
 		// check versions
 		repository.findById(2)
 				.as(StepVerifier::create)
@@ -287,6 +276,20 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 					assertThat(actual.getCounterVersion()).isEqualTo(3);
 				})
 				.verifyComplete();
+
+		// try to change equality attr name and get exception
+		legoSet.setName("123");
+
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.expectError(IllegalStateException.class);
+
+		// try to change equality attr from properties name and get exception
+		legoSet.setNameEquality("123");
+
+		repository.save(legoSet) //
+				.as(StepVerifier::create) //
+				.expectError(IllegalStateException.class);
 	}
 
 	@Test

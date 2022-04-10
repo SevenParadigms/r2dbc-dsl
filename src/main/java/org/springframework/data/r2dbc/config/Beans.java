@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(R2dbcDslProperties.class)
 public class Beans implements ApplicationContextAware {
-    private static final AbstractMap<Object, Object> OBJECTS_CACHE = new ConcurrentReferenceHashMap<>(720);
+    private static final AbstractMap<Object, Object> OBJECTS_CACHE = new ConcurrentReferenceHashMap<>(256);
     @Nullable private static ApplicationContext applicationContext = null;
 
     @Bean({ "objectMapper" })

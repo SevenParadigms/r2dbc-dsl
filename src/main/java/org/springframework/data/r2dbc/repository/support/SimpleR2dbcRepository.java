@@ -219,7 +219,10 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                         .flatMap(previous -> {
                             for (Field version : versionFields) {
                                 var versionValue = FastMethodInvoker.getValue(objectToSave, version.getName());
-                                assert versionValue != null;
+                                if (versionValue == null) {
+                                    evict(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)));
+                                    return Mono.error(new IllegalArgumentException("Version field " + version.getName() + " is not set"));
+                                }
                                 var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
                                 if (!Objects.equals(versionValue, previousVersionValue)) {
                                     return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
@@ -239,6 +242,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                 var value = FastMethodInvoker.getValue(objectToSave, field.getName());
                                 var previousValue = FastMethodInvoker.getValue(previous, field.getName());
                                 if (!Objects.equals(value, previousValue)) {
+                                    evict(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)));
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
