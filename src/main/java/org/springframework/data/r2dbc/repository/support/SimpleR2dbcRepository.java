@@ -32,6 +32,8 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.*;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.r2dbc.config.Beans;
+import org.springframework.data.r2dbc.config.R2dbcDslProperties;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -112,7 +114,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         this.converter = converter;
         this.databaseClient = org.springframework.data.r2dbc.core.DatabaseClient.create(entityOperations.getDatabaseClient().getConnectionFactory());
         this.applicationContext = applicationContext;
-        subscribeIfNecessary();
+        if (Beans.of(R2dbcDslProperties.class).getSecondCache()) {
+            listener().doOnNext(notification -> evictAll()).subscribe();
+        }
     }
 
     /**
@@ -133,7 +137,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         this.converter = converter;
         this.databaseClient = org.springframework.data.r2dbc.core.DatabaseClient.create(databaseClient.getConnectionFactory());
         this.applicationContext = applicationContext;
-        subscribeIfNecessary();
+        if (Beans.of(R2dbcDslProperties.class).getSecondCache()) {
+            listener().doOnNext(notification -> evictAll()).subscribe();
+        }
     }
 
     /**
@@ -156,13 +162,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         this.converter = converter;
         this.databaseClient = databaseClient;
         this.applicationContext = applicationContext;
-        subscribeIfNecessary();
-    }
-
-    public void subscribeIfNecessary() {
-        var enableSecondCache = applicationContext.getEnvironment()
-                .getProperty("spring.r2dbc.dsl.secondCache", Boolean.FALSE.toString());
-        if (enableSecondCache.equalsIgnoreCase(Boolean.TRUE.toString())) {
+        if (Beans.of(R2dbcDslProperties.class).getSecondCache()) {
             listener().doOnNext(notification -> evictAll()).subscribe();
         }
     }
@@ -178,14 +178,14 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     @Override
     @Transactional
     public <S extends T> Mono<S> save(S objectToSave) {
-
+        final var dslProperties = Beans.of(R2dbcDslProperties.class);
         Assert.notNull(objectToSave, "Object to save must not be null!");
 
         final var versionFields = getFields(objectToSave, Fields.version, Version.class);
-        versionFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.version"));
+        versionFields.addAll(getPropertyFields(objectToSave, dslProperties.getVersion()));
 
         final var nowStampFields = getFields(objectToSave, Fields.updatedAt, LastModifiedDate.class);
-        nowStampFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.updatedAt"));
+        nowStampFields.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedAt()));
 
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
@@ -194,7 +194,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                 setVersion(objectToSave, version, 0);
             }
             nowStampFields.addAll(getFields(objectToSave, Fields.createdAt, CreatedDate.class));
-            nowStampFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.createdAt"));
+            nowStampFields.addAll(getPropertyFields(objectToSave, dslProperties.getCreatedAt()));
             for (Field field : nowStampFields) {
                 setNowStamp(objectToSave, field);
             }
@@ -208,11 +208,11 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     });
         } else {
             final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
-            readOnlyFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.readOnly"));
-            readOnlyFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.createdAt"));
+            readOnlyFields.addAll(getPropertyFields(objectToSave, dslProperties.getReadOnly()));
+            readOnlyFields.addAll(getPropertyFields(objectToSave, dslProperties.getCreatedAt()));
 
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
-            equalityFields.addAll(getPropertyFields(objectToSave, "spring.r2dbc.dsl.equality"));
+            equalityFields.addAll(getPropertyFields(objectToSave, dslProperties.getEquality()));
 
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
@@ -429,7 +429,8 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     public Flux<T> fullTextSearch(Dsl dsl) {
-        var lang = applicationContext.getEnvironment().getProperty("spring.r2dbc.dsl.fts-lang", dsl.getLang());
+        final var dslProperties = Beans.of(R2dbcDslProperties.class);
+        var lang = dslProperties.getFtsLang().isEmpty() ? dsl.getLang() : dslProperties.getFtsLang();
         if (ObjectUtils.isEmpty(lang)) {
             lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
             if (ObjectUtils.isEmpty(lang)) lang = "English";
@@ -456,8 +457,8 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             fields = String.join(Dsl.COMMA, mutableList);
         }
 
+        assert parts != null;
         if (!fields.equals("*")) {
-            assert parts != null;
             if (!fields.contains(parts.component1()) && !parts.component1().contains("->>")) fields += Dsl.COMMA + parts.component1();
         }
         var sql = "SELECT * FROM (SELECT " + fields +
@@ -629,7 +630,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     public Mono<Void> delete(T objectToDelete) {
         Assert.notNull(objectToDelete, "Object to delete must not be null!");
         evictAll();
-        return deleteById((ID) FastMethodInvoker.getValue(objectToDelete, getIdColumnName()));
+        return deleteById((ID) Objects.requireNonNull(FastMethodInvoker.getValue(objectToDelete, getIdColumnName())));
     }
 
     /*

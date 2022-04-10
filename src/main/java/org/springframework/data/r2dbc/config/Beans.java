@@ -1,6 +1,7 @@
 package org.springframework.data.r2dbc.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(R2dbcDslProperties.class)
 public class Beans implements ApplicationContextAware {
     private static final AbstractMap<Object, Object> OBJECTS_CACHE = new ConcurrentReferenceHashMap<>(720);
     @Nullable private static ApplicationContext applicationContext = null;

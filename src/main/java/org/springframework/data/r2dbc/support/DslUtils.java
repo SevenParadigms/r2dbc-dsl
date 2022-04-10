@@ -4,11 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import kotlin.Pair;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.query.Criteria;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.lang.Nullable;
@@ -301,9 +299,8 @@ public abstract class DslUtils {
         return FastMethodInvoker.getFields(objectToSave.getClass(), name.name(), cls);
     }
 
-    public static Set<Field> getPropertyFields(Object objectToSave, String property) {
+    public static Set<Field> getPropertyFields(Object objectToSave, String propertyString) {
         var result = new HashSet<Field>();
-        var propertyString = Beans.getProperty(property, StringUtils.EMPTY);
         if (!propertyString.isEmpty()) {
             result.addAll(Arrays.stream(propertyString.split(Dsl.COMMA))
                     .map(name -> FastMethodInvoker.getField(objectToSave.getClass(), name)).filter(Objects::nonNull)

@@ -54,5 +54,5 @@ public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>
     @Nullable T get(Dsl dsl);
     @Nullable T get(ID id);
     @Nullable List<T> getList(Dsl dsl);
-    Mono<T> putAndGet(T value);
+    @Nullable Mono<T> putAndGet(T value);
 }

@@ -159,6 +159,19 @@ Dsl.create()
 ----
 where after executing the next fields in the model will be set: age, name, description. The secondary idea is using dsl in tests as more readable than jdbcTemplate.
 
+Properties:
+[source,yaml]
+----
+spring.r2dbc.dsl:
+  secondCache: true
+  cacheManager: true
+  equality: tenantId,userId
+  readOnly: tenantId,userId
+  createdAt: tenantId,userId
+  updatedAt: updatingTimeAndDateAt
+  version: counter,innerIndex
+  fts-lang: english
+----
 
 == First and Second Level Cache supporting
 

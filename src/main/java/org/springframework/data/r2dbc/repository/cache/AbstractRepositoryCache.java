@@ -1,12 +1,14 @@
 package org.springframework.data.r2dbc.repository.cache;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.r2dbc.config.Beans;
+import org.springframework.data.r2dbc.config.R2dbcDslProperties;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.DslUtils;
 import org.springframework.data.r2dbc.support.FastMethodInvoker;
@@ -33,9 +35,8 @@ abstract public class AbstractRepositoryCache<T, ID> {
 
     public AbstractRepositoryCache(@Nullable RelationalEntityInformation<T, ID> entity, @Nullable ApplicationContext applicationContext) {
         applicationContext = Beans.setAndGetContext(applicationContext);
-        var enableCacheManager = applicationContext.getEnvironment()
-                .getProperty("spring.r2dbc.dsl.cacheManager", Boolean.FALSE.toString());
-        if (enableCacheManager.equalsIgnoreCase(Boolean.TRUE.toString())) {
+        var dslProperties = Beans.of(R2dbcDslProperties.class);
+        if (dslProperties.getCacheManager()) {
             this.cacheManager = Beans.of(CacheManager.class, new CaffeineGuidedCacheManager(applicationContext));
         } else {
             this.cacheManager = new CaffeineGuidedCacheManager(applicationContext);
@@ -43,12 +44,11 @@ abstract public class AbstractRepositoryCache<T, ID> {
         this.entity = entity;
         if (entity != null) {
             if (cacheManager instanceof CaffeineGuidedCacheManager) {
-                var enableSecondCache = applicationContext.getEnvironment()
-                        .getProperty("spring.r2dbc.dsl.secondCache", Boolean.FALSE.toString());
-                if (enableSecondCache.equalsIgnoreCase(Boolean.TRUE.toString()) ) {
+                if (dslProperties.getSecondCache()) {
                     ((CaffeineGuidedCacheManager) cacheManager).setDefaultExpireAfterAccess("300000");
                 }
             } else {
+                assert cacheManager != null;
                 log.info("R2dbcRepository<" + entity.getJavaType().getSimpleName() + "> initialize with cache: " + cacheManager.getClass().getSimpleName());
             }
         }
@@ -157,21 +157,22 @@ abstract public class AbstractRepositoryCache<T, ID> {
     }
 
     @Nullable
-    public T get(Dsl dsl) {
+    public T get(@NotNull Dsl dsl) {
         return get(Mono.class, dsl);
     }
 
     @Nullable
-    public T get(ID id) {
+    public T get(@NotNull ID id) {
         return get(Mono.class, Dsl.create().id(id));
     }
 
     @Nullable
-    public List<T> getList(Dsl dsl) {
+    public List<T> getList(@NotNull Dsl dsl) {
         return getList(Flux.class, dsl);
     }
 
-    public Mono<T> putAndGet(T value) {
+    @Nullable
+    public Mono<T> putAndGet(@NotNull T value) {
         var id = FastMethodInvoker.getValue(value, SqlField.id);
         return putAndGetMono(Dsl.create().id(id), value);
     }
