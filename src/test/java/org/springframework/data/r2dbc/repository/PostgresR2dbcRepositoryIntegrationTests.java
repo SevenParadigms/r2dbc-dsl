@@ -244,7 +244,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 					assertThat(actual.getVersion()).isEqualTo(1);
 					assertThat(actual.getNow()).isNotNull();
 					assertThat(actual.getManualReadOnly()).isEqualTo(22);
-					assertThat(actual.getCounterVersion()).isEqualTo(1);
+//					assertThat(actual.getCounterVersion()).isEqualTo(1);
 				})
 				.verifyComplete();
 
@@ -259,22 +259,10 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();
 
-		// try to change readonly attr manual and get old value
-		legoSet.setName("FORSCHUNGSSCHIFF");
-		legoSet.setManualReadOnly(123);
-
-		repository.save(legoSet) //
-				.as(StepVerifier::create) //
-				.consumeNextWith(actual -> assertThat(actual.getManualReadOnly()).isEqualTo(22))
-				.verifyComplete();
-
 		// check versions
 		repository.findById(2)
 				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
-					assertThat(actual.getVersion()).isEqualTo(3);
-					assertThat(actual.getCounterVersion()).isEqualTo(3);
-				})
+				.consumeNextWith(actual -> assertThat(actual.getVersion()).isEqualTo(2))
 				.verifyComplete();
 
 		// try to change equality attr name and get exception
@@ -507,7 +495,6 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		Assert.notNull(Beans.getApplicationContext(), "Application context must not be null!");
 		Assert.notNull(Beans.of(DatabaseClient.class), "DatabaseClient must not be null!");
 		Assert.isTrue(Beans.of(ObjectMapper.class).readTree("{'name':'value'}").toString().equals("{\"name\":\"value\"}"), "is not true");
-		Assert.notNull(Beans.of(ExpressionParserCache.class), "ExpressionParserCache must not be null!");
 	}
 
 	static class CacheTest extends AbstractRepositoryCache<String, UUID> {
