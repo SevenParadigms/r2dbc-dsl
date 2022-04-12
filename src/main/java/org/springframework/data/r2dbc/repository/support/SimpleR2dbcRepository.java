@@ -202,7 +202,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     .into(this.entity.getJavaType())
                     .table(this.entity.getTableName()).using(objectToSave)
                     .map(converter.populateIdIfNecessary(objectToSave))
-                    .first().flatMap(updated -> {
+                    .one().flatMap(updated -> {
                         evictAll().put(updated);
                         return Mono.just(updated);
                     });
@@ -263,9 +263,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         Update update = null;
         for (SqlIdentifier column : columns.keySet()) {
             if (update == null) {
-                update = Update.update(accessStrategy.toSql(column), columns.get(column));
+                update = Update.update(accessStrategy.toSql(SqlIdentifier.quoted(column.getReference())), columns.get(column));
             }
-            update = update.set(accessStrategy.toSql(column), columns.get(column));
+            update = update.set(accessStrategy.toSql(SqlIdentifier.quoted(column.getReference())), columns.get(column));
         }
         assert update != null;
         PreparedOperation<?> operation = mapper.getMappedObject(
@@ -501,8 +501,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     fields.add(Dsl.COLON.concat(field.getName()).concat(Dsl.COLON));
                 }
             }
+            var namedFields = fields.stream().map(f -> "\"".concat(f).concat("\"")).collect(Collectors.joining(Dsl.COMMA));
             var buildFields = String.join(Dsl.COMMA, fields);
-            var template = "INSERT INTO " + entity.getTableName() + "(" + WordUtils.camelToSql(buildFields.replaceAll(":", "")) + ") " +
+            var template = "INSERT INTO " + entity.getTableName() + "(" + WordUtils.camelToSql(namedFields.replaceAll(":", "")) + ") " +
                     "VALUES(" + buildFields + ");";
             var query = new StringBuilder();
             for (T target : models) {

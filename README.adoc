@@ -86,6 +86,8 @@ data class Dsl {
 
 * SpEL Expression type in model automatically converted to TEXT type of PostgreSQL and back
 
+* Any reserved database words can be used by column name
+
 * Repository `listener` method subscribe to listen of all changes of table from database in realtime over `Flux<Notification>` (Postgres only)
 
 * Ranked full text search by field `tsv` as default with RUM index operator in `Dsl.fts` method (Postgres only)

@@ -242,9 +242,8 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 					assertThat(actual.getName()).isEqualTo("FORSCHUNGSSCHIFF");
 					assertThat(actual.getManual()).isEqualTo(13);
 					assertThat(actual.getVersion()).isEqualTo(1);
-					assertThat(actual.getNow()).isNotNull();
+					assertThat(actual.getGroup()).isNotNull();
 					assertThat(actual.getManualReadOnly()).isEqualTo(22);
-//					assertThat(actual.getCounterVersion()).isEqualTo(1);
 				})
 				.verifyComplete();
 
@@ -579,7 +578,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	@Test
 	void shouldExpressionWork() {
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
-		legoSet1.exp = Objects.requireNonNull(ExpressionParserCache.INSTANCE.parseExpression("a==5"));
+		legoSet1.having = Objects.requireNonNull(ExpressionParserCache.INSTANCE.parseExpression("a==5"));
 
 		repository.save(legoSet1)
 				.as(StepVerifier::create)
@@ -589,7 +588,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.findById(1)
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
-					Assert.isTrue(actual.getExp().getExpressionString().equals("a==5"), "must equals");
+					Assert.isTrue(actual.getHaving().getExpressionString().equals("a==5"), "must equals");
 					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must equals");
 					Assert.isTrue(actual.getManual() == 12, "must equals");
 				})

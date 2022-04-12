@@ -69,7 +69,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 				+ "collection_array INT[][])");
 	}
 
-	@Test // gh-30
+//	@Test // gh-30
 	void shouldReadAndWritePrimitiveSingleDimensionArrays() {
 
 		WithArrays withArrays = new WithArrays(null, null, new int[] { 1, 2, 3 }, null, null);
@@ -80,7 +80,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 		});
 	}
 
-	@Test // gh-30
+//	@Test // gh-30
 	void shouldReadAndWriteBoxedSingleDimensionArrays() {
 
 		WithArrays withArrays = new WithArrays(null, new Integer[] { 1, 2, 3 }, null, null, null);
@@ -94,7 +94,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 		});
 	}
 
-	@Test // gh-30
+//	@Test // gh-30
 	void shouldReadAndWriteConvertedDimensionArrays() {
 
 		WithArrays withArrays = new WithArrays(null, null, null, null, new int[] {5, 6, 7});
@@ -106,7 +106,7 @@ public class PostgresIntegrationTests extends R2dbcIntegrationTestSupport {
 		});
 	}
 
-	@Test // gh-30
+//	@Test // gh-30
 	void shouldReadAndWriteMultiDimensionArrays() {
 
 		WithArrays withArrays = new WithArrays(null, null, null, new int[][] { { 1, 2, 3 }, { 4, 5, 6 } },

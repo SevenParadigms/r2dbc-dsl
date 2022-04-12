@@ -42,7 +42,7 @@ public class MariaDbTestSupport {
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
 			+ "    version     integer NULL\n," //
-			+ "    now         TIMESTAMP NULL\n," //
+			+ "    `group`       TIMESTAMP NULL\n," //
 			+ "    cert        varbinary(255) NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
@@ -50,15 +50,15 @@ public class MariaDbTestSupport {
 			+ "    id          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    version     integer NULL\n," //
-			+ "    now         TIMESTAMP NULL\n," //
+			+ "    `group`     TIMESTAMP NULL\n," //
 			+ "    data        date NULL\n," //
 			+ "    data_time   TIMESTAMP NULL\n," //
 			+ "    zoned_time  TIMESTAMP NULL\n," //
-			+ "    offset_time  TIMESTAMP NULL\n," //
-			+ "    exp         varchar(512) NULL\n," //
-			+ "    name_equality         varchar(255) NULL\n," //
-			+ "    manual_read_only         integer NULL\n," //
-			+ "    counter_version         integer NULL\n," //
+			+ "    offset_time TIMESTAMP NULL\n," //
+			+ "    `having`    varchar(512) NULL\n," //
+			+ "    name_equality    varchar(255) NULL\n," //
+			+ "    manual_read_only integer NULL\n," //
+			+ "    counter_version  integer NULL\n," //
 			+ "    manual      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 
@@ -66,7 +66,7 @@ public class MariaDbTestSupport {
 			+ "    `Id`          integer AUTO_INCREMENT PRIMARY KEY,\n" //
 			+ "    `Name`        varchar(255) NOT NULL,\n" //
 			+ "     version      integer NULL\n," //
-			+ "     now          TIMESTAMP NULL\n," //
+			+ "    `group`       TIMESTAMP NULL\n," //
 			+ "    `Manual`      integer NULL\n" //
 			+ ") ENGINE=InnoDB;";
 

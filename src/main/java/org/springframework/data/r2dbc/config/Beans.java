@@ -8,11 +8,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.r2dbc.support.JsonUtils;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import java.util.AbstractMap;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
@@ -35,12 +37,23 @@ public class Beans implements ApplicationContextAware {
     }
 
     @Nullable
-    public static <T> T of(Class<T> beanType, @Nullable T defaultValue) {
+    public static <T> T of(@NonNull Class<T> beanType, @Nullable T defaultValue) {
         try {
             return of(beanType);
         } catch (Exception ignore) {
             return defaultValue;
         }
+    }
+
+    @NonNull
+    public static <T> Optional<T> getOrNull(@NonNull Class<T> beanType) {
+        if (getApplicationContext() != null) {
+            try {
+                return Optional.of(of(beanType));
+            } catch (Exception ignore) {
+            }
+        }
+        return Optional.empty();
     }
 
     @Nullable

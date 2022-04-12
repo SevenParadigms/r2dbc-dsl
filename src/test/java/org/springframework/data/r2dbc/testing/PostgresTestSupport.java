@@ -25,11 +25,11 @@ public class PostgresTestSupport {
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
-			+ "    now         timestamp NULL\n," //
-			+ "    exp         text NULL\n," //
-			+ "    name_equality         text NULL\n," //
-			+ "    manual_read_only         integer NULL\n," //
-			+ "    counter_version         integer NULL\n," //
+			+ "    \"group\"   timestamp NULL\n," //
+			+ "    \"having\"  text NULL\n," //
+			+ "    name_equality    text NULL\n," //
+			+ "    manual_read_only	integer NULL\n," //
+			+ "    counter_version  integer NULL\n," //
 			+ "    data        date NULL\n," //
 			+ "    data_time   timestamp NULL\n," //
 			+ "    zoned_time  timestamp with time zone NULL\n," //

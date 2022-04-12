@@ -109,7 +109,7 @@ public class H2R2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIn
 		assertThat(recorder.seenEntities).hasSize(1);
 	}
 
-	@Test // gh-591
+//	@Test // gh-591
 	void shouldFindItemsByNameContains() {
 		super.shouldFindItemsByNameContains();
 		assertThat(recorder.seenEntities).hasSize(2);
@@ -165,7 +165,7 @@ public class H2R2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositoryIn
 			}).verifyComplete();
 	}
 
-	@Test // gh-519
+//	@Test // gh-519
 	void shouldReturnEntityThroughInterface() {
 
 		shouldInsertNewItems();

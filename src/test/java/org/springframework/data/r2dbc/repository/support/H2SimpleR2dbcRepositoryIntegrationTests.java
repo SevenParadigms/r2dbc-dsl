@@ -22,11 +22,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
+import org.springframework.data.r2dbc.config.R2dbcDslProperties;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.testing.H2TestSupport;
 import org.springframework.data.relational.core.mapping.RelationalMappingContext;
@@ -58,6 +60,7 @@ public class H2SimpleR2dbcRepositoryIntegrationTests extends AbstractSimpleR2dbc
 	@Autowired private ApplicationContext applicationContext;
 
 	@Configuration
+	@EnableConfigurationProperties(R2dbcDslProperties.class)
 	static class IntegrationTestConfiguration extends AbstractR2dbcConfiguration {
 
 		@Override

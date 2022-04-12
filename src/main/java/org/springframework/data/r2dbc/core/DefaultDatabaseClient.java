@@ -15,6 +15,7 @@
  */
 package org.springframework.data.r2dbc.core;
 
+import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.r2dbc.UncategorizedR2dbcException;
+import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionFactoryUtils;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionProxy;
 import org.springframework.data.r2dbc.convert.ColumnMapRowMapper;
@@ -1168,7 +1170,7 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 			for (SqlIdentifier column : outboundRow.keySet()) {
 				Parameter settableValue = outboundRow.get(column);
 				if (settableValue.hasValue()) {
-					insert = insert.withColumn(column, settableValue);
+					insert = insert.withColumn(SqlIdentifier.quoted(column.getReference()), settableValue);
 				}
 			}
 
@@ -1578,6 +1580,12 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 		String sql = sqlSupplier.get();
 		Assert.state(StringUtils.hasText(sql), "SQL returned by SQL supplier must not be empty!");
+
+		// Fix H2 bug on always double-quoted SqlIdentifier
+		var postgresConnectionFactory = Beans.getOrNull(PostgresqlConnectionFactory.class);
+		if (postgresConnectionFactory.isEmpty()) {
+			sql = sql.replaceAll("\"", "`");
+		}
 		return sql;
 	}
 
