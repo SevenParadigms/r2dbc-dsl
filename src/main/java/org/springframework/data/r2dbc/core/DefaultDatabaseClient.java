@@ -1582,8 +1582,10 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 		Assert.state(StringUtils.hasText(sql), "SQL returned by SQL supplier must not be empty!");
 
 		// Fix H2 bug on always double-quoted SqlIdentifier
+		var connectionFactory = Beans.getOrNull(ConnectionFactory.class);
 		var postgresConnectionFactory = Beans.getOrNull(PostgresqlConnectionFactory.class);
-		if (postgresConnectionFactory.isEmpty()) {
+		if (connectionFactory.isEmpty() ||
+				(postgresConnectionFactory.isEmpty() && !connectionFactory.get().getClass().getSimpleName().equals("ConnectionPool"))) {
 			sql = sql.replaceAll("\"", "`");
 		}
 		return sql;
