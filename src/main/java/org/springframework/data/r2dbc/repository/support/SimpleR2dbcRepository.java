@@ -72,6 +72,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -224,9 +225,14 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                     return Mono.error(new IllegalArgumentException("Version field " + version.getName() + " is not set"));
                                 }
                                 var previousVersionValue = FastMethodInvoker.getValue(previous, version.getName());
-                                if (!Objects.equals(versionValue, previousVersionValue)) {
-                                    return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
-                                }
+                                if (versionValue instanceof Temporal && previousVersionValue instanceof Temporal) {
+                                    if (!DslUtils.compareDateTime(versionValue, previousVersionValue)) {
+                                        return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
+                                    }
+                                } else
+                                    if (!Objects.equals(versionValue, previousVersionValue)) {
+                                        return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
+                                    }
                                 setVersion(objectToSave, version, versionValue);
                             }
                             for (Field field : nowStampFields) {
@@ -239,8 +245,8 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                 }
                             }
                             for (Field field : equalityFields) {
-                                var value = FastMethodInvoker.getValue(objectToSave, field.getName());
                                 var previousValue = FastMethodInvoker.getValue(previous, field.getName());
+                                var value = FastMethodInvoker.getValue(objectToSave, field.getName());
                                 if (!Objects.equals(value, previousValue)) {
                                     evict(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)));
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
@@ -391,7 +397,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     @Override
     public R2dbcRepository<T, ID> evict(@Nullable ID id) {
-        if (!ObjectUtils.isEmpty(id)) {
+        if (ObjectUtils.isNotEmpty(id)) {
             evictMono(Dsl.create().id(id));
             evictFlux(Dsl.create().id(id));
         }
@@ -412,7 +418,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     @Override
     public R2dbcRepository<T, ID> put(@Nullable T value) {
-        if (!ObjectUtils.isEmpty(value)) {
+        if (ObjectUtils.isNotEmpty(value)) {
             var id = (ID) FastMethodInvoker.getValue(value, getIdColumnName());
             putMono(Dsl.create().id(id), value);
         }

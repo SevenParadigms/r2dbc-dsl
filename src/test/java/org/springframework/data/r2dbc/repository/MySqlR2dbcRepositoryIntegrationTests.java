@@ -18,6 +18,7 @@ package org.springframework.data.r2dbc.repository;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -104,6 +105,7 @@ public class MySqlR2dbcRepositoryIntegrationTests extends AbstractR2dbcRepositor
 	}
 
 	@Data
+	@NoArgsConstructor
 	@AllArgsConstructor
 	static class DateTests {
 		/*@Id */Integer id;

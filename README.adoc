@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.7.5</version>
+  <version>4.7.6</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with `Dsl` and `MementoPage` models (it is convenient 
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.7.5</version>
+  <version>4.7.6</version>
 </dependency>
 ----
 
@@ -64,9 +64,9 @@ data class Dsl {
 
 == Features
 
-* First level cache based on Caffeine with guided expire access and size for each cache from application.properties, can be using as bean for @Cacheable
+* First level cache based on Caffeine with guided expire access and size for each cache from application.properties
 
-* Convert first level cache to second level cache by property in application.properties: `spring.r2dbc.dsl.secondCache = true` then subscribe to changes from database
+* Convert first level cache to second level cache by property in application.properties: `spring.r2dbc.dsl.secondCache = true` then subscribe to change from database
 
 * Support second level cache from any CacheManager implementation and may be both working with subscribe to change from database. Enabled by: `spring.r2dbc.dsl.cacheManager = true`
 

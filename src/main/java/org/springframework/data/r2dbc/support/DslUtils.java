@@ -15,10 +15,7 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -285,15 +282,48 @@ public abstract class DslUtils {
 
     public static void setNowStamp(Object objectToSave, Field field) {
         if (field.getType() == LocalDateTime.class) {
-            FastMethodInvoker.setValue(objectToSave, field.getName(), LocalDateTime.now());
+            FastMethodInvoker.setValue(objectToSave, field.getName(), LocalDateTime.now(ZoneOffset.UTC));
         }
         if (field.getType() == ZonedDateTime.class) {
-            FastMethodInvoker.setValue(objectToSave, field.getName(), ZonedDateTime.now());
+            FastMethodInvoker.setValue(objectToSave, field.getName(), ZonedDateTime.now(ZoneOffset.UTC));
         }
         if (field.getType() == OffsetDateTime.class) {
-            FastMethodInvoker.setValue(objectToSave, field.getName(), OffsetDateTime.now());
+            FastMethodInvoker.setValue(objectToSave, field.getName(), OffsetDateTime.now(ZoneOffset.UTC));
         }
     }
+
+    public static boolean compareDateTime(Object first, Object second) {
+        if (first instanceof LocalDateTime && second instanceof LocalDateTime) {
+            return ((LocalDateTime) first).isEqual(((LocalDateTime) second));
+        }
+        if (first instanceof ZonedDateTime && second instanceof ZonedDateTime) {
+            return ((ZonedDateTime) first).isEqual(((ZonedDateTime) second));
+        }
+        if (first instanceof OffsetDateTime && second instanceof OffsetDateTime) {
+            return ((OffsetDateTime) first).isEqual(((OffsetDateTime) second));
+        }
+        return dateTimeToString(first).equals(dateTimeToString(second));
+    }
+
+    public static boolean compareDateTime(@Nullable LocalDateTime first, @Nullable LocalDateTime second) {
+        return first != null && second != null && first.isEqual(second);
+    }
+
+    public static boolean compareDateTime(@Nullable ZonedDateTime first, @Nullable ZonedDateTime second) {
+        return first != null && second != null && first.isEqual(second);
+    }
+
+    public static boolean compareDateTime(@Nullable OffsetDateTime first, @Nullable OffsetDateTime second) {
+        return first != null && second != null && first.isEqual(second);
+    }
+
+    public static String dateTimeToString(Object dateTime) {
+        var string = dateTime.toString().replaceAll("Z", "");
+        string = string.indexOf("+") > 0 ? string.substring(0, string.indexOf("+")) : string;
+        string = string.indexOf("[") > 0 ? string.substring(0, string.indexOf("[")) : string;
+        return string;
+    }
+
 
     public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>... cls) {
         return FastMethodInvoker.getFields(objectToSave.getClass(), name.name(), cls);
@@ -310,11 +340,11 @@ public abstract class DslUtils {
     }
 
     public static String generateHash(Dsl dsl) {
-        return dsl.getQuery() + "-" + dsl.getPage() + "-" + dsl.getSize() + "-" + dsl.getSort();
+        return dsl.getQuery() + "<->" + dsl.getPage() + "<->" + dsl.getSize() + "<->" + dsl.getSort();
     }
 
     public static Dsl generateDsl(String hash) {
-        var arr = hash.split("-");
+        var arr = hash.split("<->");
         return Dsl.create(arr[0]).pageable(Integer.parseInt(arr[1]), Integer.parseInt(arr[2])).sorting(arr[3]);
     }
 

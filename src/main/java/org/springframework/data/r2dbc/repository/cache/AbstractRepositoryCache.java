@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -111,8 +112,21 @@ abstract public class AbstractRepositoryCache<T, ID> {
     }
 
     public void putMono(Dsl dsl, T value) {
-        put(Mono.class, dsl, value);
-        putList(Flux.class, dsl, new ArrayList<>(List.of(value)));
+        if (cacheManager instanceof CaffeineGuidedCacheManager && entity != null) {
+            try {
+                Constructor<?> constructor = entity.getJavaType().getDeclaredConstructor();
+                constructor.setAccessible(true);
+                Object clone = constructor.newInstance();
+                FastMethodInvoker.copy(value, clone);
+                put(Mono.class, dsl, clone);
+                putList(Flux.class, dsl, new ArrayList<T>(List.of((T) clone)));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            put(Mono.class, dsl, value);
+            putList(Flux.class, dsl, new ArrayList<>(List.of(value)));
+        }
     }
 
     public boolean containsMono(Dsl dsl) {

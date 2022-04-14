@@ -18,6 +18,7 @@ package org.springframework.data.r2dbc.repository.support;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -123,6 +124,7 @@ public class H2SimpleR2dbcRepositoryIntegrationTests extends AbstractSimpleR2dbc
 	}
 
 	@Data
+	@NoArgsConstructor
 	@AllArgsConstructor
 	static class AlwaysNew implements Persistable<Long> {
 

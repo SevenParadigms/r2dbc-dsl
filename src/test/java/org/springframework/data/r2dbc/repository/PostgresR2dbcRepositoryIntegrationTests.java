@@ -22,6 +22,8 @@ import com.hazelcast.core.Hazelcast;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Result;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -190,6 +192,8 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		hstoreRepositoryWith.findAll().as(StepVerifier::create).consumeNextWith(actual -> assertThat(actual.hstoreValue).isNotNull().containsEntry("hello", "world")).verifyComplete();
 	}
 
+	@Setter
+	@NoArgsConstructor
 	@AllArgsConstructor
 	static class WithJson implements Serializable {
 
@@ -210,6 +214,8 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	}
 
+	@Setter
+	@NoArgsConstructor
 	@AllArgsConstructor
 //	@Table("with_hstore")
 	static class WithHstore implements Serializable {
@@ -504,7 +510,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 			var hash = getHash(String.class, Dsl.create().id(id));
 			var contains = contains(String.class, Dsl.create().id(id));
 			var value = Objects.requireNonNull(get(String.class, Dsl.create().id(id)));
-			Assert.isTrue(hash.equals("null->>'String->>'id==00000000-0000-0000-0000-000000000000--1--1-"), "must equals");
+			Assert.isTrue(hash.equals("null->>'String->>'id==00000000-0000-0000-0000-000000000000<->-1<->-1<->"), "must equals");
 			Assert.isTrue(contains, "should be contain");
 			Assert.isTrue(value.equals("test1"), "value is equal");
 			evict(String.class, Dsl.create().id(id));
