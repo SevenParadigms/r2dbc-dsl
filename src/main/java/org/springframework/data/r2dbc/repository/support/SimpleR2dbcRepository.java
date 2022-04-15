@@ -16,12 +16,10 @@
 package org.springframework.data.r2dbc.repository.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.Notification;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.postgresql.api.PostgresqlResult;
 import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.Result;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +27,10 @@ import org.reactivestreams.Publisher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.annotation.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.config.Beans;
@@ -44,6 +45,7 @@ import org.springframework.data.r2dbc.mapping.OutboundRow;
 import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
+import org.springframework.data.r2dbc.repository.cache.CacheApi;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.query.Equality;
 import org.springframework.data.r2dbc.repository.query.MementoPage;
@@ -89,7 +91,7 @@ import static org.springframework.data.r2dbc.support.DslUtils.*;
  * @author Lao Tsing
  */
 @Transactional(readOnly = true)
-public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID> implements R2dbcRepository<T, ID> {
+public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID> implements R2dbcRepository<T, ID>, CacheApi<T, ID> {
 
     private final RelationalEntityInformation<T, ID> entity;
     private final R2dbcEntityOperations entityOperations;
@@ -204,7 +206,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     .table(this.entity.getTableName()).using(objectToSave)
                     .map(converter.populateIdIfNecessary(objectToSave))
                     .one().flatMap(updated -> {
-                        evictAll().put(updated);
+                        evictAll().cache().put(updated);
                         return Mono.just(updated);
                     });
         } else {
@@ -252,12 +254,12 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
-                            evictAll().put(objectToSave);
+                            evictAll().cache().put(objectToSave);
                             return simpleSave(idPropertyName, idValue, objectToSave);
                         })
                         .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
             }
-            evictAll().put(objectToSave);
+            evictAll().cache().put(objectToSave);
             return simpleSave(idPropertyName, idValue, objectToSave);
         }
     }
@@ -389,6 +391,11 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     @Override
+    public CacheApi<T, ID> cache() {
+        return this;
+    }
+
+    @Override
     public R2dbcRepository<T, ID> evict(Dsl dsl) {
         evictMono(dsl);
         evictFlux(dsl);
@@ -494,32 +501,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             }
         }
         return databaseClient.execute(sql).as(entity.getJavaType()).fetch().all();
-    }
-
-    @Override
-    public Flux<Result> saveBatch(Iterable<T> models) {
-        var connectionFactory = (PostgresqlConnectionFactory) databaseClient.getConnectionFactory();
-        try {
-            var fields = new ArrayList<String>();
-            var reflectionStorage = FastMethodInvoker.reflectionStorage(entity.getJavaType());
-            for (var field : reflectionStorage) {
-                if (!field.isAnnotationPresent(Id.class) && !field.getName().equals(SqlField.id)) {
-                    fields.add(Dsl.COLON.concat(field.getName()).concat(Dsl.COLON));
-                }
-            }
-            var namedFields = fields.stream().map(f -> "\"".concat(f).concat("\"")).collect(Collectors.joining(Dsl.COMMA));
-            var buildFields = String.join(Dsl.COMMA, fields);
-            var template = "INSERT INTO " + entity.getTableName() + "(" + WordUtils.camelToSql(namedFields.replaceAll(":", "")) + ") " +
-                    "VALUES(" + buildFields + ");";
-            var query = new StringBuilder();
-            for (T target : models) {
-                query.append(DslUtils.binding(template, target));
-            }
-            evictAll();
-            return connectionFactory.create().flatMap(c -> c.createBatch().add(query.toString()).execute().collectList()).flatMapMany(Flux::fromIterable);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override

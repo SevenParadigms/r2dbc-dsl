@@ -13,6 +13,7 @@ import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * Utilities for r2dbc compliant.
@@ -37,12 +38,12 @@ public abstract class R2dbcUtils {
         ).getRepository(cls);
     }
 
-    public <S> Flux<Result> batchSave(Iterable<S> models) {
+    public static Flux<Integer> batchSave(Iterable<?> models) {
         var databaseClient = Beans.of(DatabaseClient.class);
         var connectionFactory = (PostgresqlConnectionFactory) databaseClient.getConnectionFactory();
         try {
             var query = new StringBuilder();
-            for (S target : models) {
+            for (Object target : models) {
                 var fields = new ArrayList<String>();
                 var reflectionStorage = FastMethodInvoker.reflectionStorage(target.getClass());
                 for (var field : reflectionStorage) {
@@ -50,12 +51,15 @@ public abstract class R2dbcUtils {
                         fields.add(Dsl.COLON.concat(field.getName()).concat(Dsl.COLON));
                     }
                 }
+                var namedFields = fields.stream().map(f -> "\"".concat(f).concat("\"")).collect(Collectors.joining(Dsl.COMMA));
                 var buildFields = String.join(Dsl.COMMA, fields);
                 var template = "INSERT INTO " + WordUtils.camelToSql(target.getClass().getSimpleName()) +
-                        "(" + WordUtils.camelToSql(buildFields.replaceAll(":", "")) + ") VALUES(" + buildFields + ");";
+                        "(" + WordUtils.camelToSql(namedFields.replaceAll(":", "")) + ") " +
+                        "VALUES(" + buildFields + ");";
                 query.append(DslUtils.binding(template, target));
             }
-            return connectionFactory.create().flatMap(c -> c.createBatch().add(query.toString()).execute().collectList()).flatMapMany(Flux::fromIterable);
+            return connectionFactory.create().flatMap(c -> c.createBatch().add(SQLInjectionSafe.check(query.toString()))
+                    .execute().collectList()).flatMapMany(Flux::fromIterable).flatMap(Result::getRowsUpdated);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -16,17 +16,14 @@
 package org.springframework.data.r2dbc.repository;
 
 import io.r2dbc.postgresql.api.Notification;
-import io.r2dbc.spi.Result;
+import org.springframework.data.r2dbc.repository.cache.CacheApi;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.query.MementoPage;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
-import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 /**
  * R2DBC specific {@link org.springframework.data.repository.Repository} interface with reactive support.
@@ -42,17 +39,6 @@ public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>
     Mono<T> findOne(Dsl dsl);
     Mono<Integer> delete(Dsl dsl);
     Mono<Long> count(Dsl dsl);
-
     Flux<Notification> listener();
-    Flux<Result> saveBatch(Iterable<T> models);
-
-    R2dbcRepository<T, ID> evict(Dsl dsl);
-    R2dbcRepository<T, ID> evict(ID id);
-    R2dbcRepository<T, ID> evictAll();
-    R2dbcRepository<T, ID> put(@Nullable T value);
-    R2dbcRepository<T, ID> put(Dsl dsl, List<T> value);
-    @Nullable T get(Dsl dsl);
-    @Nullable T get(ID id);
-    @Nullable List<T> getList(Dsl dsl);
-    @Nullable Mono<T> putAndGet(T value);
+    CacheApi<T, ID> cache();
 }

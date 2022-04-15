@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.core.Hazelcast;
 import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.Result;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -43,6 +42,7 @@ import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.support.JsonUtils;
+import org.springframework.data.r2dbc.support.R2dbcUtils;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -391,7 +391,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		legoSet3.setZonedTime(zonedTime.plus(1, ChronoUnit.DAYS));
 		legoSet3.setOffsetTime(offsetTime.plus(1, ChronoUnit.DAYS));
 
-		repository.saveBatch(List.of(legoSet1, legoSet2, legoSet3)).flatMap(Result::getRowsUpdated)
+		R2dbcUtils.batchSave(List.of(legoSet1, legoSet2, legoSet3))
 				.as(StepVerifier::create)
 				.expectNextCount(3) //
 				.verifyComplete();
@@ -560,7 +560,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
 
-		repository.saveBatch(List.of(legoSet1, legoSet2))
+		R2dbcUtils.batchSave(List.of(legoSet1, legoSet2))
 				.as(StepVerifier::create)
 				.expectNextCount(2) //
 				.verifyComplete();
@@ -614,19 +614,19 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must true");
-					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+					Assert.isTrue(Objects.requireNonNull(repository.cache().get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 				})
 				.verifyComplete();
 
-		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+		Assert.isTrue(Objects.requireNonNull(repository.cache().get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 
-		Assert.isTrue(repository.evict(1).get(1) == null, "must equals");
+		Assert.isTrue(repository.cache().evict(1).cache().get(1) == null, "must equals");
 
 		legoSet1.setId(1);
-		Assert.isTrue(Objects.requireNonNull(repository.put(legoSet1).get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+		Assert.isTrue(Objects.requireNonNull(repository.cache().put(legoSet1).cache().get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 
-		repository.evictAll();
-		Assert.isTrue(repository.get(1) == null, "must equals");
+		repository.cache().evictAll();
+		Assert.isTrue(repository.cache().get(1) == null, "must equals");
 	}
 
 	@Test
@@ -634,18 +634,18 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.deleteAll().block();
 
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
-		repository.evictAll().save(legoSet1)
+		repository.save(legoSet1)
 				.as(StepVerifier::create)
 				.expectNextCount(1)
 				.verifyComplete();
 
-		Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+		Assert.isTrue(Objects.requireNonNull(repository.cache().get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 
-		repository.evictAll().findAll(Dsl.create().id(1))
+		repository.cache().evictAll().findAll(Dsl.create().id(1))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must true");
-					Assert.isTrue(Objects.requireNonNull(repository.get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
+					Assert.isTrue(Objects.requireNonNull(repository.cache().get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 				})
 				.verifyComplete();
 	}

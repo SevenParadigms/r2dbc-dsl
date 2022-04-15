@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.7.6</version>
+  <version>4.7.7</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with `Dsl` and `MementoPage` models (it is convenient 
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.7.6</version>
+  <version>4.7.7</version>
 </dependency>
 ----
 
@@ -35,17 +35,8 @@ interface R2dbcRepository<T, ID> : ReactiveCrudRepository<T, ID> {
     fun findAllPaged(dsl: Dsl): Mono<MementoPage<T>>
     fun delete(dsl: Dsl): Mono<Integer>
     fun count(dsl: Dsl): Mono<Long>
-
     fun listener(): Flux<Notification>
-    fun saveBatch(models: Iterable<T>): Flux<Result>
-
-    fun evict(dsl: Dsl): R2dbcRepository<T, ID>
-    fun evict(id: ID): R2dbcRepository<T, ID>
-    fun evictAll(): R2dbcRepository<T, ID>
-    fun put(value: T): R2dbcRepository<T, ID>
-    fun putAndGet(value: T): Mono<T>
-    fun get(dsl: Dsl): T
-    fun get(id: ID): T
+    fun cache(): CacheApi<T, ID>
 }
 ----
 
@@ -98,7 +89,7 @@ data class Dsl {
 
 * Utility class `JsonUtils` is a powerful utils to flexibility manage any json operations around JsonNode type.
 
-* Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)` and have `batchSave` massive opearaion for any type objects in collection.
+* Utility class `R2dbcUtils` can create repository from url: `R2dbcUtils.getRepository("r2dbc:postgresql://postgres:postgres@localhost/abac_rules", AbacRepository::class)` and have `batchSave` massive operation for any type objects in collection. Also have `fun saveBatch(models: Iterable<T>): Flux<Integer>` method for call native Postgres driver batch operation for massive insert as one sql.
 
 * Field with @Equality annotation on each update the value is comparing with previous value from database and throw exception is not equals, also can set in application.properties: `spring.r2dbc.dsl.equality = tenantId,userId`
 
