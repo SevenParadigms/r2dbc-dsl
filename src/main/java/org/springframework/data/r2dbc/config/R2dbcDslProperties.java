@@ -31,14 +31,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class R2dbcDslProperties implements BeanClassLoaderAware, InitializingBean {
 	private ClassLoader classLoader;
 
-	private Boolean secondCache = false;
-	private Boolean cacheManager = false;
+	private Boolean secondCache;
+	private Boolean cacheManager;
 	private String equality;
 	private String readOnly;
 	private String createdAt;
 	private String updatedAt;
 	private String version;
 	private String ftsLang;
+	private String listener;
 
 	public Boolean getSecondCache() {
 		return secondCache;
@@ -104,6 +105,14 @@ public class R2dbcDslProperties implements BeanClassLoaderAware, InitializingBea
 		this.ftsLang = ftsLang;
 	}
 
+	public String getListener() {
+		return listener;
+	}
+
+	public void setListener(String listener) {
+		this.listener = listener;
+	}
+
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
@@ -119,5 +128,6 @@ public class R2dbcDslProperties implements BeanClassLoaderAware, InitializingBea
 		if (ObjectUtils.isEmpty(updatedAt)) updatedAt = StringUtils.EMPTY;
 		if (ObjectUtils.isEmpty(version)) version = StringUtils.EMPTY;
 		if (ObjectUtils.isEmpty(ftsLang)) ftsLang = StringUtils.EMPTY;
+		if (ObjectUtils.isEmpty(listener)) listener = StringUtils.EMPTY;
 	}
 }

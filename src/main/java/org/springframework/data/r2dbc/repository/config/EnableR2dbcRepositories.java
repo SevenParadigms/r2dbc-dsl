@@ -18,8 +18,9 @@ package org.springframework.data.r2dbc.repository.config;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.r2dbc.config.Beans;
+import org.springframework.data.r2dbc.config.R2dbcDslConfiguration;
 import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactoryBean;
+import org.springframework.data.r2dbc.support.Beans;
 import org.springframework.data.repository.config.DefaultRepositoryBaseClass;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
@@ -38,7 +39,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({Beans.class, R2dbcRepositoriesRegistrar.class})
+@Import({R2dbcDslConfiguration.class, Beans.class, R2dbcRepositoriesRegistrar.class})
 public @interface EnableR2dbcRepositories {
 
 	/**

@@ -33,7 +33,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.r2dbc.config.Beans;
 import org.springframework.data.r2dbc.config.R2dbcDslProperties;
 import org.springframework.data.r2dbc.convert.R2dbcConverter;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
@@ -50,10 +49,7 @@ import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.query.Equality;
 import org.springframework.data.r2dbc.repository.query.MementoPage;
 import org.springframework.data.r2dbc.repository.query.ReadOnly;
-import org.springframework.data.r2dbc.support.DslUtils;
-import org.springframework.data.r2dbc.support.FastMethodInvoker;
-import org.springframework.data.r2dbc.support.SqlField;
-import org.springframework.data.r2dbc.support.WordUtils;
+import org.springframework.data.r2dbc.support.*;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
@@ -108,7 +104,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
      * @param converter
      * @since 1.1
      */
-    public SimpleR2dbcRepository(RelationalEntityInformation<T, ID> entity, R2dbcEntityOperations entityOperations,
+    public SimpleR2dbcRepository(@Nullable RelationalEntityInformation<T, ID> entity, R2dbcEntityOperations entityOperations,
                                  R2dbcConverter converter, ApplicationContext applicationContext) {
         super(entity, applicationContext);
         this.entity = entity;
@@ -117,7 +113,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         this.converter = converter;
         this.databaseClient = org.springframework.data.r2dbc.core.DatabaseClient.create(entityOperations.getDatabaseClient().getConnectionFactory());
         this.applicationContext = applicationContext;
-        if (Beans.of(R2dbcDslProperties.class).getSecondCache()) {
+        var dslProperties = Beans.of(R2dbcDslProperties.class);
+        if (entity != null && dslProperties.getSecondCache() &&
+                (dslProperties.getListener().isEmpty() || dslProperties.getListener().contains(entity.getJavaType().getSimpleName()))) {
             listener().doOnNext(notification -> evictAll()).subscribe();
         }
     }
