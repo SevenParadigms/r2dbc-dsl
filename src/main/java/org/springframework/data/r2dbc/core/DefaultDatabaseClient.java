@@ -57,6 +57,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 /**
  * Default implementation of {@link DatabaseClient}.
  *
@@ -1583,9 +1585,11 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 		// Fix H2 bug on always double-quoted SqlIdentifier
 		var connectionFactory = Beans.getOrNull(ConnectionFactory.class);
+		var connectionFactoryName = connectionFactory.map(factory -> factory.getMetadata().getName()).orElse(EMPTY);
 		var postgresConnectionFactory = Beans.getOrNull(PostgresqlConnectionFactory.class);
 		if (connectionFactory.isEmpty() ||
-				(postgresConnectionFactory.isEmpty() && !connectionFactory.get().getClass().getSimpleName().equals("ConnectionPool"))) {
+				(postgresConnectionFactory.isEmpty() && !connectionFactory.get().getClass().getSimpleName().equals("ConnectionPool")
+						&& !connectionFactoryName.equals("PostgreSQL"))) {
 			sql = sql.replaceAll("\"", "`");
 		}
 		return sql;
