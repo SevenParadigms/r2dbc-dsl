@@ -38,6 +38,7 @@ public abstract class DslUtils {
     public static final String COMBINATORS = "(\\(|\\)|\")";
     public static final String DOT_REGEX = "\\.";
     public static final String JSONB = "->>'";
+    public static final String HASH = "<->";
 
     public enum Fields {createdAt, updatedAt, version}
 
@@ -317,14 +318,6 @@ public abstract class DslUtils {
         return first != null && second != null && first.isEqual(second);
     }
 
-    public static String dateTimeToString(Object dateTime) {
-        var string = dateTime.toString().replaceAll("Z", "");
-        string = string.indexOf("+") > 0 ? string.substring(0, string.indexOf("+")) : string;
-        string = string.indexOf("[") > 0 ? string.substring(0, string.indexOf("[")) : string;
-        return string;
-    }
-
-
     public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>... cls) {
         return FastMethodInvoker.getFields(objectToSave.getClass(), name.name(), cls);
     }
@@ -340,11 +333,11 @@ public abstract class DslUtils {
     }
 
     public static String generateHash(Dsl dsl) {
-        return dsl.getQuery() + "<->" + dsl.getPage() + "<->" + dsl.getSize() + "<->" + dsl.getSort();
+        return dsl.getQuery() + HASH + dsl.getPage() + HASH + dsl.getSize() + HASH + dsl.getSort();
     }
 
     public static Dsl generateDsl(String hash) {
-        var arr = hash.split("<->");
+        var arr = hash.split(HASH);
         return Dsl.create(arr[0]).pageable(Integer.parseInt(arr[1]), Integer.parseInt(arr[2])).sorting(arr[3]);
     }
 

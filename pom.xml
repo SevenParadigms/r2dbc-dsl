@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.7.8</version>
+	<version>4.7.9</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -74,11 +74,11 @@
 	</scm>
 
 	<properties>
-		<kotlin.version>1.6.20</kotlin.version>
+		<kotlin.version>1.6.21</kotlin.version>
 		<kotlinx.version>1.6.1-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring-framework.version>5.3.17</spring-framework.version>
+		<spring-framework.version>5.3.19</spring-framework.version>
 		<springdata.commons>2.5.8</springdata.commons>
 		<springdata.autoconfig>2.5.9</springdata.autoconfig>
 		<springdata.relational>2.2.8</springdata.relational>
@@ -87,16 +87,16 @@
 		<caffeine.version>3.0.6</caffeine.version>
 
 		<degraph-check.version>0.1.4</degraph-check.version>
-		<postgresql.version>42.3.3</postgresql.version>
+		<postgresql.version>42.3.4</postgresql.version>
 		<mysql.version>8.0.28</mysql.version>
 		<r2dbc-spi-test.version>0.8.6.RELEASE</r2dbc-spi-test.version>
 		<mssql-jdbc.version>9.4.0.jre8</mssql-jdbc.version>
 		<mariadb-jdbc.version>2.7.5</mariadb-jdbc.version>
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
-		<testcontainer>1.16.3</testcontainer>
+		<testcontainer>1.17.1</testcontainer>
 		<mockk>1.12.2</mockk>
-		<embedded-hazelcast.version>1.1.8</embedded-hazelcast.version>
+		<embedded-hazelcast.version>1.1.9</embedded-hazelcast.version>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
