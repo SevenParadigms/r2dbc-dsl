@@ -117,7 +117,7 @@ then generated SQL:
 
 ==== Web query predicates (-> sql):
 
-* "con1,(con2),con3" -> con1 or con2 and con3
+* "con1,con2,()con3,con4,()con5" -> con1 and con2 or con3 and con4 or con5
 * "column^^1 2 3" -> column in (1, 2, 3)
 * "column!^1 2 3" -> column not in (1, 2, 3)
 * "column==value" -> column = value
