@@ -200,6 +200,23 @@ spring.cache:
   <model class simple name>.maximumSize: 10000
 ----
 
+Examples of manage internal repository cache:
+
+[source,kotlin]
+----
+// change feature in cache and get it
+featureRepository
+    .cache().put(feature.copy(group = ExpressionParserCache.INSTANCE.parseExpression("a==6")))
+    .findById(feature.id!!)
+
+// evict cache and get real feature from database and after from cache
+featureRepository
+    .cache().evict(feature.id)
+    .findById(feature.id!!)
+
+val exp = featureRepository.cache()[feature.id]?.group?.expressionString
+----
+
 == Subscribe to async database UPDATE/INSERT events:
 
 Before create universal notifier function:
