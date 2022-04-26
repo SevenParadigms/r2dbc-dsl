@@ -36,6 +36,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.expression.ExpressionParserCache;
 import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
@@ -372,6 +373,16 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
+
+		repository.findAll(Dsl.create().top(1).order("group", Sort.Direction.DESC))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().distinct())
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
+				.verifyComplete();
 	}
 
 	@Test
@@ -696,6 +707,13 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.verifyComplete();
 
 		repository.findAll(Dsl.create("version==2,name==abc,()legoJoin.name==bbc,manual==10,()legoJoin.name==join2,legoJoin.version==2"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().equals("version", 2).equals("name", "abc").or()
+						.equals("legoJoin.name", "bbc").equals("manual", 10).or()
+						.equals("legoJoin.name", "join2").equals("legoJoin.version", 2))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
 				.verifyComplete();

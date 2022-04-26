@@ -850,6 +850,12 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             }
         }
         var selectBuilder = new CustomSelectBuilder().select(columns).from(table);
+        if (dsl.getDistinct()) {
+            selectBuilder.distinct();
+        }
+        if (dsl.getTop() > 0) {
+            selectBuilder.top(dsl.getTop());
+        }
         for (var joinKey : joins.keySet()) {
             selectBuilder.join(
                     new CustomSelectBuilder.JoinBuilder(joins.get(joinKey), selectBuilder)

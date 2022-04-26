@@ -261,7 +261,7 @@ public abstract class DslUtils {
                 if (parts[0].contains(DOT)) {
                     name = toJsonbPath(parts[0]);
                 } else
-                    name = parts[0];
+                    name = "\"" + parts[0] + "\"";
                 return new Sort.Order(Sort.Direction.valueOf(parts[1].toUpperCase()), camelToSql(name));
             }).collect(Collectors.toList()));
         } else return Sort.unsorted();
