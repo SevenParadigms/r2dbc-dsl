@@ -39,6 +39,7 @@ public class MySqlTestSupport {
 
 	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer PRIMARY KEY,\n" //
+			+ "    lego_join_id     integer NULL,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    `group`     TIMESTAMP NULL\n," //
 			+ "    name        varchar(255) NOT NULL,\n" //
@@ -48,6 +49,7 @@ public class MySqlTestSupport {
 
 	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer AUTO_INCREMENT PRIMARY KEY,\n" //
+			+ "    lego_join_id     integer NULL,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    `group`     TIMESTAMP NULL\n," //
 			+ "    name        varchar(255) NOT NULL,\n" //

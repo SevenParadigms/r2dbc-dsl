@@ -111,7 +111,9 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 	List<LegoSet> shouldInsertNewItems() {
 
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
+		legoSet1.setLegoJoinId(1);
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
+		legoSet2.setLegoJoinId(2);
 		legoSet2.setManualReadOnly(22);
 		legoSet2.setNameEquality("equality");
 
@@ -449,6 +451,8 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 		LocalDateTime dataTime;
 		ZonedDateTime zonedTime;
 		OffsetDateTime offsetTime;
+
+		Integer legoJoinId;
 
 		@PersistenceConstructor
 		LegoSet(@Nullable Integer id, String name, Integer manual) {

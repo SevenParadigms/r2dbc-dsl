@@ -33,6 +33,7 @@ public class H2TestSupport {
 
 	public static String CREATE_TABLE_LEGOSET = "CREATE TABLE lego_set (\n" //
 			+ "    id          integer CONSTRAINT id1 PRIMARY KEY,\n" //
+			+ "    lego_join_id     integer NULL,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    manual      integer NULL\n," //
@@ -42,6 +43,7 @@ public class H2TestSupport {
 
 	public static String CREATE_TABLE_LEGOSET_WITH_ID_GENERATION = "CREATE TABLE lego_set (\n" //
 			+ "    id          serial CONSTRAINT id1 PRIMARY KEY,\n" //
+			+ "    lego_join_id     integer NULL,\n" //
 			+ "    version     integer NULL,\n" //
 			+ "    name        varchar(255) NOT NULL,\n" //
 			+ "    extra       varchar(255) NULL,\n" //

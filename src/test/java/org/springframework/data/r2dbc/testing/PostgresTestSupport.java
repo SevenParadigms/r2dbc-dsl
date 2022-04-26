@@ -34,7 +34,8 @@ public class PostgresTestSupport {
 			+ "    data_time   timestamp NULL\n," //
 			+ "    zoned_time  timestamp with time zone NULL\n," //
 			+ "    offset_time timestamp with time zone NULL\n," //
-			+ "    cert        bytea NULL\n" //
+			+ "    cert        bytea NULL\n," //
+			+ "    lego_join_id     integer NULL\n" //
 			+ ");";
 
 	public static final String DROP_TABLE_LEGOSET = "DROP TABLE lego_set";

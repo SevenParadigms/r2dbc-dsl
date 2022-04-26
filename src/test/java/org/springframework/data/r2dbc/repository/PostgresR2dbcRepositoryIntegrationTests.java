@@ -21,8 +21,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.core.Hazelcast;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -88,10 +90,12 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	@Autowired WithHStoreRepository hstoreRepositoryWith;
 
+	@Autowired LegoJoinRepository legoJoinRepository;
+
 	@Configuration
 	@EnableR2dbcRepositories(considerNestedRepositories = true,
 			includeFilters = @Filter(
-					classes = { PostgresLegoSetRepository.class, WithJsonRepository.class, WithHStoreRepository.class },
+					classes = { PostgresLegoSetRepository.class, WithJsonRepository.class, WithHStoreRepository.class, LegoJoinRepository.class },
 					type = FilterType.ASSIGNABLE_TYPE))
 	static class IntegrationTestConfiguration extends AbstractR2dbcConfiguration {
 
@@ -211,6 +215,10 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	}
 
 	interface WithJsonRepository extends R2dbcRepository<WithJson, Long> {
+
+	}
+
+	interface LegoJoinRepository extends R2dbcRepository<LegoJoin, Long> {
 
 	}
 
@@ -647,6 +655,49 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 					Assert.isTrue(actual.getName().equals("SCHAUFELRADBAGGER"), "must true");
 					Assert.isTrue(Objects.requireNonNull(repository.cache().get(1)).getName().equals("SCHAUFELRADBAGGER"), "must equals");
 				})
+				.verifyComplete();
+	}
+
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Accessors(chain = true)
+	static class LegoJoin implements Serializable {
+		Long id;
+		Integer version;
+		String name;
+	}
+
+	@Test
+	void shouldJoinTableAndGroupingByOr() {
+		List<LegoSet> legoSets = shouldInsertNewItems();
+		JdbcTemplate template = new JdbcTemplate(createDataSource());
+		template.execute("DROP TABLE IF EXISTS lego_join");
+		template.execute("CREATE TABLE lego_join (\n" //
+				+ "    id          SERIAL PRIMARY KEY,\n" //
+				+ "    version     integer NULL,\n" //
+				+ "    name        text NOT NULL\n" //
+				+ ");");
+		LegoJoin legoJoin1 = new LegoJoin().setName("join1");
+		legoJoinRepository.save(legoJoin1).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		LegoJoin legoJoin2 = new LegoJoin().setName("join2");
+		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		Assert.isTrue(legoJoin2.getVersion() == 2, "must 2");
+
+		repository.findAll(Dsl.create().equals("legoJoin.name", "join1").limit(1))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 1, "must 1"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().equals("legoJoin.name", "join2").equals("legoJoin.version", 2))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create("version==2,name==abc,()legoJoin.name==bbc,manual==10,()legoJoin.name==join2,legoJoin.version==2"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
 				.verifyComplete();
 	}
 
