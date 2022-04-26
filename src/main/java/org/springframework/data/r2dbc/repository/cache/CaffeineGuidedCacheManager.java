@@ -29,9 +29,9 @@ public class CaffeineGuidedCacheManager implements CacheManager {
     private final Map<String, Cache> cacheMap = new ConcurrentHashMap<>(16);
     private final Collection<String> customCacheNames = new CopyOnWriteArrayList<>();
     private final ApplicationContext applicationContext;
-    private String defaultExpireAfterAccess = "500";
-    private String defaultExpireAfterWrite = "";
-    private String defaultMaximumSize = "10000";
+    private Long defaultExpireAfterAccess = 500L;
+    private Long defaultExpireAfterWrite = -1L;
+    private Long defaultMaximumSize = 10000L;
 
     public CaffeineGuidedCacheManager() {
         this.applicationContext = Beans.getApplicationContext();
@@ -46,15 +46,15 @@ public class CaffeineGuidedCacheManager implements CacheManager {
         setCacheNames(Arrays.asList(cacheNames));
     }
 
-    public void setDefaultExpireAfterAccess(String defaultExpireAfterAccess) {
+    public void setDefaultExpireAfterAccess(Long defaultExpireAfterAccess) {
         this.defaultExpireAfterAccess = defaultExpireAfterAccess;
     }
 
-    public void setDefaultExpireAfterWrite(String defaultExpireAfterWrite) {
+    public void setDefaultExpireAfterWrite(Long defaultExpireAfterWrite) {
         this.defaultExpireAfterWrite = defaultExpireAfterWrite;
     }
 
-    public void setDefaultMaximumSize(String defaultMaximumSize) {
+    public void setDefaultMaximumSize(Long defaultMaximumSize) {
         this.defaultMaximumSize = defaultMaximumSize;
     }
 
@@ -132,16 +132,16 @@ public class CaffeineGuidedCacheManager implements CacheManager {
     protected com.github.benmanes.caffeine.cache.Cache<Object, Object> createNativeCaffeineCache(String name) {
         var context = Beans.setAndGetContext(applicationContext);
         var expireAfterAccess = context.getEnvironment()
-                .getProperty("spring.cache." + name + ".expireAfterAccess", defaultExpireAfterAccess);
+                .getProperty("spring.cache." + name + ".expireAfterAccess", Long.class, defaultExpireAfterAccess);
         var expireAfterWrite = context.getEnvironment()
-                .getProperty("spring.cache." + name + ".expireAfterWrite", defaultExpireAfterWrite);
+                .getProperty("spring.cache." + name + ".expireAfterWrite", Long.class, defaultExpireAfterWrite);
         var maximumSize = context.getEnvironment()
-                .getProperty("spring.cache." + name + ".maximumSize", defaultMaximumSize);
-        cacheBuilder.expireAfterAccess(Long.parseLong(expireAfterAccess), TimeUnit.MILLISECONDS);
-        if (!expireAfterWrite.isEmpty()) {
-            cacheBuilder.expireAfterWrite(Long.parseLong(expireAfterWrite), TimeUnit.MILLISECONDS);
+                .getProperty("spring.cache." + name + ".maximumSize", Long.class, defaultMaximumSize);
+        cacheBuilder.expireAfterAccess(expireAfterAccess, TimeUnit.MILLISECONDS);
+        if (expireAfterWrite > 0) {
+            cacheBuilder.expireAfterWrite(expireAfterWrite, TimeUnit.MILLISECONDS);
         }
-        cacheBuilder.maximumSize(Long.parseLong(maximumSize));
+        cacheBuilder.maximumSize(maximumSize);
         cacheBuilder.initialCapacity(50);
         return (this.cacheLoader != null ? this.cacheBuilder.build(this.cacheLoader) : this.cacheBuilder.build());
     }

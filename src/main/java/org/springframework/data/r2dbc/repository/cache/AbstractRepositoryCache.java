@@ -45,7 +45,7 @@ abstract public class AbstractRepositoryCache<T, ID> {
         if (entity != null) {
             if (cacheManager instanceof CaffeineGuidedCacheManager) {
                 if (dslProperties.getSecondCache()) {
-                    ((CaffeineGuidedCacheManager) cacheManager).setDefaultExpireAfterAccess("300000");
+                    ((CaffeineGuidedCacheManager) cacheManager).setDefaultExpireAfterAccess(300000L);
                 }
             } else {
                 assert cacheManager != null;
