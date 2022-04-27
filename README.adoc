@@ -109,11 +109,11 @@ data class Dsl {
 
 The primary idea is to reduce development time when all kinds of criteria can be formed at the frontend:
 
-`localhost:8080/items?query=shops.type==mega,name~~biggest,price>=100 & fields=id,name & page=0 & size=20 & sort=itemType:asc,createdAt:desc`
+`localhost:8080/items?query=!@shops.data.assign,shops.data.type==mega,name~~biggest,price>=100 & fields=id,name & page=0 & size=20 & sort=itemType:asc,createdAt:desc`
 
 then generated SQL:
 
-`select id, name from items join shops on items.shop_id = shops.id where shops.type='mega' and name like '%biggest%' and price >= 100 order by item_type asc, created_at desc limit 20 offset 0`
+`select id, name from items join shops on items.shop_id = shops.id where shops.data->>'assign' is not null and shops.data->>'type'='mega' and name like '%biggest%' and price >= 100 order by item_type asc, created_at desc limit 20 offset 0`
 
 ==== Web query predicates (-> sql):
 

@@ -443,6 +443,23 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         });
     }
 
+    private List<String> getSqlFields(Set<String> fields) {
+        var mutableList = new ArrayList<String>();
+        var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType())
+                .stream().map(SqlIdentifier::getReference).collect(Collectors.toList());
+        for (String field : fields) {
+            if (field.contains(DOT)) {
+                String[] tmp = field.split(DOT_REGEX);
+                if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
+                    mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + field);
+                    continue;
+                }
+            }
+            mutableList.add(WordUtils.camelToSql(field));
+        }
+        return mutableList;
+    }
+
     public Flux<T> fullTextSearch(Dsl dsl) {
         final var dslProperties = Beans.of(R2dbcDslProperties.class);
         var lang = dslProperties.getFtsLang().isEmpty() ? dsl.getLang() : dslProperties.getFtsLang();
@@ -452,31 +469,28 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         }
         var parts = DslUtils.getFtsPair(dsl, entity.getJavaType());
         var fields = "";
-        
-        if (dsl.getFields().length == 0)
+        var whereFields = "";
+
+        if (dsl.getFields().length == 0) {
             fields = "*";
-        else {
-            var mutableList = new ArrayList<String>();
-            var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType())
-                    .stream().map(SqlIdentifier::getReference).collect(Collectors.toList());
-            for (String field : dsl.getFields()) {
-                if (field.contains(DOT)) {
-                    String[] tmp = field.split(DOT_REGEX);
-                    if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
-                        mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + field);
-                        continue;
-                    }
-                }
-                mutableList.add(WordUtils.camelToSql(field));
-            }
+            whereFields = "*";
+        } else {
+            var mutableList = getSqlFields(new HashSet<>(Arrays.asList(dsl.getFields())));
             fields = String.join(Dsl.COMMA, mutableList);
+
+            var queryFields = new HashSet<>(DslUtils.getCriteriaFields(dsl));
+            queryFields.addAll(Arrays.asList(dsl.getFields()));
+            mutableList = getSqlFields(queryFields);
+            whereFields = String.join(Dsl.COMMA, mutableList);
         }
 
         assert parts != null;
         if (!fields.equals("*")) {
-            if (!fields.contains(parts.component1()) && !parts.component1().contains("->>")) fields += Dsl.COMMA + parts.component1();
+            if (!fields.contains(parts.component1()) && !parts.component1().contains("->>")) {
+                whereFields += Dsl.COMMA + parts.component1();
+            }
         }
-        var sql = "SELECT * FROM (SELECT " + fields +
+        var sql = "SELECT " + fields + " FROM (SELECT " + whereFields +
                 " FROM " + entity.getTableName().getReference() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
                 " WHERE (" + parts.component1() + " @@ q)) AS s";
         var operation = getMappedObject(dsl);
@@ -809,10 +823,10 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             for (String field : queryFields) {
                 field = field.replaceAll(COMBINATORS, "");
                 if (!joins.containsKey(field) && field.contains(DOT)) {
-                    String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0];
+                    String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0].replaceAll(PREFIX, "");;
                     Field entityField = ReflectionUtils.findField(entity.getJavaType(), tableField);
                     if (entityField != null && entityField.getType() == JsonNode.class) {
-                        jsonNodeFields.add(field);
+                        jsonNodeFields.add(field.replaceAll(PREFIX, ""));
                     }
                     if (entityColumns.contains(tableField + "_" + SqlField.id)) {
                         joins.put(tableField, Table.create(tableField));
