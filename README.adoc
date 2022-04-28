@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.8.1</version>
+  <version>4.8.3</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with `Dsl` and `MementoPage` models (it is convenient 
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.8.1</version>
+  <version>4.8.3</version>
 </dependency>
 ----
 
@@ -55,6 +55,10 @@ data class Dsl {
 
 == Features
 
+* Support all predicates for PostgreSQL JSONB type, JsonNode in model automatically converted to JSONB and back
+
+* SpEL Expression type in model automatically converted to TEXT type of PostgreSQL and back
+
 * First level cache based on Caffeine with guided expire access and size for each cache from application.properties
 
 * Convert first level cache to second level cache by property in application.properties: `spring.r2dbc.dsl.secondCache = true` then subscribe to change from database
@@ -72,10 +76,6 @@ data class Dsl {
 * Annotation `@Id` is not required in model, because column with name `id` in 99% of all tables has name `id`
 
 * Annotation `@Table` is not required in model, because table name in 99% of all tables equals model class name, the camel name automatic convert to sql underlined
-
-* JsonNode type in model automatically converted to JSONB type of PostgreSQL and back
-
-* SpEL Expression type in model automatically converted to TEXT type of PostgreSQL and back
 
 * Any reserved database words can be used by column name
 

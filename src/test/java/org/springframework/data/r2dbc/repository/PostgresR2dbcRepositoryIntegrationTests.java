@@ -677,6 +677,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		Long id;
 		Integer version;
 		String name;
+		JsonNode data;
 	}
 
 	@Test
@@ -687,11 +688,12 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		template.execute("CREATE TABLE lego_join (\n" //
 				+ "    id          SERIAL PRIMARY KEY,\n" //
 				+ "    version     integer NULL,\n" //
+				+ "    data        jsonb NOT NULL,\n" //
 				+ "    name        text NOT NULL\n" //
 				+ ");");
-		LegoJoin legoJoin1 = new LegoJoin().setName("join1");
+		LegoJoin legoJoin1 = new LegoJoin().setName("join1").setData(JsonUtils.objectNode().put("key", "value1"));
 		legoJoinRepository.save(legoJoin1).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-		LegoJoin legoJoin2 = new LegoJoin().setName("join2");
+		LegoJoin legoJoin2 = new LegoJoin().setName("join2").setData(JsonUtils.objectNode().put("key", "value2"));
 		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		Assert.isTrue(legoJoin2.getVersion() == 2, "must 2");
@@ -699,6 +701,11 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.findAll(Dsl.create().equals("legoJoin.name", "join1").limit(1))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 1, "must 1"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().equals("legoJoin.data.key", "value2").limit(1))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
 				.verifyComplete();
 
 		repository.findAll(Dsl.create().equals("legoJoin.name", "join2").equals("legoJoin.version", 2))
@@ -716,6 +723,39 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 						.equals("legoJoin.name", "join2").equals("legoJoin.version", 2))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldFullTextSearchAndCountIt() {
+		List<LegoSet> legoSets = shouldInsertNewItems();
+		JdbcTemplate template = new JdbcTemplate(createDataSource());
+		template.execute("DROP TABLE IF EXISTS lego_join");
+		template.execute("CREATE TABLE lego_join (\n" //
+				+ "    id          SERIAL PRIMARY KEY,\n" //
+				+ "    version     integer NULL,\n" //
+				+ "    name        text NOT NULL,\n" //
+				+ "    data        jsonb NOT NULL,\n" //
+				+ "    tsv         tsvector NULL\n" //
+				+ ");");
+		template.execute("INSERT INTO lego_join (version,name,tsv,data) " +
+				"values(1,'join1',to_tsvector('pg_catalog.english','The best from the west'),'{\"key\":\"value1\"}'::jsonb);");
+		template.execute("INSERT INTO lego_join (version,name,tsv,data) " +
+				"values(1,'join2',to_tsvector('pg_catalog.english','The best from the wild west'),'{\"key\":\"value2\"}'::jsonb);");
+
+		legoJoinRepository.findAll(Dsl.create().fts("Wild").isNotNull("data.key").equals("data.key", "value2"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId() == 2, "must 2"))
+				.verifyComplete();
+
+		legoJoinRepository.count(Dsl.create().fts("West").isNotNull("data.key"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual == 2, "must 2"))
+				.verifyComplete();
+
+		legoJoinRepository.findAllPaged(Dsl.create().fts("West").isNotNull("data.key"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getCount() == 2 && actual.getContent().size() == 2, "must 2"))
 				.verifyComplete();
 	}
 

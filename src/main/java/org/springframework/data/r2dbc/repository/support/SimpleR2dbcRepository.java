@@ -229,10 +229,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                     if (!DslUtils.compareDateTime(versionValue, previousVersionValue)) {
                                         return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
                                     }
-                                } else
-                                    if (!Objects.equals(versionValue, previousVersionValue)) {
-                                        return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
-                                    }
+                                } else if (!Objects.equals(versionValue, previousVersionValue)) {
+                                    return Mono.error(new OptimisticLockingFailureException("Incorrect version"));
+                                }
                                 setVersion(objectToSave, version, versionValue);
                             }
                             for (Field field : nowStampFields) {
@@ -366,26 +365,21 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
     @Override
     public Mono<Long> count(Dsl dsl) {
-        var sql = "SELECT count(*) FROM " + entity.getTableName().getReference() + " AS s ";
-        var operation = getMappedObject(dsl);
-        var criteria = operation.get().replaceAll(entity.getTableName().getReference(), "s");
-        if (criteria.indexOf("WHERE") > 0) {
-            int lastIndex = criteria.indexOf("FOR UPDATE") - 1;
-            if (criteria.indexOf("LIMIT") > 0) lastIndex = criteria.indexOf("LIMIT") - 1;
-            if (criteria.indexOf("ORDER") > 0) lastIndex = criteria.indexOf("ORDER") - 1;
-            criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
-            sql += criteria;
-            var index = 1;
-            for (Bindings.Binding bind : operation.getBindings()) {
-                var bindValue = DslUtils.objectToSql(bind.getValue());
-                sql = sql.replaceAll("(\\$" + index + " )", bindValue + " ");
-                sql = sql.replaceAll("(\\$" + index + "$)", bindValue);
-                sql = sql.replaceAll("(\\$" + index + "\\))", bindValue + ")");
-                sql = sql.replaceAll("(\\$" + index + ",)", bindValue + ",");
-                index++;
+        var sql = StringUtils.EMPTY;
+        if (dsl.getQuery().contains("@@")) {
+            var whereFields = "*";
+            var parts = DslUtils.getFtsPair(dsl, entity.getJavaType());
+            var queryFields = new HashSet<>(DslUtils.getCriteriaFields(dsl));
+            var mutableList = getSqlNames(queryFields);
+            if (!mutableList.isEmpty()) {
+                whereFields = String.join(Dsl.COMMA, mutableList);
             }
-        }
-        return databaseClient.execute(sql).as(Long.class).fetch().one();
+            sql = "SELECT count(s.*) FROM (SELECT " + whereFields +
+                    " FROM " + entity.getTableName().getReference() + ", to_tsquery('" + getLanguage(dsl) + "', '" + parts.component2() + "') AS q" +
+                    " WHERE (" + parts.component1() + " @@ q)) AS s ";
+        } else
+            sql = "SELECT count(*) FROM " + entity.getTableName().getReference() + " AS s ";
+        return databaseClient.execute(sql + getBindingCriteria(dsl)).as(Long.class).fetch().one();
     }
 
     @Override
@@ -449,9 +443,26 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                 .stream().map(SqlIdentifier::getReference).collect(Collectors.toList());
         for (String field : fields) {
             if (field.contains(DOT)) {
-                String[] tmp = field.split(DOT_REGEX);
-                if (columns.contains(WordUtils.camelToSql(tmp[0]))) {
-                    mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + field);
+                String fieldName = field.split(DOT_REGEX)[0];
+                if (columns.contains(WordUtils.camelToSql(fieldName))) {
+                    mutableList.add(DslUtils.toJsonbPath(field, entity.getJavaType()) + " as " + WordUtils.lastOctet(field));
+                    continue;
+                }
+            }
+            mutableList.add(WordUtils.camelToSql(field));
+        }
+        return mutableList;
+    }
+
+    private List<String> getSqlNames(Set<String> fields) {
+        var mutableList = new ArrayList<String>();
+        var columns = entityOperations.getDataAccessStrategy().getAllColumns(entity.getJavaType())
+                .stream().map(SqlIdentifier::getReference).collect(Collectors.toList());
+        for (String field : fields) {
+            if (field.contains(DOT)) {
+                String fieldName = field.split(DOT_REGEX)[0];
+                if (columns.contains(WordUtils.camelToSql(fieldName))) {
+                    mutableList.add(fieldName);
                     continue;
                 }
             }
@@ -461,12 +472,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     public Flux<T> fullTextSearch(Dsl dsl) {
-        final var dslProperties = Beans.of(R2dbcDslProperties.class);
-        var lang = dslProperties.getFtsLang().isEmpty() ? dsl.getLang() : dslProperties.getFtsLang();
-        if (ObjectUtils.isEmpty(lang)) {
-            lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
-            if (ObjectUtils.isEmpty(lang)) lang = "English";
-        }
+        var lang = getLanguage(dsl);
         var parts = DslUtils.getFtsPair(dsl, entity.getJavaType());
         var fields = "";
         var whereFields = "";
@@ -483,7 +489,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             mutableList = getSqlFields(queryFields);
             whereFields = String.join(Dsl.COMMA, mutableList);
         }
-
         assert parts != null;
         if (!fields.equals("*")) {
             if (!fields.contains(parts.component1()) && !parts.component1().contains("->>")) {
@@ -491,52 +496,39 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             }
         }
         var sql = "SELECT " + fields + " FROM (SELECT " + whereFields +
-                " FROM " + entity.getTableName().getReference() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
-                " WHERE (" + parts.component1() + " @@ q)) AS s";
-        var operation = getMappedObject(dsl);
-        var criteria = operation.get().replaceAll(entity.getTableName().getReference(), "s");
-        if (criteria.indexOf("WHERE") > 0) {
-            int lastIndex = criteria.indexOf("FOR UPDATE") - 1;
-            if (criteria.indexOf("LIMIT") > 0) lastIndex = criteria.indexOf("LIMIT") - 1;
-            if (criteria.indexOf("ORDER") > 0) lastIndex = criteria.indexOf("ORDER") - 1;
-            criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
-            sql += criteria;
-        }
-        sql += " ORDER BY ts_rank_cd(s." + parts.component1() + ", websearch_to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
+                " FROM " + entity.getTableName().getReference() + ", to_tsquery('" + lang + "', '" + parts.component2() + "') AS q" +
+                " WHERE (" + parts.component1() + " @@ q)) AS s " + getBindingCriteria(dsl) +
+                " ORDER BY ts_rank_cd(s." + parts.component1() + ", to_tsquery('" + lang + "', '" + parts.component2() + "')) DESC ";
         if (dsl.isPaged()) {
             sql += "LIMIT " + dsl.getSize() + " OFFSET " + (dsl.getSize() * dsl.getPage());
-        }
-        if (criteria.indexOf("WHERE") > 0) {
-            var index = 1;
-            for (Bindings.Binding bind : operation.getBindings()) {
-                sql = sql.replaceAll("\\$" + index++, bind.getValue() == null ? "null" : DslUtils.objectToSql(bind.getValue()));
-            }
         }
         return databaseClient.execute(sql).as(entity.getJavaType()).fetch().all();
     }
 
     @Override
     public Flux<T> findAll(Dsl dsl) {
-        if (dsl.getQuery().contains("@@")) return fullTextSearch(dsl);
+        if (dsl.getQuery().contains("@@")) return getFlux(dsl, fullTextSearch(dsl));
         return getFlux(dsl, databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all());
     }
 
     @Override
     public Mono<MementoPage<T>> findAllPaged(Dsl dsl) {
-        if (dsl.getQuery().contains("@@")) return fullTextSearch(dsl).collectList()
-                .flatMap(content -> count(dsl).map(totalElements -> new MementoPage<>(
-                        new MementoPage.MementoPageRequest(dsl, totalElements), content)));
         if (containsFlux(dsl)) {
             return count(dsl).map(totalElements -> new MementoPage<>(
                     new MementoPage.MementoPageRequest(dsl, totalElements), getList(Flux.class, dsl)
             ));
-        } else
-            return databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all().collectList()
-                    .flatMap(content -> {
-                        putFlux(dsl.pageable(dsl.getPage() < 0 ? 0 : dsl.getPage(), dsl.getSize() < 0 ? 20 : dsl.getSize()), content);
-                        return count(dsl).map(totalElements -> new MementoPage<>(
-                                new MementoPage.MementoPageRequest(dsl, totalElements), content));
-                    });
+        } else {
+            Mono<List<T>> result;
+            if (dsl.getQuery().contains("@@"))
+                result = fullTextSearch(dsl).collectList();
+            else
+                result = databaseClient.execute(getMappedObject(dsl)).as(entity.getJavaType()).fetch().all().collectList();
+            return result.flatMap(content -> {
+                putFlux(dsl.pageable(dsl.getPage() < 0 ? 0 : dsl.getPage(), dsl.getSize() < 0 ? 20 : dsl.getSize()), content);
+                return count(dsl).map(totalElements -> new MementoPage<>(
+                        new MementoPage.MementoPageRequest(dsl, totalElements), content));
+            });
+        }
     }
 
     /*
@@ -777,6 +769,38 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         return Query.query(Criteria.where(getIdColumnName()).is(id));
     }
 
+    private String getLanguage(Dsl dsl) {
+        final var dslProperties = Beans.of(R2dbcDslProperties.class);
+        var lang = dslProperties.getFtsLang().isEmpty() ? dsl.getLang() : dslProperties.getFtsLang();
+        if (ObjectUtils.isEmpty(lang)) {
+            lang = Locale.getDefault().getDisplayLanguage(Locale.ENGLISH);
+            if (ObjectUtils.isEmpty(lang)) lang = "English";
+        }
+        return lang;
+    }
+
+    private String getBindingCriteria(Dsl dsl) {
+        var operation = getMappedObject(dsl);
+        var criteria = operation.get().replaceAll(entity.getTableName().getReference(), "s");
+        if (criteria.indexOf("WHERE") > 0) {
+            int lastIndex = criteria.indexOf("FOR UPDATE") - 1;
+            if (criteria.indexOf("LIMIT") > 0) lastIndex = criteria.indexOf("LIMIT") - 1;
+            if (criteria.indexOf("ORDER") > 0) lastIndex = criteria.indexOf("ORDER") - 1;
+            criteria = criteria.substring(criteria.indexOf("WHERE") - 1, lastIndex);
+            var index = 1;
+            for (Bindings.Binding bind : operation.getBindings()) {
+                var bindValue = DslUtils.objectToSql(bind.getValue());
+                criteria = criteria.replaceAll("(\\$" + index + " )", bindValue + " ");
+                criteria = criteria.replaceAll("(\\$" + index + "$)", bindValue);
+                criteria = criteria.replaceAll("(\\$" + index + "\\))", bindValue + ")");
+                criteria = criteria.replaceAll("(\\$" + index + ",)", bindValue + ",");
+                index++;
+            }
+            return criteria;
+        }
+        return StringUtils.EMPTY;
+    }
+
     private DslPreparedOperation<Delete> getDeleteMappedObject(Dsl dsl) {
         var dialect = DialectResolver.getDialect(databaseClient.getConnectionFactory());
         ReactiveDataAccessStrategy accessStrategy = entityOperations.getDataAccessStrategy();
@@ -823,9 +847,10 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             for (String field : queryFields) {
                 field = field.replaceAll(COMBINATORS, "");
                 if (!joins.containsKey(field) && field.contains(DOT)) {
-                    String tableField = WordUtils.camelToSql(field).split(DOT_REGEX)[0].replaceAll(PREFIX, "");;
+                    var split = WordUtils.camelToSql(field).split(DOT_REGEX);
+                    String tableField = split[0].replaceAll(PREFIX, "");
                     Field entityField = ReflectionUtils.findField(entity.getJavaType(), tableField);
-                    if (entityField != null && entityField.getType() == JsonNode.class) {
+                    if (entityField != null && entityField.getType() == JsonNode.class || split.length > 2) {
                         jsonNodeFields.add(field.replaceAll(PREFIX, ""));
                     }
                     if (entityColumns.contains(tableField + "_" + SqlField.id)) {

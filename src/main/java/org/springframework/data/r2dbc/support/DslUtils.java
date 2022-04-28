@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import kotlin.Pair;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -70,6 +72,10 @@ public abstract class DslUtils {
             for (var field : reflectionStorage) {
                 if (fieldName.equals(field.getName()) && field.getType() == JsonNode.class) {
                     return toJsonbPath(dotter);
+                }
+                if (fieldName.concat(StringUtils.capitalize(SqlField.id)).equals(field.getName())) {
+                    var json = dotter.substring(dotter.indexOf(".") + 1);
+                    return fieldName + "." + toJsonbPath(json);
                 }
             }
         }
@@ -218,9 +224,9 @@ public abstract class DslUtils {
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(Dsl.COMMA);
             for (String criteria : criterias) {
-                if (criteria.contains(Dsl.fts)) continue;
-                String[] parts = criteria.split(COMMANDS);
-                list.add(parts[0].replace(PREFIX, ""));
+                if (ObjectUtils.isEmpty(criteria) || criteria.contains(Dsl.fts)) continue;
+                String fieldName = criteria.split(COMMANDS)[0];
+                list.add(fieldName.replaceAll(PREFIX, ""));
             }
         }
         return list;
