@@ -35,6 +35,7 @@ import org.springframework.data.r2dbc.mapping.SettableValue;
 import org.springframework.data.r2dbc.query.Update;
 import org.springframework.data.r2dbc.support.Beans;
 import org.springframework.data.r2dbc.support.R2dbcExceptionTranslator;
+import org.springframework.data.r2dbc.support.WordUtils;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.sql.SqlIdentifier;
@@ -1582,7 +1583,7 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 
 		String sql = sqlSupplier.get();
 		Assert.state(StringUtils.hasText(sql), "SQL returned by SQL supplier must not be empty!");
-
+		if (sql.contains(" DISTINCT ")) sql = WordUtils.removeAfter(sql, " FOR UPDATE");
 		// Fix H2 bug on always double-quoted SqlIdentifier
 		var connectionFactory = Beans.getOrNull(ConnectionFactory.class);
 		var connectionFactoryName = connectionFactory.map(factory -> factory.getMetadata().getName()).orElse(EMPTY);
