@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.8.3</version>
+	<version>4.8.4</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -95,8 +95,8 @@
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
 		<testcontainer>1.17.1</testcontainer>
-		<mockk>1.12.2</mockk>
-		<embedded-hazelcast.version>1.2.3</embedded-hazelcast.version>
+		<mockk>1.12.3</mockk>
+		<embedded-hazelcast.version>1.2.4</embedded-hazelcast.version>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
