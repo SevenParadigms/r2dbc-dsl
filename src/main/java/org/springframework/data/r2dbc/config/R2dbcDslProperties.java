@@ -40,6 +40,8 @@ public class R2dbcDslProperties implements BeanClassLoaderAware, InitializingBea
 	private String version;
 	private String ftsLang;
 	private String listener;
+	private String createdBy;
+	private String updatedBy;
 
 	public Boolean getSecondCache() {
 		return secondCache;
@@ -113,6 +115,22 @@ public class R2dbcDslProperties implements BeanClassLoaderAware, InitializingBea
 		this.listener = listener;
 	}
 
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getUpdatedBy() {
+		return updatedBy;
+	}
+
+	public void setUpdatedBy(String updatedBy) {
+		this.updatedBy = updatedBy;
+	}
+
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
 		this.classLoader = classLoader;
@@ -129,5 +147,7 @@ public class R2dbcDslProperties implements BeanClassLoaderAware, InitializingBea
 		if (ObjectUtils.isEmpty(version)) version = StringUtils.EMPTY;
 		if (ObjectUtils.isEmpty(ftsLang)) ftsLang = StringUtils.EMPTY;
 		if (ObjectUtils.isEmpty(listener)) listener = StringUtils.EMPTY;
+		if (ObjectUtils.isEmpty(createdBy)) createdBy = StringUtils.EMPTY;
+		if (ObjectUtils.isEmpty(updatedBy)) updatedBy = StringUtils.EMPTY;
 	}
 }

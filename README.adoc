@@ -11,7 +11,7 @@ The Maven Central dependency instead of the library `spring-data-r2dbc`:
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl</artifactId>
-  <version>4.8.4</version>
+  <version>4.8.5</version>
 </dependency>
 ----
 
@@ -22,7 +22,7 @@ there included common jar with `Dsl` and `MementoPage` models (it is convenient 
 <dependency>
   <groupId>io.github.sevenparadigms</groupId>
   <artifactId>spring-data-r2dbc-dsl-common</artifactId>
-  <version>4.8.4</version>
+  <version>4.8.5</version>
 </dependency>
 ----
 
@@ -100,6 +100,9 @@ data class Dsl {
 * Field with name `updatedAt` and type `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` on update using @LastModifiedDate annotation logic, also can be set in application.properties: `spring.r2dbc.dsl.updatedAt = updatedAt`
 
 * Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking, also can be set in application.properties: `spring.r2dbc.dsl.version = counter,innerIndex`
+
+* Fields with name `createdBy`, `updatedBy` or annotations @CreatedBy, @UpdatedBy on create or update using AuthenticationIdentifierResolver bean to get current userId, also can be set in application.properties: `spring.r2dbc.dsl.createdBy = createdBy`, `spring.r2dbc.dsl.updatedBy = updatedBy`
+
 
 * ApplicationContext implementation as `Beans` utility class with caching resolved beans and registering new beans as ect or recreate by classname
 

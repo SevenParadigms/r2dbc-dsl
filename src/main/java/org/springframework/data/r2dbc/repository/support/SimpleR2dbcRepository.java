@@ -45,10 +45,8 @@ import org.springframework.data.r2dbc.query.CustomUpdateMapper;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.cache.CacheApi;
-import org.springframework.data.r2dbc.repository.query.Dsl;
-import org.springframework.data.r2dbc.repository.query.Equality;
-import org.springframework.data.r2dbc.repository.query.MementoPage;
-import org.springframework.data.r2dbc.repository.query.ReadOnly;
+import org.springframework.data.r2dbc.repository.query.*;
+import org.springframework.data.r2dbc.repository.security.AuthenticationIdentifierResolver;
 import org.springframework.data.r2dbc.support.*;
 import org.springframework.data.relational.core.dialect.RenderContextFactory;
 import org.springframework.data.relational.core.query.Criteria;
@@ -190,6 +188,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
+        final var resolver = Beans.of(AuthenticationIdentifierResolver.class, null);
         if (idValue == null) {
             for (Field version : versionFields) {
                 setVersion(objectToSave, version, 0);
@@ -198,6 +197,13 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             nowStampFields.addAll(getPropertyFields(objectToSave, dslProperties.getCreatedAt()));
             for (Field field : nowStampFields) {
                 setNowStamp(objectToSave, field);
+            }
+            if (resolver != null) {
+                final var createdBy = getFields(objectToSave, Fields.createdBy, CreatedBy.class);
+                createdBy.addAll(getPropertyFields(objectToSave, dslProperties.getCreatedBy()));
+                for (Field field : createdBy) {
+                    FastMethodInvoker.setValue(objectToSave, field.getName(), resolver.resolve());
+                }
             }
             return databaseClient.insert()
                     .into(this.entity.getJavaType())
@@ -208,12 +214,21 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                         return Mono.just(updated);
                     });
         } else {
-            final var readOnlyFields = getFields(objectToSave, Fields.createdAt, ReadOnly.class, CreatedDate.class, CreatedBy.class);
+            final var readOnlyFields = getFields(objectToSave,
+                    Arrays.asList(Fields.createdAt, Fields.createdBy), ReadOnly.class, CreatedDate.class, CreatedBy.class);
             readOnlyFields.addAll(getPropertyFields(objectToSave, dslProperties.getReadOnly()));
             readOnlyFields.addAll(getPropertyFields(objectToSave, dslProperties.getCreatedAt()));
 
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
             equalityFields.addAll(getPropertyFields(objectToSave, dslProperties.getEquality()));
+
+            if (resolver != null) {
+                final var updatedBy = getFields(objectToSave, Fields.updatedBy, UpdatedBy.class);
+                updatedBy.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedBy()));
+                for (Field field : updatedBy) {
+                    FastMethodInvoker.setValue(objectToSave, field.getName(), resolver.resolve());
+                }
+            }
 
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
@@ -845,7 +860,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         var jsonNodeFields = new ArrayList<String>();
         if (!queryFields.isEmpty()) {
             for (String field : queryFields) {
-                field = field.replaceAll(COMBINATORS, "");
                 if (!joins.containsKey(field) && field.contains(DOT)) {
                     var split = WordUtils.camelToSql(field).split(DOT_REGEX);
                     String tableField = split[0].replaceAll(PREFIX, "");

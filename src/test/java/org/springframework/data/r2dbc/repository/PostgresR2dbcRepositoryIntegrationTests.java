@@ -36,6 +36,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.expression.ExpressionParserCache;
@@ -43,6 +44,8 @@ import org.springframework.data.r2dbc.mapping.event.BeforeConvertCallback;
 import org.springframework.data.r2dbc.repository.cache.AbstractRepositoryCache;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.data.r2dbc.repository.query.Dsl;
+import org.springframework.data.r2dbc.repository.query.UpdatedBy;
+import org.springframework.data.r2dbc.repository.security.AuthenticationIdentifierResolver;
 import org.springframework.data.r2dbc.support.Beans;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.r2dbc.support.R2dbcUtils;
@@ -93,12 +96,24 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	@Autowired LegoJoinRepository legoJoinRepository;
 
+	static class UserIdResolver implements AuthenticationIdentifierResolver {
+		@Override
+		public Object resolve() {
+			return UUID.randomUUID();
+		}
+	}
+
 	@Configuration
 	@EnableR2dbcRepositories(considerNestedRepositories = true,
 			includeFilters = @Filter(
 					classes = { PostgresLegoSetRepository.class, WithJsonRepository.class, WithHStoreRepository.class, LegoJoinRepository.class },
 					type = FilterType.ASSIGNABLE_TYPE))
 	static class IntegrationTestConfiguration extends AbstractR2dbcConfiguration {
+
+		@Bean
+		public AuthenticationIdentifierResolver userIdResolver() {
+			return new UserIdResolver();
+		}
 
 		@Bean
 		@Override
@@ -678,19 +693,34 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		Integer version;
 		String name;
 		JsonNode data;
+		UUID createdBy;
+		@CreatedBy
+		UUID createdUser;
+		UUID updatedBy;
+		@UpdatedBy
+		UUID updatedUser;
 	}
 
-	@Test
-	void shouldJoinTableAndGroupingByOr() {
-		List<LegoSet> legoSets = shouldInsertNewItems();
+	void createLegoJoin() {
 		JdbcTemplate template = new JdbcTemplate(createDataSource());
 		template.execute("DROP TABLE IF EXISTS lego_join");
 		template.execute("CREATE TABLE lego_join (\n" //
 				+ "    id          SERIAL PRIMARY KEY,\n" //
 				+ "    version     integer NULL,\n" //
-				+ "    data        jsonb NOT NULL,\n" //
-				+ "    name        text NOT NULL\n" //
+				+ "    data        jsonb NULL,\n" //
+				+ "    name        text NULL,\n" //
+				+ "    tsv         tsvector NULL,\n" //
+				+ "    created_by   uuid NULL,\n" //
+				+ "    created_user uuid NULL,\n" //
+				+ "    updated_by   uuid NULL,\n" //
+				+ "    updated_user uuid NULL\n" //
 				+ ");");
+	}
+
+	@Test
+	void shouldJoinTableAndGroupingByOr() {
+		shouldInsertNewItems();
+		createLegoJoin();
 		LegoJoin legoJoin1 = new LegoJoin().setName("join1").setData(JsonUtils.objectNode().put("key", "value1"));
 		legoJoinRepository.save(legoJoin1).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		LegoJoin legoJoin2 = new LegoJoin().setName("join2").setData(JsonUtils.objectNode().put("key", "value2"));
@@ -728,16 +758,9 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	@Test
 	void shouldFullTextSearchAndCountIt() {
-		List<LegoSet> legoSets = shouldInsertNewItems();
+		shouldInsertNewItems();
 		JdbcTemplate template = new JdbcTemplate(createDataSource());
-		template.execute("DROP TABLE IF EXISTS lego_join");
-		template.execute("CREATE TABLE lego_join (\n" //
-				+ "    id          SERIAL PRIMARY KEY,\n" //
-				+ "    version     integer NULL,\n" //
-				+ "    name        text NOT NULL,\n" //
-				+ "    data        jsonb NOT NULL,\n" //
-				+ "    tsv         tsvector NULL\n" //
-				+ ");");
+		createLegoJoin();
 		template.execute("INSERT INTO lego_join (version,name,tsv,data) " +
 				"values(1,'join1',to_tsvector('pg_catalog.english','The best from the west'),'{\"key\":\"value1\"}'::jsonb);");
 		template.execute("INSERT INTO lego_join (version,name,tsv,data) " +
@@ -756,6 +779,36 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		legoJoinRepository.findAllPaged(Dsl.create().fts("West").isNotNull("data.key"))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.getCount() == 2 && actual.getContent().size() == 2, "must 2"))
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldSecurityUserIdResolver() {
+		createLegoJoin();
+
+		var one = new LegoJoin().setName("one");
+		legoJoinRepository.save(one)
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					Assert.isTrue(actual.getName().equals("one"), "must true");
+					Assert.isTrue(actual.getCreatedBy() != null, "must true");
+					Assert.isTrue(actual.getCreatedUser() != null, "must true");
+					Assert.isTrue(actual.getUpdatedBy() == null, "must true");
+					Assert.isTrue(actual.getUpdatedUser() == null, "must true");
+					Assert.isTrue(actual.getVersion() == 1, "must true");
+				})
+				.verifyComplete();
+
+		legoJoinRepository.save(one.setName("two"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> {
+					Assert.isTrue(actual.getName().equals("two"), "must true");
+					Assert.isTrue(actual.getCreatedBy() != null, "must true");
+					Assert.isTrue(actual.getCreatedUser() != null, "must true");
+					Assert.isTrue(actual.getUpdatedBy() != null, "must true");
+					Assert.isTrue(actual.getUpdatedUser() != null, "must true");
+					Assert.isTrue(actual.getVersion() == 2, "must true");
+				})
 				.verifyComplete();
 	}
 

@@ -42,7 +42,7 @@ public abstract class DslUtils {
     public static final String JSONB = "->>'";
     public static final String HASH = "<->";
 
-    public enum Fields {createdAt, updatedAt, version}
+    public enum Fields {createdAt, updatedAt, version, createdBy, updatedBy}
 
     public static String toJsonbPath(final String path) {
         if (path.contains(DOT)) {
@@ -226,7 +226,20 @@ public abstract class DslUtils {
             for (String criteria : criterias) {
                 if (ObjectUtils.isEmpty(criteria) || criteria.contains(Dsl.fts)) continue;
                 String fieldName = criteria.split(COMMANDS)[0];
-                list.add(fieldName.replaceAll(PREFIX, ""));
+                list.add(fieldName.replaceAll(PREFIX, "").replaceAll(COMBINATORS, ""));
+            }
+        }
+        return list;
+    }
+
+    public static Map<String, String> getCriteriaPairs(Dsl dsl) {
+        Map<String, String> list = new HashMap<>();
+        if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
+            String[] criterias = dsl.getQuery().split(Dsl.COMMA);
+            for (String criteria : criterias) {
+                if (ObjectUtils.isEmpty(criteria) || criteria.contains(Dsl.fts)) continue;
+                String[] pair = criteria.split(COMMANDS);
+                list.put(pair[0].replaceAll(PREFIX, "").replaceAll(COMBINATORS, ""), pair.length > 1 ? pair[1] : null);
             }
         }
         return list;
@@ -322,6 +335,14 @@ public abstract class DslUtils {
 
     public static boolean compareDateTime(@Nullable OffsetDateTime first, @Nullable OffsetDateTime second) {
         return first != null && second != null && first.isEqual(second);
+    }
+
+    public static Set<Field> getFields(Object objectToSave, List<Enum<?>> names, Class<?>... cls) {
+        Set<Field> fields = new HashSet<>(FastMethodInvoker.getFields(objectToSave.getClass(), null, cls));
+        for (Enum<?> name : names) {
+            FastMethodInvoker.getFields(objectToSave.getClass(), name.name());
+        }
+        return fields;
     }
 
     public static Set<Field> getFields(Object objectToSave, Enum<?> name, Class<?>... cls) {
