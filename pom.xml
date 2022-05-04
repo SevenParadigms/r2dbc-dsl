@@ -16,7 +16,7 @@
 	<name>Spring Data R2DBC DSL</name>
 	<description>Spring Data DSL module for Web querying and Criteria building</description>
 	<url>https://github.com/SevenParadigms/r2dbc-dsl.git</url>
-	<inceptionYear>2021</inceptionYear>
+	<inceptionYear>2020</inceptionYear>
 	<organization>
 		<name>SevenParadigms™</name>
 	</organization>
