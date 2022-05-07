@@ -101,8 +101,7 @@ data class Dsl {
 
 * Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking, also can be set in application.properties: `spring.r2dbc.dsl.version = counter,innerIndex`
 
-* Fields with name `createdBy`, `updatedBy` or annotations @CreatedBy, @UpdatedBy on create or update using AuthenticationIdentifierResolver bean to get current userId, also can be set in application.properties: `spring.r2dbc.dsl.createdBy = createdBy`, `spring.r2dbc.dsl.updatedBy = updatedBy`
-
+* Fields with name `createdBy`, `updatedBy` or annotated by @CreatedBy, @UpdatedBy on create or update using AuthenticationIdentifierResolver Bean to get current userId, also fields can be set in application.properties: `spring.r2dbc.dsl.createdBy = createdBy`, `spring.r2dbc.dsl.updatedBy = updatedBy`
 
 * ApplicationContext implementation as `Beans` utility class with caching resolved beans and registering new beans as ect or recreate by classname
 

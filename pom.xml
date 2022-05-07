@@ -96,7 +96,7 @@
 		<reactive-streams.version>1.0.3</reactive-streams.version>
 		<testcontainer>1.17.1</testcontainer>
 		<mockk>1.12.3</mockk>
-		<embedded-hazelcast.version>1.2.5</embedded-hazelcast.version>
+		<embedded-hazelcast.version>1.2.6</embedded-hazelcast.version>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
