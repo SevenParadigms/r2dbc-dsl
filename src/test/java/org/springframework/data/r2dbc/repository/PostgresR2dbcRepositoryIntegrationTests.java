@@ -98,8 +98,8 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 
 	static class UserIdResolver implements AuthenticationIdentifierResolver {
 		@Override
-		public Object resolve() {
-			return UUID.randomUUID();
+		public Mono<Object> resolve() {
+			return Mono.just(UUID.randomUUID());
 		}
 	}
 

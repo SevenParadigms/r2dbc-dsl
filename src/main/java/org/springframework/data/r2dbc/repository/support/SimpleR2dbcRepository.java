@@ -86,7 +86,7 @@ import static org.springframework.data.r2dbc.support.DslUtils.*;
  */
 @Transactional(readOnly = true)
 public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID> implements R2dbcRepository<T, ID>, CacheApi<T, ID> {
-
+    @Nullable
     private final RelationalEntityInformation<T, ID> entity;
     private final R2dbcEntityOperations entityOperations;
     private final RelationalExampleMapper exampleMapper;
@@ -201,18 +201,14 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             if (resolver != null) {
                 final var createdBy = getFields(objectToSave, Fields.createdBy, CreatedBy.class);
                 createdBy.addAll(getPropertyFields(objectToSave, dslProperties.getCreatedBy()));
-                for (Field field : createdBy) {
-                    FastMethodInvoker.setValue(objectToSave, field.getName(), resolver.resolve());
-                }
+                return resolver.resolve().flatMap(userId -> {
+                    for (Field field : createdBy) {
+                        FastMethodInvoker.setValue(objectToSave, field.getName(), userId);
+                    }
+                    return createEntity(objectToSave);
+                });
             }
-            return databaseClient.insert()
-                    .into(this.entity.getJavaType())
-                    .table(this.entity.getTableName()).using(objectToSave)
-                    .map(converter.populateIdIfNecessary(objectToSave))
-                    .one().flatMap(updated -> {
-                        evictAll().cache().put(updated);
-                        return Mono.just(updated);
-                    });
+            return createEntity(objectToSave);
         } else {
             final var readOnlyFields = getFields(objectToSave,
                     Arrays.asList(Fields.createdAt, Fields.createdBy), ReadOnly.class, CreatedDate.class, CreatedBy.class);
@@ -221,14 +217,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
             equalityFields.addAll(getPropertyFields(objectToSave, dslProperties.getEquality()));
-
-            if (resolver != null) {
-                final var updatedBy = getFields(objectToSave, Fields.updatedBy, UpdatedBy.class);
-                updatedBy.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedBy()));
-                for (Field field : updatedBy) {
-                    FastMethodInvoker.setValue(objectToSave, field.getName(), resolver.resolve());
-                }
-            }
 
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
@@ -266,10 +254,16 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                                     return Mono.error(new IllegalArgumentException("Field " + field.getName() + " has different values"));
                                 }
                             }
+                            if (resolver != null) {
+                                return updateEntity(objectToSave, idPropertyName, idValue, dslProperties);
+                            }
                             evictAll().cache().put(objectToSave);
                             return simpleSave(idPropertyName, idValue, objectToSave);
                         })
                         .switchIfEmpty(Mono.error(new EmptyResultDataAccessException(1)));
+            }
+            if (resolver != null) {
+                return updateEntity(objectToSave, idPropertyName, idValue, dslProperties);
             }
             evictAll().cache().put(objectToSave);
             return simpleSave(idPropertyName, idValue, objectToSave);
@@ -944,5 +938,29 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         return new DslPreparedOperation<>(
                 selectBuilder.build(),
                 new RenderContextFactory(dialect).createRenderContext(), bindings);
+    }
+
+    private <S extends T> Mono<S> createEntity(S objectToSave) {
+        return databaseClient.insert()
+                .into(this.entity.getJavaType())
+                .table(this.entity.getTableName()).using(objectToSave)
+                .map(converter.populateIdIfNecessary(objectToSave))
+                .one().flatMap(updated -> {
+                    evictAll().cache().put(updated);
+                    return Mono.just(updated);
+                });
+    }
+
+    private <S extends T> Mono<S> updateEntity(S objectToSave, String idPropertyName, Object idValue, R2dbcDslProperties dslProperties) {
+        final var updatedBy = getFields(objectToSave, Fields.updatedBy, UpdatedBy.class);
+        updatedBy.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedBy()));
+        final var resolver = Beans.of(AuthenticationIdentifierResolver.class);
+        return resolver.resolve().flatMap(userId -> {
+            for (Field field : updatedBy) {
+                FastMethodInvoker.setValue(objectToSave, field.getName(), userId);
+            }
+            evictAll().cache().put(objectToSave);
+            return simpleSave(idPropertyName, idValue, objectToSave);
+        });
     }
 }
