@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.sevenparadigms.kotlin.common.MethodExtensionsKt.has;
 import static org.springframework.data.r2dbc.support.WordUtils.*;
 
 /**
@@ -232,7 +233,7 @@ public abstract class DslUtils {
         return list;
     }
 
-    public static Map<String, String> getCriteriaPairs(Dsl dsl) {
+    public static Map<String, String> getCriteriaMap(Dsl dsl) {
         Map<String, String> list = new HashMap<>();
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
             String[] criterias = dsl.getQuery().split(Dsl.COMMA);
@@ -339,8 +340,10 @@ public abstract class DslUtils {
 
     public static Set<Field> getFields(Object objectToSave, List<Enum<?>> names, Class<?>... cls) {
         Set<Field> fields = new HashSet<>(FastMethodInvoker.getFields(objectToSave.getClass(), null, cls));
-        for (Enum<?> name : names) {
-            FastMethodInvoker.getFields(objectToSave.getClass(), name.name());
+        for (Enum<?> enumName : names) {
+            if (has(cls, enumName.name())) {
+                fields.add(FastMethodInvoker.getField(objectToSave.getClass(), enumName.name()));
+            }
         }
         return fields;
     }

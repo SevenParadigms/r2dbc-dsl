@@ -183,9 +183,6 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
         final var versionFields = getFields(objectToSave, Fields.version, Version.class);
         versionFields.addAll(getPropertyFields(objectToSave, dslProperties.getVersion()));
 
-        final var nowStampFields = getFields(objectToSave, Fields.updatedAt, LastModifiedDate.class);
-        nowStampFields.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedAt()));
-
         String idPropertyName = getIdColumnName();
         Object idValue = FastMethodInvoker.getValue(objectToSave, idPropertyName);
         final var resolver = Beans.of(AuthenticationIdentifierResolver.class, null);
@@ -193,7 +190,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
             for (Field version : versionFields) {
                 setVersion(objectToSave, version, 0);
             }
-            nowStampFields.addAll(getFields(objectToSave, Fields.createdAt, CreatedDate.class));
+            final var nowStampFields = getFields(objectToSave, Fields.createdAt, CreatedDate.class);
             nowStampFields.addAll(getPropertyFields(objectToSave, dslProperties.getCreatedAt()));
             for (Field field : nowStampFields) {
                 setNowStamp(objectToSave, field);
@@ -217,6 +214,9 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
 
             final var equalityFields = FastMethodInvoker.getFieldsByAnnotation(objectToSave.getClass(), Equality.class);
             equalityFields.addAll(getPropertyFields(objectToSave, dslProperties.getEquality()));
+
+            final var nowStampFields = getFields(objectToSave, Fields.updatedAt, LastModifiedDate.class);
+            nowStampFields.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedAt()));
 
             if (!versionFields.isEmpty() || !nowStampFields.isEmpty() || !readOnlyFields.isEmpty() || !equalityFields.isEmpty()) {
                 return findOne(Dsl.create().equals(idPropertyName, ConvertUtils.convert(idValue)))
