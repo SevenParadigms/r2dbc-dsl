@@ -341,7 +341,7 @@ public abstract class DslUtils {
     public static Set<Field> getFields(Object objectToSave, List<Enum<?>> names, Class<?>... cls) {
         Set<Field> fields = new HashSet<>(FastMethodInvoker.getFields(objectToSave.getClass(), null, cls));
         for (Enum<?> enumName : names) {
-            if (has(cls, enumName.name())) {
+            if (has(objectToSave.getClass(), enumName.name())) {
                 fields.add(FastMethodInvoker.getField(objectToSave.getClass(), enumName.name()));
             }
         }
