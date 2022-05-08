@@ -50,6 +50,8 @@ data class Dsl {
     val page: Int
     val size: Int
     val sort: String
+    val top: Int
+    val distinct: Boolean
 }
 ----
 
@@ -101,11 +103,13 @@ data class Dsl {
 
 * Field with name `version` do not required @Version annotation if it has type `Long`, `Integer`, `ZonedDateTime`, `OffsetDateTime` or `LocalDateTime` for optimistic locking, also can be set in application.properties: `spring.r2dbc.dsl.version = counter,innerIndex`
 
-* Fields with name `createdBy`, `updatedBy` or annotated by @CreatedBy, @UpdatedBy on create or update using AuthenticationIdentifierResolver Bean to get current userId, also fields can be set in application.properties: `spring.r2dbc.dsl.createdBy = createdBy`, `spring.r2dbc.dsl.updatedBy = updatedBy`
+* Fields with name `createdBy`, `updatedBy` or annotated by @CreatedBy, @UpdatedBy on create or update set current security userId, also fields can be set in application.properties: `spring.r2dbc.dsl.createdBy = createdBy`, `spring.r2dbc.dsl.updatedBy = updatedBy`
 
 * ApplicationContext implementation as `Beans` utility class with caching resolved beans and registering new beans as ect or recreate by classname
 
 * Utility class SqlField constants a most used sql-names in tables for no handwriting names
+
+* Integration with Spring Security via AuthenticationIdentifierResolver Bean to get current userId
 
 == Concepts
 
