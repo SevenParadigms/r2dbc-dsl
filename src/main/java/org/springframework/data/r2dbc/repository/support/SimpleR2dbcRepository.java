@@ -203,7 +203,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                         FastMethodInvoker.setValue(objectToSave, field.getName(), userId);
                     }
                     return createEntity(objectToSave);
-                });
+                }).switchIfEmpty(createEntity(objectToSave));
             }
             return createEntity(objectToSave);
         } else {
@@ -952,15 +952,16 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     private <S extends T> Mono<S> updateEntity(S objectToSave, String idPropertyName, Object idValue, R2dbcDslProperties dslProperties) {
-        final var updatedBy = getFields(objectToSave, Fields.updatedBy, UpdatedBy.class);
-        updatedBy.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedBy()));
         final var resolver = Beans.of(AuthenticationIdentifierResolver.class);
+        evictAll().cache().put(objectToSave);
         return resolver.resolve().flatMap(userId -> {
+            final var updatedBy = getFields(objectToSave, Fields.updatedBy, UpdatedBy.class);
+            updatedBy.addAll(getPropertyFields(objectToSave, dslProperties.getUpdatedBy()));
             for (Field field : updatedBy) {
                 FastMethodInvoker.setValue(objectToSave, field.getName(), userId);
             }
             evictAll().cache().put(objectToSave);
             return simpleSave(idPropertyName, idValue, objectToSave);
-        });
+        }).switchIfEmpty(simpleSave(idPropertyName, idValue, objectToSave));
     }
 }
