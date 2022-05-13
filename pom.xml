@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.8.7</version>
+	<version>4.8.8</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -78,7 +78,7 @@
 		<kotlinx.version>1.6.1-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring-framework.version>5.3.19</spring-framework.version>
+		<spring-framework.version>5.3.20</spring-framework.version>
 		<springdata.commons>2.5.8</springdata.commons>
 		<springdata.autoconfig>2.5.9</springdata.autoconfig>
 		<springdata.relational>2.2.8</springdata.relational>
@@ -96,7 +96,7 @@
 		<reactive-streams.version>1.0.3</reactive-streams.version>
 		<testcontainer>1.17.1</testcontainer>
 		<mockk>1.12.3</mockk>
-		<embedded-hazelcast.version>1.2.7</embedded-hazelcast.version>
+		<embedded-hazelcast.version>1.2.8</embedded-hazelcast.version>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>

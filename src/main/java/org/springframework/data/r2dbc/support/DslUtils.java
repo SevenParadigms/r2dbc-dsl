@@ -292,10 +292,12 @@ public abstract class DslUtils {
             var longValue = (Long) ConvertUtils.convert(versionValue, Long.class);
             if (version.getType() == Long.class) {
                 FastMethodInvoker.setValue(objectToSave, version.getName(), longValue + 1);
+                return;
             }
             if (version.getType() == Integer.class) {
                 var value = (Integer) ConvertUtils.convert(longValue + 1, Integer.class);
                 FastMethodInvoker.setValue(objectToSave, version.getName(), value);
+                return;
             }
         }
         setNowStamp(objectToSave, version);

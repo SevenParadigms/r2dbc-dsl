@@ -334,7 +334,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();
 
-		repository.findOne(Dsl.create().like("name", "UNGSS"))
+		repository.findOne(Dsl.create().like("name", "chung")) // in PostgreSQL LIKE replaced by ILIKE
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();

@@ -1592,6 +1592,8 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 				(postgresConnectionFactory.isEmpty() && !connectionFactory.get().getClass().getSimpleName().equals("ConnectionPool")
 						&& !connectionFactoryName.equals("PostgreSQL"))) {
 			sql = sql.replaceAll("\"", "`");
+		} else {
+			sql = sql.replaceAll(" LIKE ", " ILIKE ");
 		}
 		return sql;
 	}
