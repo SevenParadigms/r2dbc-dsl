@@ -20,7 +20,6 @@ import lombok.*;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.sevenparadigms.cache.hazelcast.AnySerializable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.CreatedDate;
@@ -431,7 +430,7 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 	@Setter
 //	@Table("lego_set")
 	@NoArgsConstructor
-	public static class LegoSet extends Lego implements Buildable, AnySerializable {
+	public static class LegoSet extends Lego implements Buildable, Serializable {
 		@Equality
 		String name;
 		@ReadOnly

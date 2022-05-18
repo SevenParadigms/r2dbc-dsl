@@ -18,19 +18,16 @@ package org.springframework.data.r2dbc.repository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hazelcast.core.Hazelcast;
 import io.r2dbc.spi.ConnectionFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.sevenparadigms.cache.hazelcast.HazelcastCacheConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -79,7 +76,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Jose Luis Leon
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = { HazelcastCacheConfiguration.class, PostgresR2dbcRepositoryIntegrationTests.IntegrationTestConfiguration.class })
+@ContextConfiguration(classes = { PostgresR2dbcRepositoryIntegrationTests.IntegrationTestConfiguration.class })
 @TestPropertySource(properties = {
 		"spring.r2dbc.dsl.cacheManager=true",
 		"spring.r2dbc.dsl.equality=nameEquality",
@@ -810,10 +807,5 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 					Assert.isTrue(actual.getVersion() == 2, "must true");
 				})
 				.verifyComplete();
-	}
-
-	@AfterAll
-	void shutdown() {
-		Hazelcast.shutdownAll();
 	}
 }

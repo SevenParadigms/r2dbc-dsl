@@ -72,6 +72,7 @@ import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.springframework.data.r2dbc.repository.query.Dsl.PREFIX;
 import static org.springframework.data.r2dbc.support.DslUtils.*;
 
 /**

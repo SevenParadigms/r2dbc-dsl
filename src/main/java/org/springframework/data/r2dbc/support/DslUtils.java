@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.sevenparadigms.kotlin.common.MethodExtensionsKt.has;
+import static org.springframework.data.r2dbc.repository.query.Dsl.*;
 import static org.springframework.data.r2dbc.support.WordUtils.*;
 
 /**
@@ -32,13 +33,10 @@ import static org.springframework.data.r2dbc.support.WordUtils.*;
  * @author Lao Tsing
  */
 public abstract class DslUtils {
-    public static final String COMMANDS = "(\\^\\^|!\\^|==|!=|>>|>=|<<|<=|~~|@@)";
-    public static final String PREFIX = "(!|@|!@)";
     public static final String CLEAN = "[^!=>\\^<~@]";
     public static final String DOT = ".";
     public static final String OR = "(";
     public static final String GROUP_COMBINATOR = "\"";
-    public static final String COMBINATORS = "(\\(|\\)|\")";
     public static final String DOT_REGEX = "\\.";
     public static final String JSONB = "->>'";
     public static final String HASH = "<->";
@@ -228,19 +226,6 @@ public abstract class DslUtils {
                 if (ObjectUtils.isEmpty(criteria) || criteria.contains(Dsl.fts)) continue;
                 String fieldName = criteria.split(COMMANDS)[0];
                 list.add(fieldName.replaceAll(PREFIX, "").replaceAll(COMBINATORS, ""));
-            }
-        }
-        return list;
-    }
-
-    public static Map<String, String> getCriteriaMap(Dsl dsl) {
-        Map<String, String> list = new HashMap<>();
-        if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
-            String[] criterias = dsl.getQuery().split(Dsl.COMMA);
-            for (String criteria : criterias) {
-                if (ObjectUtils.isEmpty(criteria) || criteria.contains(Dsl.fts)) continue;
-                String[] pair = criteria.split(COMMANDS);
-                list.put(pair[0].replaceAll(PREFIX, "").replaceAll(COMBINATORS, ""), pair.length > 1 ? pair[1] : null);
             }
         }
         return list;

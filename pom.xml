@@ -5,7 +5,7 @@
 
 	<groupId>io.github.sevenparadigms</groupId>
 	<artifactId>spring-data-r2dbc-dsl</artifactId>
-	<version>4.8.8</version>
+	<version>4.8.8.1</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -74,35 +74,34 @@
 	</scm>
 
 	<properties>
-		<kotlin.version>1.6.21</kotlin.version>
-		<kotlinx.version>1.6.1-native-mt</kotlinx.version>
+		<kotlin.version>1.6.10</kotlin.version>
+		<kotlinx.version>1.6.0-native-mt</kotlinx.version>
 
 		<dist.key>DATAR2DBC</dist.key>
-		<spring-framework.version>5.3.20</spring-framework.version>
+		<spring-framework.version>5.3.16</spring-framework.version>
 		<springdata.commons>2.5.8</springdata.commons>
 		<springdata.autoconfig>2.5.9</springdata.autoconfig>
 		<springdata.relational>2.2.8</springdata.relational>
 		<java-module-name>spring.data.r2dbc</java-module-name>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-		<caffeine.version>3.0.6</caffeine.version>
+		<caffeine.version>3.0.5</caffeine.version>
 
 		<degraph-check.version>0.1.4</degraph-check.version>
-		<postgresql.version>42.3.4</postgresql.version>
+		<postgresql.version>42.3.3</postgresql.version>
 		<mysql.version>8.0.28</mysql.version>
 		<r2dbc-spi-test.version>0.8.6.RELEASE</r2dbc-spi-test.version>
 		<mssql-jdbc.version>9.4.0.jre8</mssql-jdbc.version>
 		<mariadb-jdbc.version>2.7.5</mariadb-jdbc.version>
 		<r2dbc-releasetrain.version>Borca-M2</r2dbc-releasetrain.version>
 		<reactive-streams.version>1.0.3</reactive-streams.version>
-		<testcontainer>1.17.1</testcontainer>
+		<testcontainer>1.16.3</testcontainer>
 		<mockk>1.12.3</mockk>
-		<embedded-hazelcast.version>1.2.8</embedded-hazelcast.version>
 
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<jackson.version>2.13.2</jackson.version>
-		<jackson-databind.version>2.13.2.2</jackson-databind.version>
+		<jackson-databind.version>2.13.2.1</jackson-databind.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -458,13 +457,6 @@
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
 			<version>4.2.0</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.sevenparadigms</groupId>
-			<artifactId>kubernetes-embedded-hazelcast</artifactId>
-			<version>${embedded-hazelcast.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
