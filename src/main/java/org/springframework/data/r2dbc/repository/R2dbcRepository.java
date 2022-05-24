@@ -15,7 +15,7 @@
  */
 package org.springframework.data.r2dbc.repository;
 
-import io.r2dbc.postgresql.api.Notification;
+import io.r2dbc.postgresql.message.backend.NotificationResponse;
 import org.springframework.data.r2dbc.repository.cache.CacheApi;
 import org.springframework.data.r2dbc.repository.query.Dsl;
 import org.springframework.data.r2dbc.repository.query.MementoPage;
@@ -39,6 +39,7 @@ public interface R2dbcRepository<T, ID> extends ReactiveSortingRepository<T, ID>
     Mono<T> findOne(Dsl dsl);
     Mono<Integer> delete(Dsl dsl);
     Mono<Long> count(Dsl dsl);
-    Flux<Notification> listener();
+    Flux<NotificationResponse> listener();
+    Mono<String> notifier(String event);
     CacheApi<T, ID> cache();
 }

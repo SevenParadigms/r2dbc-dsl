@@ -16,10 +16,12 @@
 package org.springframework.data.r2dbc.repository.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.r2dbc.postgresql.api.Notification;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.postgresql.api.PostgresqlResult;
+import io.r2dbc.postgresql.message.backend.NotificationResponse;
+import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.Wrapped;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -67,7 +69,9 @@ import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.sql.PooledConnection;
 import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -435,16 +439,32 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
     }
 
     @Override
-    public Flux<Notification> listener() {
+    public Flux<NotificationResponse> listener() {
         ConnectionFactory connectionFactory = entityOperations.getDatabaseClient().getConnectionFactory();
         return Mono.from(connectionFactory.create()).flatMapMany(connection -> {
             String tableName = entityOperations.getDataAccessStrategy().toSql(this.entity.getTableName()).toLowerCase();
-            PostgresqlConnection postgresqlConnection = (PostgresqlConnection) connection;
+            var postgresqlConnection = connection instanceof PostgresqlConnection ? (PostgresqlConnection) connection : null;
+            if (postgresqlConnection == null) {
+                if (connection instanceof PooledConnection) {
+                    try {
+                        postgresqlConnection = (PostgresqlConnection) ((PooledConnection) connection).getConnection();
+                    } catch (SQLException ignore) {
+                    }
+                } else
+                    postgresqlConnection = (PostgresqlConnection) ((Wrapped<Connection>) connection).unwrap();
+            }
             return postgresqlConnection.createStatement("LISTEN " + tableName)
                     .execute()
                     .flatMap(PostgresqlResult::getRowsUpdated)
-                    .thenMany(postgresqlConnection.getNotifications());
+                    .thenMany(postgresqlConnection.getNotifications())
+                    .map(it -> new NotificationResponse(it.getName(), it.getParameter(), it.getProcessId()));
         });
+    }
+
+    @Override
+    public Mono<String> notifier(String event) {
+        String tableName = entityOperations.getDataAccessStrategy().toSql(this.entity.getTableName()).toLowerCase();
+        return databaseClient.execute("SELECT pg_notify('" + tableName + "', '" + event + "'::text)").as(String.class).fetch().one();
     }
 
     private List<String> getSqlFields(Set<String> fields) {
