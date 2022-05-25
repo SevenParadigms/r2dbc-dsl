@@ -46,6 +46,7 @@ import org.springframework.data.r2dbc.repository.security.AuthenticationIdentifi
 import org.springframework.data.r2dbc.support.Beans;
 import org.springframework.data.r2dbc.support.JsonUtils;
 import org.springframework.data.r2dbc.support.R2dbcUtils;
+import org.springframework.data.r2dbc.support.SqlField;
 import org.springframework.data.r2dbc.testing.ExternalDatabase;
 import org.springframework.data.r2dbc.testing.PostgresTestSupport;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -309,7 +310,12 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	@Test
 	void shouldSimpleDsl() {
 		List<LegoSet> legoSets = shouldInsertNewItems();
-		assert legoSets.size() == 2;
+		repository.findAll(Dsl.create())
+				.as(StepVerifier::create)
+				.expectNextCount(2) //
+				.verifyComplete();
+		Integer id1 = legoSets.get(0).id;
+		Integer id2 = legoSets.get(1).id;
 
 		repository.findOne(Dsl.create().equals("manual", 13))
 				.as(StepVerifier::create)
@@ -336,19 +342,40 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> assertThat(actual.getManual()).isEqualTo(13))
 				.verifyComplete();
 
-		repository.findOne(Dsl.create().id(1L))
+		repository.findOne(Dsl.create().id(id1))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER"))
 				.verifyComplete();
 
-		repository.findOne(Dsl.create().in("id", 1L))
+		repository.findOne(Dsl.create().in("id", id1))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("SCHAUFELRADBAGGER"))
 				.verifyComplete();
 
-		repository.findAll(Dsl.create())
+		var set = new HashSet<Integer>();
+		set.add(id1);
+		set.add(id2);
+		repository.findAll(Dsl.create().in(SqlField.id, set))
 				.as(StepVerifier::create)
-				.expectNextCount(2) //
+				.expectNextCount(2)
+				.verifyComplete();
+
+		var list = new ArrayList<Integer>();
+		list.add(id1);
+		list.add(id2);
+		repository.findAll(Dsl.create().in(SqlField.id, list))
+				.as(StepVerifier::create)
+				.expectNextCount(2)
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().notIn(SqlField.id, set))
+				.as(StepVerifier::create)
+				.expectNextCount(0)
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().notIn(SqlField.id, list))
+				.as(StepVerifier::create)
+				.expectNextCount(0)
 				.verifyComplete();
 
 		repository.findOne(Dsl.create().sorting("id", "desc"))
@@ -361,27 +388,27 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 1, "must 1"))
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().greaterThanOrEquals("id", 1L).limit(2))
+		repository.findAll(Dsl.create().greaterThanOrEquals("id", id1).limit(2))
 				.as(StepVerifier::create)
 				.expectNextCount(2) //
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().greaterThanOrEquals("id", 2L).limit(1))
+		repository.findAll(Dsl.create().greaterThanOrEquals("id", id2).limit(1))
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().greaterThanOrEquals("id", 2L).fields(" id", "name").limit(1))
+		repository.findAll(Dsl.create().greaterThanOrEquals("id", id2).fields(" id", "name").limit(1))
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().notIn("id", 2L).fields(" id", "name").limit(1))
+		repository.findAll(Dsl.create().notIn("id", id2).fields(" id", "name").limit(1))
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().in("id", 1L).in("name", "SCHAUFELRADBAGGER").fields(" id", "name").limit(1))
+		repository.findAll(Dsl.create().in("id", id1).in("name", "SCHAUFELRADBAGGER").fields(" id", "name").limit(1))
 				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();

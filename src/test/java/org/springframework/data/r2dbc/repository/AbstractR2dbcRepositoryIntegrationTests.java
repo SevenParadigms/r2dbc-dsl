@@ -108,7 +108,6 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 
 	@Test
 	List<LegoSet> shouldInsertNewItems() {
-
 		LegoSet legoSet1 = new LegoSet(null, "SCHAUFELRADBAGGER", 12);
 		legoSet1.setLegoJoinId(1);
 		LegoSet legoSet2 = new LegoSet(null, "FORSCHUNGSSCHIFF", 13);
@@ -120,9 +119,6 @@ public abstract class AbstractR2dbcRepositoryIntegrationTests extends R2dbcInteg
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
-
-		legoSet1.setId(1);
-		legoSet2.setId(2);
 
 		return List.of(legoSet1, legoSet2);
 	}
