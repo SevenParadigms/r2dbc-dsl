@@ -3,6 +3,8 @@ package org.springframework.data.r2dbc.repository.cache;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.CaffeineSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCache;
@@ -22,6 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class CaffeineGuidedCacheManager implements CacheManager {
+    private static final Logger log = LoggerFactory.getLogger(CaffeineGuidedCacheManager.class);
 
     private Caffeine<Object, Object> cacheBuilder = Caffeine.newBuilder();
     @Nullable private CacheLoader<Object, Object> cacheLoader;
@@ -131,16 +134,20 @@ public class CaffeineGuidedCacheManager implements CacheManager {
 
     protected com.github.benmanes.caffeine.cache.Cache<Object, Object> createNativeCaffeineCache(String name) {
         var context = Beans.setAndGetContext(applicationContext);
-        var expireAfterAccess = context.getEnvironment()
+        long expireAfterAccess = context.getEnvironment()
                 .getProperty("spring.cache." + name + ".expireAfterAccess", Long.class, defaultExpireAfterAccess);
-        var expireAfterWrite = context.getEnvironment()
+        long expireAfterWrite = context.getEnvironment()
                 .getProperty("spring.cache." + name + ".expireAfterWrite", Long.class, defaultExpireAfterWrite);
-        var maximumSize = context.getEnvironment()
+        long maximumSize = context.getEnvironment()
                 .getProperty("spring.cache." + name + ".maximumSize", Long.class, defaultMaximumSize);
-        cacheBuilder.expireAfterAccess(expireAfterAccess, TimeUnit.MILLISECONDS);
-        if (expireAfterWrite > 0) {
-            cacheBuilder.expireAfterWrite(expireAfterWrite, TimeUnit.MILLISECONDS);
-        }
+        if (expireAfterAccess > 0) {
+            cacheBuilder.expireAfterAccess(expireAfterAccess, TimeUnit.MILLISECONDS);
+            log.info("Created Caffeine cache `" + name + "` with expire after access: " + expireAfterAccess + " ms");
+        } else
+            if (expireAfterWrite > 0) {
+                cacheBuilder.expireAfterWrite(expireAfterWrite, TimeUnit.MILLISECONDS);
+                log.info("Created Caffeine cache `" + name + "` with expire after write: " + expireAfterAccess + " ms");
+            }
         cacheBuilder.maximumSize(maximumSize);
         cacheBuilder.initialCapacity(50);
         return (this.cacheLoader != null ? this.cacheBuilder.build(this.cacheLoader) : this.cacheBuilder.build());
