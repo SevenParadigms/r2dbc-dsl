@@ -879,7 +879,7 @@ public class SimpleR2dbcRepository<T, ID> extends AbstractRepositoryCache<T, ID>
                     var split = WordUtils.camelToSql(field).split(DOT_REGEX);
                     String tableField = split[0].replaceAll(PREFIX, "");
                     Field entityField = ReflectionUtils.findField(entity.getJavaType(), tableField);
-                    if (entityField != null && entityField.getType() == JsonNode.class || split.length > 2) {
+                    if (entityField != null && entityField.getType() == JsonNode.class || split.length >= 2) {
                         jsonNodeFields.add(field.replaceAll(PREFIX, ""));
                     }
                     if (entityColumns.contains(tableField + "_" + SqlField.id)) {

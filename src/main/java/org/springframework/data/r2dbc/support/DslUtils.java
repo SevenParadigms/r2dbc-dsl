@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.sevenparadigms.kotlin.common.MethodExtensionsKt.has;
 import static org.springframework.data.r2dbc.repository.query.Dsl.*;
+import static org.springframework.data.r2dbc.support.FastMethodInvoker.NUMBER_REGEX;
 import static org.springframework.data.r2dbc.support.WordUtils.*;
 
 /**
@@ -38,7 +39,8 @@ public abstract class DslUtils {
     public static final String OR = "(";
     public static final String GROUP_COMBINATOR = "\"";
     public static final String DOT_REGEX = "\\.";
-    public static final String JSONB = "->>'";
+    public static final String JSONB = "->>";
+    public static final String JSONB_CHAIN = "->";
     public static final String HASH = "<->";
 
     public enum Fields {createdAt, updatedAt, version, createdBy, updatedBy}
@@ -49,9 +51,12 @@ public abstract class DslUtils {
             final var order = new StringBuilder(paths[0]);
             for (int i = 1; i < paths.length; i++) {
                 if (i < paths.length - 1)
-                    order.append("->'").append(paths[i]).append("'");
+                    order.append(JSONB_CHAIN).append("'").append(paths[i]).append("'");
                 else
-                    order.append(JSONB).append(paths[i]).append("'");
+                    if (paths[i].matches(NUMBER_REGEX))
+                        order.append(JSONB).append(paths[i]);
+                    else
+                        order.append(JSONB).append("'").append(paths[i]).append("'");
             }
             return order.toString();
         } else return path;

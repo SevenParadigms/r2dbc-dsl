@@ -568,7 +568,7 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 			var hash = getHash(String.class, Dsl.create().id(id));
 			var contains = contains(String.class, Dsl.create().id(id));
 			var value = Objects.requireNonNull(get(String.class, Dsl.create().id(id)));
-			Assert.isTrue(hash.equals("null->>'String->>'id==00000000-0000-0000-0000-000000000000<->-1<->-1<->"), "must equals");
+			Assert.isTrue(hash.equals("null->>String->>id==00000000-0000-0000-0000-000000000000<->-1<->-1<->"), "must equals");
 			Assert.isTrue(contains, "should be contain");
 			Assert.isTrue(value.equals("test1"), "value is equal");
 			evict(String.class, Dsl.create().id(id));
@@ -745,9 +745,9 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	void shouldJoinTableAndGroupingByOr() {
 		shouldInsertNewItems();
 		createLegoJoin();
-		LegoJoin legoJoin1 = new LegoJoin().setName("join1").setData(JsonUtils.objectNode().put("key", "value1"));
+		LegoJoin legoJoin1 = new LegoJoin().setName("join1").setData(JsonUtils.objectNode().put("key", "value1").set("arr", JsonUtils.arrayNode().add("one")));
 		legoJoinRepository.save(legoJoin1).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-		LegoJoin legoJoin2 = new LegoJoin().setName("join2").setData(JsonUtils.objectNode().put("key", "value2"));
+		LegoJoin legoJoin2 = new LegoJoin().setName("join2").setData(JsonUtils.objectNode().put("key", "value2").set("arr", JsonUtils.arrayNode().add("two")));
 		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		Assert.isTrue(legoJoin2.getVersion() == 2, "must 2");
@@ -775,6 +775,16 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 		repository.findAll(Dsl.create().equals("version", 2).equals("name", "abc").or()
 						.equals("legoJoin.name", "bbc").equals("manual", 10).or()
 						.equals("legoJoin.name", "join2").equals("legoJoin.version", 2))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().equals("legoJoin.data.arr.0", "one"))
+				.as(StepVerifier::create)
+				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 1, "must 1"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().equals("legoJoin.data.arr.0", "two"))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
 				.verifyComplete();
