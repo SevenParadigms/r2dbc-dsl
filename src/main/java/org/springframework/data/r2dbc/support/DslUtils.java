@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.sevenparadigms.kotlin.common.MethodExtensionsKt.has;
 import static org.springframework.data.r2dbc.repository.query.Dsl.*;
@@ -46,11 +47,15 @@ public abstract class DslUtils {
     public enum Fields {createdAt, updatedAt, version, createdBy, updatedBy}
 
     public static String toJsonbPath(final String path) {
+        return toJsonbPath(path, EMPTY);
+    }
+
+    public static String toJsonbPath(final String path, final String operator) {
         if (path.contains(DOT)) {
             final var paths = path.split(DOT_REGEX);
             final var order = new StringBuilder(paths[0]);
             for (int i = 1; i < paths.length; i++) {
-                if (i < paths.length - 1)
+                if (i < paths.length - 1 || operator.equals(Dsl.in))
                     order.append(JSONB_CHAIN).append("'").append(paths[i]).append("'");
                 else
                     if (paths[i].matches(NUMBER_REGEX))
@@ -70,16 +75,20 @@ public abstract class DslUtils {
     }
 
     public static <T> String toJsonbPath(final String dotter, final Class<T> type) {
+        return toJsonbPath(dotter, type);
+    }
+
+    public static <T> String toJsonbPath(final String dotter, final Class<T> type, final String operator) {
         if (dotter.contains(DOT)) {
             final var fieldName = dotter.split(DOT_REGEX)[0];
             final var reflectionStorage = FastMethodInvoker.reflectionStorage(type);
             for (var field : reflectionStorage) {
                 if (fieldName.equals(field.getName()) && field.getType() == JsonNode.class) {
-                    return toJsonbPath(dotter);
+                    return toJsonbPath(dotter, operator);
                 }
                 if (fieldName.concat(StringUtils.capitalize(SqlField.id)).equals(field.getName())) {
                     var json = dotter.substring(dotter.indexOf(".") + 1);
-                    return fieldName + "." + toJsonbPath(json);
+                    return fieldName + "." + toJsonbPath(json, operator);
                 }
             }
         }
@@ -166,16 +175,17 @@ public abstract class DslUtils {
     public static <T> Criteria getCriteriaBy(Dsl dsl, Class<T> type, @Nullable List<String> jsonNodeFields) {
         Criteria criteriaBy = null;
         if (dsl.getQuery() != null && !dsl.getQuery().isEmpty()) {
-            String[] criterias = dsl.getQuery().split(Dsl.COMMA);
+            var criterias = dsl.getQuery().split(Dsl.COMMA);
             for (String criteria : criterias) {
-                String[] parts = criteria.split(COMMANDS);
-                String field = parts[0].replaceAll(PREFIX, "").replaceAll(COMBINATORS, "");
+                var operator = criteria.replaceAll(CLEAN, "");
+                var parts = criteria.split(COMMANDS);
+                var field = parts[0].replaceAll(PREFIX, "").replaceAll(COMBINATORS, "");
                 if (jsonNodeFields != null && jsonNodeFields.contains(field)) {
-                    field = toJsonbPath(field, type);
+                    field = toJsonbPath(field, type, operator);
                 }
-                Criteria.CriteriaStep step = getCriteriaByCombinators(criteriaBy, field, parts[0]);
-                String value = parts.length > 1 ? parts[1].replaceAll(COMBINATORS, "") : null;
-                switch (criteria.replaceAll(CLEAN, "")) {
+                var step = getCriteriaByCombinators(criteriaBy, field, parts[0]);
+                var value = parts.length > 1 ? parts[1].replaceAll(COMBINATORS, "") : null;
+                switch (operator) {
                     case Dsl.in:
                         if (value != null) criteriaBy = step.in(stringToObject(value.split(SPACE), field, type));
                         break;

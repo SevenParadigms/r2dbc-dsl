@@ -1594,6 +1594,12 @@ class DefaultDatabaseClient implements DatabaseClient, ConnectionAccessor {
 			sql = sql.replaceAll("\"", "`");
 		} else {
 			sql = sql.replaceAll(" LIKE ", " ILIKE ");
+			while (sql.contains("' IN (")) {
+				var prefix = sql.substring(0, sql.indexOf("' IN ("));
+				var postfix = "' ?| ARRAY[" + sql.substring(sql.indexOf("' IN (") + 6);
+				postfix = postfix.replaceFirst("\\)", "]");
+				sql = prefix + postfix;
+			}
 		}
 		return sql;
 	}

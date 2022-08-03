@@ -745,9 +745,11 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 	void shouldJoinTableAndGroupingByOr() {
 		shouldInsertNewItems();
 		createLegoJoin();
-		LegoJoin legoJoin1 = new LegoJoin().setName("join1").setData(JsonUtils.objectNode().put("key", "value1").set("arr", JsonUtils.arrayNode().add("one")));
+		LegoJoin legoJoin1 = new LegoJoin().setName("join1").setData(JsonUtils.objectNode().put("key", "value1")
+				.set("arr", JsonUtils.arrayNode().add("one").add("two")));
 		legoJoinRepository.save(legoJoin1).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-		LegoJoin legoJoin2 = new LegoJoin().setName("join2").setData(JsonUtils.objectNode().put("key", "value2").set("arr", JsonUtils.arrayNode().add("two")));
+		LegoJoin legoJoin2 = new LegoJoin().setName("join2").setData(JsonUtils.objectNode().put("key", "value2")
+				.set("arr", JsonUtils.arrayNode().add("two").add("four")));
 		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		legoJoinRepository.save(legoJoin2).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		Assert.isTrue(legoJoin2.getVersion() == 2, "must 2");
@@ -784,9 +786,19 @@ public class PostgresR2dbcRepositoryIntegrationTests extends AbstractR2dbcReposi
 				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 1, "must 1"))
 				.verifyComplete();
 
-		repository.findAll(Dsl.create().equals("legoJoin.data.arr.0", "two"))
+		repository.findAll(Dsl.create().equals("legoJoin.data.arr.1", "four"))
 				.as(StepVerifier::create)
 				.consumeNextWith(actual -> Assert.isTrue(actual.getId().longValue() == 2, "must 2"))
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().in("legoJoin.data.arr", "two"))
+				.as(StepVerifier::create)
+				.expectNextCount(2)
+				.verifyComplete();
+
+		repository.findAll(Dsl.create().in("legoJoin.data.arr", "one four"))
+				.as(StepVerifier::create)
+				.expectNextCount(2)
 				.verifyComplete();
 	}
 
